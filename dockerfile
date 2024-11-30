@@ -17,5 +17,8 @@ COPY . /app
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Étape 6 : Commande pour exécuter le script principal
+# Ajouter /app au PYTHONPATH
+ENV PYTHONPATH="/app"
+
+# Étape 7 : Commande pour exécuter le script principal
 CMD ["python", "pipeline.py"]

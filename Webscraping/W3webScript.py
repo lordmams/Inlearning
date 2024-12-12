@@ -12,7 +12,7 @@ def get_next_page(current_url, soup):
         return urljoin(current_url, next_link['href'])
     return None
 
-def extract_main_content(soup):
+def extract_main_content(soup, page_url):
     """Extract content from the main section."""
     main_div = soup.find('div', {'class': 'w3-col l10 m12', 'id': 'main'})
     if not main_div:
@@ -36,6 +36,10 @@ def extract_main_content(soup):
     for code_div in main_div.find_all('div', {'class': 'w3-code'}):
         examples.append(code_div.get_text(strip=True))
 
+    # Extract description if available
+    description_div = main_div.find('div', {'class': 'w3-info'})
+    description = description_div.get_text(strip=True) if description_div else ""
+
     # Extract YouTube video link
     video_link = None
     video_anchor = main_div.find('a', {'class': 'ga-featured ga-youtube'})
@@ -43,11 +47,17 @@ def extract_main_content(soup):
         video_link = video_anchor['href']
 
     return {
-        "title": title_text,
-        "paragraphs": paragraphs,
-        "lists": lists,
-        "examples": examples,
-        "video_link": video_link
+        "titre": title_text,
+        "description": description,  # Include description if found
+        "lien": page_url,  # Page URL
+        "contenus": {
+            "paragraphs": paragraphs,
+            "lists": lists,
+            "examples": examples
+        },
+        "categories": "",  # Placeholder for categories
+        "niveau": "",  # Placeholder for level
+        "durée": ""  # Placeholder for duration
     }
 
 def analyze_page_content(url):
@@ -57,7 +67,7 @@ def analyze_page_content(url):
     soup = BeautifulSoup(response.text, 'html.parser')
 
     # Extract main content
-    content = extract_main_content(soup)
+    content = extract_main_content(soup, url)
 
     # Find next page
     next_url = get_next_page(url, soup)
@@ -65,7 +75,7 @@ def analyze_page_content(url):
     # Build structured data
     content_data = {
         "url": url,
-        "content": content
+        "cours": content
     }
     return content_data, next_url
 
@@ -74,9 +84,16 @@ def scrape_course(course):
     start_url = f"{BASE_URL}{course}/default.asp"
     url = start_url
     all_content = []
+    visited_urls = set()  # Track visited URLs
 
     while url:
+        if url in visited_urls:
+            print(f"URL already visited: {url}. Ending scrape.")
+            break
+
         print(f"Analyzing: {url}")
+        visited_urls.add(url)  # Mark the URL as visited
+
         try:
             page_content, next_url = analyze_page_content(url)
             all_content.append(page_content)

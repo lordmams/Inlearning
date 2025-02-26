@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  web:
+    build: .
+    container_name: search_engine
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongo
+    environment:
+      - FLASK_ENV=development
+
+volumes:
+  mongo-data:

@@ -13,7 +13,7 @@ with open("data/workplace-documents.json", "r", encoding="utf-8") as file:
     documents = json.load(file)
 
 # Entraîner Word2Vec
-sentences = [doc["text"].split() for doc in documents]
+sentences = [doc["content"].split() for doc in documents if "content" in doc]
 model = Word2Vec(sentences, vector_size=100, window=5, min_count=1, workers=4)
 model.save("models/word2vec.model")
 

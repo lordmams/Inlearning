@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 import json
+import os
 
 BASE_URL = "https://www.w3schools.com/"
 
@@ -104,20 +105,26 @@ def scrape_course(course):
 
     return all_content
 
+def scrape_courses_from_list(course_list):
+    """Scrape multiple courses from a list."""
+    output_dir = "output"
+    os.makedirs(output_dir, exist_ok=True)  # Ensure the output directory exists
+
+    for course in course_list:
+        print(f"Starting scrape for the {course} course...")
+        course_content = scrape_course(course)
+
+        # Save all data to a JSON file in the output directory
+        output_file = os.path.join(output_dir, f"{course}_course_content.json")
+        with open(output_file, "w", encoding="utf-8") as f:
+            json.dump(course_content, f, ensure_ascii=False, indent=4)
+
+        print(f"Scraping complete for {course}. Data saved to {output_file}.")
+
 def main():
-    # Ask the user for the course they want to scrape
-    course = input("Enter the course name (e.g., html, js, css): ").strip().lower()
-    print(f"Starting scrape for the {course} course...")
-    
-    # Scrape the specified course
-    course_content = scrape_course(course)
-
-    # Save all data to a JSON file
-    output_file = f"{course}_course_content.json"
-    with open(output_file, "w", encoding="utf-8") as f:
-        json.dump(course_content, f, ensure_ascii=False, indent=4)
-
-    print(f"Scraping complete. Data saved to {output_file}.")
+    # List of courses to scrape
+    course_list = ["html", "css", "js","sql","python",'java','php','cpp','cs','react','mysql','jquery','nodejs','git','numpy']  # Example list of courses
+    scrape_courses_from_list(course_list)
 
 if __name__ == "__main__":
     main()

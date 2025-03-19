@@ -1,0 +1,153 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulaire de Profil Utilisateur</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .form-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .section-title {
+            border-bottom: 2px solid #0d6efd;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+        .delete-row {
+            color: #dc3545;
+            cursor: pointer;
+        }
+        .add-row {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <h1 class="mb-4 text-center">Formulaire de Profil Utilisateur</h1>
+        
+        <form method="post" class="needs-validation" novalidate>
+            <!-- Informations personnelles -->
+            <div class="form-section">
+                <h3 class="section-title">Informations Personnelles</h3>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Nom complet</label>
+                        <input type="text" class="form-control" placeholder="Votre nom complet">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Âge</label>
+                        <input type="number" class="form-control" placeholder="Âge">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Sexe</label>
+                        <select class="form-select">
+                            <option value="">Choisir...</option>
+                            <option>Masculin</option>
+                            <option>Féminin</option>
+                            <option>Autre</option>
+                            <option>Préfère ne pas préciser</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Adresse e-mail</label>
+                        <input type="email" class="form-control" placeholder="email@exemple.com">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Numéro de téléphone</label>
+                        <input type="tel" class="form-control" placeholder="Votre numéro">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Préférences -->
+            <div class="form-section">
+                <h3 class="section-title">Préférences</h3>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Langue préférée</label>
+                        <select class="form-select">
+                            <option value="">Choisir...</option>
+                            <option>Français</option>
+                            <option>Anglais</option>
+                            <option>Espagnol</option>
+                            <option>Allemand</option>
+                            <option>Chinois</option>
+                            <option>Arabe</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Mode d'apprentissage préféré</label>
+                        <select class="form-select">
+                            <option value="">Choisir...</option>
+                            <option>En ligne</option>
+                            <option>Présentiel</option>
+                            <option>Mixte</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <h4>Centres d'intérêt</h4>
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Centre d'intérêt</th>
+                            <th width="10%">Supprimer</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <input type="text" class="form-control" placeholder="Votre centre d'intérêt">
+                            </td>
+                            <td class="text-center">
+                                <input type="checkbox" class="form-check-input">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="text" class="form-control" placeholder="Votre centre d'intérêt">
+                            </td>
+                            <td class="text-center">
+                                <input type="checkbox" class="form-check-input">
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button type="button" class="btn btn-sm btn-outline-primary add-row">Ajouter un centre d'intérêt</button>
+            </div>
+            
+            <!-- Parcours académique et professionnel simplifié pour l'aperçu -->
+            <div class="form-section">
+                <h3 class="section-title">Parcours Académique</h3>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Niveau académique atteint</label>
+                        <select class="form-select">
+                            <option value="">Choisir...</option>
+                            <option>Baccalauréat</option>
+                            <option>Licence</option>
+                            <option>Master</option>
+                            <option>Doctorat</option>
+                            <option>Autre</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Boutons d'action -->
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                <button type="submit" class="btn btn-primary">Enregistrer le profil</button>
+            </div>
+        </form>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+    

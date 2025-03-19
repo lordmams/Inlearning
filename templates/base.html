@@ -1,19 +1,736 @@
+<!-- templates/base.html -->
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
-    <title>{% block title %}Course Recommender{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Formulaire de Profil Utilisateur{% endblock %}</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .form-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .section-title {
+            border-bottom: 2px solid #0d6efd;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+        .delete-row {
+            color: #dc3545;
+            cursor: pointer;
+        }
+        .add-row {
+            margin-top: 10px;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <!-- Navigation -->
-    </nav>
+    <div class="container py-5">
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        {% block content %}{% endblock %}
+    </div>
     
-    <main class="container mt-4">
-        {% block content %}
-        {% endblock %}
-    </main>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap JS with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Script pour gérer l'affichage/masquage du champ date de fin lorsque "Poste actuel" est coché
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentJobCheckboxes = document.querySelectorAll('input[name$="-is_current"]');
+            
+            currentJobCheckboxes.forEach(checkbox => {
+                const row = checkbox.closest('tr');
+                const endDateField = row.querySelector('input[name$="-end_date"]');
+                
+                // État initial
+                if (checkbox.checked) {
+                    endDateField.disabled = true;
+                    endDateField.value = '';
+                }
+                
+                // Événement de changement
+                checkbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        endDateField.disabled = true;
+                        endDateField.value = '';
+                    } else {
+                        endDateField.disabled = false;
+                    }
+                });
+            });
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>
+
+<!-- templates/user_profile_form.html -->
+{% extends 'base.html' %}
+
+{% block title %}Formulaire de Profil Utilisateur{% endblock %}
+
+{% block content %}
+<h1 class="mb-4 text-center">Formulaire de Profil Utilisateur</h1>
+
+<form method="post" class="needs-validation" novalidate>
+    {% csrf_token %}
+    
+    <!-- Informations personnelles -->
+    <div class="form-section">
+        <h3 class="section-title">Informations Personnelles</h3>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label for="{{ person_form.name.id_for_label }}" class="form-label">{{ person_form.name.label }}</label>
+                {{ person_form.name }}
+                {% if person_form.name.errors %}
+                <div class="invalid-feedback d-block">
+                    {{ person_form.name.errors }}
+                </div>
+                {% endif %}
+            </div>
+            <div class="col-md-2">
+                <label for="{{ person_form.age.id_for_label }}" class="form-label">{{ person_form.age.label }}</label>
+                {{ person_form.age }}
+                {% if person_form.age.errors %}
+                <div class="invalid-feedback d-block">
+                    {{ person_form.age.errors }}
+                </div>
+                {% endif %}
+            </div>
+            <div class="col-md-4">
+                <label for="{{ person_form.gender.id_for_label }}" class="form-label">{{ person_form.gender.label }}</label>
+                {{ person_form.gender }}
+                {% if person_form.gender.errors %}
+                <div class="invalid-feedback d-block">
+                    {{ person_form.gender.errors }}
+                </div>
+                {% endif %}
+            </div>
+            <div class="col-md-6">
+                <label for="{{ person_form.email.id_for_label }}" class="form-label">{{ person_form.email.label }}</label>
+                {{ person_form.email }}
+                {% if person_form.email.errors %}
+                <div class="invalid-feedback d-block">
+                    {{ person_form.email.errors }}
+                </div>
+                {% endif %}
+            </div>
+            <div class="col-md-6">
+                <label for="{{ person_form.phone.id_for_label }}" class="form-label">{{ person_form.phone.label }}</label>
+                {{ person_form.phone }}
+                {% if person_form.phone.errors %}
+                <div class="invalid-feedback d-block">
+                    {{ person_form.phone.errors }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Préférences -->
+    <div class="form-section">
+        <h3 class="section-title">Préférences</h3>
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label for="{{ preferences_form.preferred_language.id_for_label }}" class="form-label">{{ preferences_form.preferred_language.label }}</label>
+                {{ preferences_form.preferred_language }}
+                {% if preferences_form.preferred_language.errors %}
+                <div class="invalid-feedback d-block">
+                    {{ preferences_form.preferred_language.errors }}
+                </div>
+                {% endif %}
+            </div>
+            <div class="col-md-6">
+                <label for="{{ preferences_form.learning_mode.id_for_label }}" class="form-label">{{ preferences_form.learning_mode.label }}</label>
+                {{ preferences_form.learning_mode }}
+                {% if preferences_form.learning_mode.errors %}
+                <div class="invalid-feedback d-block">
+                    {{ preferences_form.learning_mode.errors }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <h4>Centres d'intérêt</h4>
+        {{ interest_formset.management_form }}
+        <table class="table table-bordered table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Centre d'intérêt</th>
+                    <th width="10%">Supprimer</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for form in interest_formset %}
+                <tr class="{% if form.instance.pk %}{% else %}empty-form{% endif %}">
+                    <td>
+                        {{ form.id }}
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.name.errors }}
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {{ form.DELETE }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="button" class="btn btn-sm btn-outline-primary add-row" id="add-interest">Ajouter un centre d'intérêt</button>
+    </div>
+    
+    <!-- Parcours académique -->
+    <div class="form-section">
+        <h3 class="section-title">Parcours Académique</h3>
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label for="{{ academic_form.highest_academic_level.id_for_label }}" class="form-label">{{ academic_form.highest_academic_level.label }}</label>
+                {{ academic_form.highest_academic_level }}
+                {% if academic_form.highest_academic_level.errors %}
+                <div class="invalid-feedback d-block">
+                    {{ academic_form.highest_academic_level.errors }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <h4>Domaines d'étude</h4>
+        {{ field_of_study_formset.management_form }}
+        <table class="table table-bordered table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Domaine d'étude</th>
+                    <th>Institution</th>
+                    <th>Année d'obtention</th>
+                    <th width="10%">Supprimer</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for form in field_of_study_formset %}
+                <tr class="{% if form.instance.
+                    {% for form in field_of_study_formset %}
+                <tr class="{% if form.instance.pk %}{% else %}empty-form{% endif %}">
+                    <td>
+                        {{ form.id }}
+                        {{ form.field_name }}
+                        {% if form.field_name.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.field_name.errors }}
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {{ form.institution }}
+                        {% if form.institution.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.institution.errors }}
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {{ form.year_of_completion }}
+                        {% if form.year_of_completion.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.year_of_completion.errors }}
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {{ form.DELETE }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="button" class="btn btn-sm btn-outline-primary add-row" id="add-field-of-study">Ajouter un domaine d'étude</button>
+    </div>
+    
+    <!-- Parcours professionnel -->
+    <div class="form-section">
+        <h3 class="section-title">Parcours Professionnel</h3>
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label for="{{ professional_form.total_experience_years.id_for_label }}" class="form-label">{{ professional_form.total_experience_years.label }}</label>
+                {{ professional_form.total_experience_years }}
+                {% if professional_form.total_experience_years.errors %}
+                <div class="invalid-feedback d-block">
+                    {{ professional_form.total_experience_years.errors }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <h4>Expériences professionnelles</h4>
+        {{ job_formset.management_form }}
+        <table class="table table-bordered table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Poste</th>
+                    <th>Entreprise</th>
+                    <th>Date de début</th>
+                    <th>Date de fin</th>
+                    <th>Poste actuel</th>
+                    <th width="10%">Supprimer</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for form in job_formset %}
+                <tr class="{% if form.instance.pk %}{% else %}empty-form{% endif %}">
+                    <td>
+                        {{ form.id }}
+                        {{ form.position }}
+                        {% if form.position.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.position.errors }}
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {{ form.company }}
+                        {% if form.company.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.company.errors }}
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {{ form.start_date }}
+                        {% if form.start_date.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.start_date.errors }}
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {{ form.end_date }}
+                        {% if form.end_date.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.end_date.errors }}
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {{ form.is_current }}
+                    </td>
+                    <td class="text-center">
+                        {{ form.DELETE }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="button" class="btn btn-sm btn-outline-primary add-row" id="add-job">Ajouter une expérience professionnelle</button>
+        
+        <div class="mt-3">
+            <h4>Description des responsabilités</h4>
+            {% for form in job_formset %}
+            <div class="mb-3 job-description" data-index="{{ forloop.counter0 }}">
+                <label class="form-label">{{ form.company.value|default:"" }} - {{ form.position.value|default:"" }}</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                <div class="invalid-feedback d-block">
+                    {{ form.description.errors }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Objectifs -->
+    <div class="form-section">
+        <h3 class="section-title">Objectifs</h3>
+        
+        <h4>Objectifs à court terme</h4>
+        {{ short_term_goal_formset.management_form }}
+        <table class="table table-bordered table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Description</th>
+                    <th width="10%">Supprimer</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for form in short_term_goal_formset %}
+                <tr class="{% if form.instance.pk %}{% else %}empty-form{% endif %}">
+                    <td>
+                        {{ form.id }}
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.description.errors }}
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {{ form.DELETE }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="button" class="btn btn-sm btn-outline-primary add-row" id="add-short-term-goal">Ajouter un objectif à court terme</button>
+        
+        <h4 class="mt-4">Objectifs à long terme</h4>
+        {{ long_term_goal_formset.management_form }}
+        <table class="table table-bordered table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Description</th>
+                    <th width="10%">Supprimer</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for form in long_term_goal_formset %}
+                <tr class="{% if form.instance.pk %}{% else %}empty-form{% endif %}">
+                    <td>
+                        {{ form.id }}
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.description.errors }}
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {{ form.DELETE }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="button" class="btn btn-sm btn-outline-primary add-row" id="add-long-term-goal">Ajouter un objectif à long terme</button>
+    </div>
+    
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+        <button type="submit" class="btn btn-primary">Enregistrer le profil</button>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Fonction pour gérer l'ajout de nouvelles lignes dans les formsets
+    document.addEventListener('DOMContentLoaded', function() {
+        const addRowButtons = document.querySelectorAll('.add-row');
+        
+        addRowButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const buttonId = this.id;
+                let formsetPrefix;
+                
+                // Déterminer le préfixe du formset en fonction du bouton cliqué
+                switch(buttonId) {
+                    case 'add-interest':
+                        formsetPrefix = 'interest_set';
+                        break;
+                    case 'add-field-of-study':
+                        formsetPrefix = 'fieldofstudy_set';
+                        break;
+                    case 'add-job':
+                        formsetPrefix = 'job_set';
+                        break;
+                    case 'add-short-term-goal':
+                        formsetPrefix = 'shorttermgoal_set';
+                        break;
+                    case 'add-long-term-goal':
+                        formsetPrefix = 'longtermgoal_set';
+                        break;
+                    default:
+                        return;
+                }
+                
+                // Obtenir le formulaire de gestion (management_form)
+                const managementForm = document.querySelector(`#id_${formsetPrefix}-TOTAL_FORMS`);
+                if (!managementForm) return;
+                
+                // Obtenir le nombre total de formulaires
+                let formCount = parseInt(managementForm.value);
+                
+                // Trouver le formulaire vide (template) et le cloner
+                const table = this.previousElementSibling;
+                const emptyForm = table.querySelector('tbody tr.empty-form');
+                if (!emptyForm) return;
+                
+                const newRow = emptyForm.cloneNode(true);
+                newRow.classList.remove('empty-form');
+                
+                // Mettre à jour les IDs et les noms des champs
+                const inputs = newRow.querySelectorAll('input, select, textarea');
+                inputs.forEach(input => {
+                    const name = input.getAttribute('name');
+                    if (name) {
+                        input.setAttribute('name', name.replace('__prefix__', formCount));
+                        input.setAttribute('id', input.getAttribute('id').replace('__prefix__', formCount));
+                    }
+                });
+                
+                // Ajouter la nouvelle ligne au tableau
+                table.querySelector('tbody').appendChild(newRow);
+                
+                // Mettre à jour le nombre total de formulaires
+                managementForm.value = formCount + 1;
+                
+                // Si c'est un job, ajouter aussi la description
+                if (buttonId === 'add-job') {
+                    const descriptionContainer = document.querySelector('.job-description').cloneNode(true);
+                    descriptionContainer.setAttribute('data-index', formCount);
+                    const textarea = descriptionContainer.querySelector('textarea');
+                    textarea.setAttribute('name', textarea.getAttribute('name').replace(/\d+/, formCount));
+                    textarea.setAttribute('id', textarea.getAttribute('id').replace(/\d+/, formCount));
+                    textarea.value = '';
+                    
+                    const label = descriptionContainer.querySelector('label');
+                    label.textContent = '';
+                    
+                    document.querySelector('.job-description:last-of-type').after(descriptionContainer);
+                }
+            });
+        });
+        
+        // Initialiser les événements pour chaque formset existant
+        ['interest_set', 'fieldofstudy_set', 'job_set', 'shorttermgoal_set', 'longtermgoal_set'].forEach(formsetPrefix => {
+            const totalForms = document.querySelector(`#id_${formsetPrefix}-TOTAL_FORMS`);
+            if (totalForms) {
+                const formCount = parseInt(totalForms.value);
+                for (let i = 0; i < formCount; i++) {
+                    // Ajouter des gestionnaires d'événements pour chaque formulaire si nécessaire
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
+
+<!-- templates/person_detail.html -->
+{% extends 'base.html' %}
+
+{% block title %}Profil de {{ person.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">Profil de {{ person.name }}</h1>
+            
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0">Informations Personnelles</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Nom :</strong> {{ person.name }}</p>
+                            {% if person.age %}<p><strong>Âge :</strong> {{ person.age }} ans</p>{% endif %}
+                            {% if person.gender %}<p><strong>Sexe :</strong> {{ person.get_gender_display }}</p>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Email :</strong> {{ person.email }}</p>
+                            {% if person.phone %}<p><strong>Téléphone :</strong> {{ person.phone }}</p>{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            {% if person.preferences %}
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h3 class="card-title mb-0">Préférences</h3>
+                </div>
+                <div class="card-body">
+                    <p><strong>Langue préférée :</strong> {{ person.preferences.get_preferred_language_display }}</p>
+                    <p><strong>Mode d'apprentissage :</strong> {{ person.preferences.get_learning_mode_display }}</p>
+                    
+                    {% if person.preferences.interests.all %}
+                    <h4>Centres d'intérêt</h4>
+                    <ul>
+                        {% for interest in person.preferences.interests.all %}
+                        <li>{{ interest.name }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if person.academic_background %}
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h3 class="card-title mb-0">Parcours Académique</h3>
+                </div>
+                <div class="card-body">
+                    <p><strong>Niveau académique :</strong> {{ person.academic_background.get_highest_academic_level_display }}</p>
+                    
+                    {% if person.academic_background.fields_of_study.all %}
+                    <h4>Domaines d'étude</h4>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Domaine</th>
+                                    <th>Institution</th>
+                                    <th>Année</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for field in person.academic_background.fields_of_study.all %}
+                                <tr>
+                                    <td>{{ field.field_name }}</td>
+                                    <td>{{ field.institution }}</td>
+                                    <td>{{ field.year_of_completion }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if person.professional_background %}
+            <div class="card mb-4">
+                <div class="card-header bg-warning">
+                    <h3 class="card-title mb-0">Parcours Professionnel</h3>
+                </div>
+                <div class="card-body">
+                    <p><strong>Expérience totale :</strong> {{ person.professional_background.total_experience_years }} années</p>
+                    
+                    {% if person.professional_background.jobs.all %}
+                    <h4>Expériences professionnelles</h4>
+                    <div class="accordion" id="jobsAccordion">
+                        {% for job in person.professional_background.jobs.all %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading{{ job.id }}">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ job.id }}" aria-expanded="false" aria-controls="collapse{{ job.id }}">
+                                    <strong>{{ job.position }}</strong> chez {{ job.company }} ({{ job.start_date|date:"d/m/Y" }} - {% if job.is_current %}Présent{% else %}{{ job.end_date|date:"d/m/Y" }}{% endif %})
+                                </button>
+                            </h2>
+                            <div id="collapse{{ job.id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ job.id }}" data-bs-parent="#jobsAccordion">
+                                <div class="accordion-body">
+                                    {{ job.description|linebreaks }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if person.goals %}
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h3 class="card-title mb-0">Objectifs</h3>
+                </div>
+                <div class="card-body">
+                    {% if person.goals.short_term_goals.all %}
+                    <h4>Objectifs à court terme</h4>
+                    <ul>
+                        {% for goal in person.goals.short_term_goals.all %}
+                        <li>{{ goal.description }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                    
+                    {% if person.goals.long_term_goals.all %}
+                    <h4>Objectifs à long terme</h4>
+                    <ul>
+                        {% for goal in person.goals.long_term_goals.all %}
+                        <li>{{ goal.description }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <a href="{% url 'edit_profile' person.pk %}" class="btn btn-primary">Modifier le profil</a>
+                <a href="{% url 'profile_list' %}" class="btn btn-secondary">Retour à la liste</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+<!-- templates/person_list.html -->
+{% extends 'base.html' %}
+
+{% block title %}Liste des Profils{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">Liste des Profils</h1>
+            
+            <div class="mb-3">
+                <a href="{% url 'create_profile' %}" class="btn btn-primary">Créer un nouveau profil</a>
+            </div>
+            
+            {% if persons %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Nom</th>
+                            <th>Email</th>
+                            <th>Niveau académique</th>
+                            <th>Expérience</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for person in persons %}
+                        <tr>
+                            <td>{{ person.name }}</td>
+                            <td>{{ person.email }}</td>
+                            <td>
+                                {% if person.academic_background %}
+                                {{ person.academic_background.get_highest_academic_level_display }}
+                                {% else %}
+                                Non spécifié
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if person.professional_background %}
+                                {{ person.professional_background.total_experience_years }} années
+                                {% else %}
+                                Non spécifié
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'profile_detail' person.pk %}" class="btn btn-sm btn-info">Voir</a>
+                                <a href="{% url 'edit_profile' person.pk %}" class="btn btn-sm btn-warning">Modifier</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                Aucun profil n'a été créé pour le moment.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>

@@ -8,6 +8,10 @@ main_bp = Blueprint('main', __name__)
 def index():
     return "Bienvenue sur l'API de recommandation de cours!"
 
+@main_bp.route('/test_post', methods=['POST'])
+def test_post():
+    return jsonify({"message": "POST request successful!"})
+
 @main_bp.route('/api/recommendations', methods=['POST'])
 def get_recommendations():
     student_data = request.json

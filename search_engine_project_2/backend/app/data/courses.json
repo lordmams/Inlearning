@@ -1,0 +1,19 @@
+[
+    {
+      "id": "1",
+      "titre": "React Tutorial",
+      "description": "React is a JavaScript library for building user interfaces.",
+      "lien": "https://www.w3schools.com/react/default.asp",
+      "niveau": 2,
+      "duree": "45 minutes"
+    },
+    {
+      "id": "2",
+      "titre": "Python Programming",
+      "description": "Learn Python programming from scratch.",
+      "lien": "https://www.w3schools.com/python/",
+      "niveau": 1,
+      "duree": "60 minutes"
+    }
+  ]
+  

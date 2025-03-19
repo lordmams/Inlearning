@@ -1,0 +1,25 @@
+version: "3.8"
+services:
+  backend:
+    build:
+      context: ./backend  # Indique que le Dockerfile est dans le dossier backend
+    ports:
+      - "5000:5000"  # Expose le port 5000
+    volumes:
+      - ./backend:/app
+    networks:
+      - my-network
+
+  frontend:
+    build:
+      context: ./frontend  # Si vous avez un frontend avec un Dockerfile, indiquez le bon dossier
+    ports:
+      - "80:80"
+    networks:
+      - my-network
+    volumes:
+      - ./frontend:/usr/share/nginx/html
+
+networks:
+  my-network:
+    driver: bridge

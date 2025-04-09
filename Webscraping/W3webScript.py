@@ -6,60 +6,79 @@ import os
 
 BASE_URL = "https://www.w3schools.com/"
 
-def get_next_page(current_url, soup):
-    """Find the 'Next' button and extract the next page URL."""
-    next_link = soup.find('a', string="Next ❯")
-    if next_link and 'href' in next_link.attrs:
-        return urljoin(current_url, next_link['href'])
-    return None
-
 def extract_main_content(soup, page_url):
     """Extract content from the main section."""
     main_div = soup.find('div', {'class': 'w3-col l10 m12', 'id': 'main'})
     if not main_div:
         return {}
 
-    # Extract title (h1)
+    # Extract title (h1) - handle potential spans within h1
     title = main_div.find('h1')
-    title_text = title.get_text(strip=True) if title else "No Title"
+    if title:
+        # Combine all text within h1, including spans
+        title_text = ' '.join(title.stripped_strings)
+    else:
+        title_text = "No Title"
 
-    # Extract paragraphs
-    paragraphs = [p.get_text(strip=True) for p in main_div.find_all('p')]
+    # Extract intro/description from w3-info div
+    description = ""
+    info_div = main_div.find('div', {'class': 'w3-info'})
+    if info_div:
+        description = ' '.join(info_div.stripped_strings)
+
+    # Extract paragraphs (excluding those in special divs)
+    paragraphs = []
+    for p in main_div.find_all('p', recursive=False):
+        # Skip paragraphs within special sections
+        if not any(parent.get('class', []) for parent in p.parents if parent != main_div):
+            paragraphs.append(' '.join(p.stripped_strings))
 
     # Extract lists (ul and ol)
     lists = []
-    for ul in main_div.find_all(['ul', 'ol']):
-        items = [li.get_text(strip=True) for li in ul.find_all('li')]
-        lists.append(items)
+    for ul in main_div.find_all(['ul', 'ol'], recursive=False):
+        items = [' '.join(li.stripped_strings) for li in ul.find_all('li')]
+        if items:  # Only add non-empty lists
+            lists.append(items)
 
-    # Extract code examples
+    # Extract code examples (including those in w3-code and other code-related classes)
     examples = []
-    for code_div in main_div.find_all('div', {'class': 'w3-code'}):
-        examples.append(code_div.get_text(strip=True))
+    code_classes = ['w3-code', 'w3-example', 'w3-programing']
+    for class_name in code_classes:
+        for code_div in main_div.find_all('div', {'class': class_name}):
+            code_text = ' '.join(code_div.stripped_strings)
+            if code_text:  # Only add non-empty examples
+                examples.append(code_text)
 
-    # Extract description if available
-    description_div = main_div.find('div', {'class': 'w3-info'})
-    description = description_div.get_text(strip=True) if description_div else ""
-
-    # Extract YouTube video link
-    video_link = None
-    video_anchor = main_div.find('a', {'class': 'ga-featured ga-youtube'})
-    if video_anchor and 'href' in video_anchor.attrs:
-        video_link = video_anchor['href']
+    # Extract links for course structure
+    course_links = []
+    for a in main_div.find_all('a', {'class': 'w3-btn'}):
+        if 'href' in a.attrs and not ('Next' in a.text or 'Home' in a.text):
+            course_links.append({
+                'title': ' '.join(a.stripped_strings),
+                'url': urljoin(page_url, a['href'])
+            })
 
     return {
         "titre": title_text,
-        "description": description,  # Include description if found
-        "lien": page_url,  # Page URL
+        "description": description,
+        "lien": page_url,
         "contenus": {
             "paragraphs": paragraphs,
             "lists": lists,
-            "examples": examples
+            "examples": examples,
+            "course_structure": course_links
         },
-        "categories": "",  # Placeholder for categories
-        "niveau": "",  # Placeholder for level
-        "durée": ""  # Placeholder for duration
+        "categories": "",
+        "niveau": "",
+        "durée": ""
     }
+
+def get_next_page(url, soup):
+    """Get the URL of the next page."""
+    next_link = soup.find('a', {'class': 'w3-right w3-btn'})
+    if next_link and 'href' in next_link.attrs:
+        return urljoin(url, next_link['href'])
+    return None
 
 def analyze_page_content(url):
     """Analyze the content of a single page."""
@@ -82,8 +101,29 @@ def analyze_page_content(url):
 
 def scrape_course(course):
     """Scrape a course by navigating through its pages."""
-    start_url = f"{BASE_URL}{course}/default.asp"
-    url = start_url
+    # Try both .asp and .php extensions
+    start_urls = [
+        f"{BASE_URL}{course}/default.asp",
+        f"{BASE_URL}{course}/index.php",
+        f"{BASE_URL}{course}/default.php",
+        f"{BASE_URL}{course}/index.asp"
+    ]
+    
+    url = None
+    # Try each possible start URL until one works
+    for start_url in start_urls:
+        try:
+            response = requests.get(start_url)
+            if response.status_code == 200:
+                url = start_url
+                break
+        except Exception:
+            continue
+    
+    if not url:
+        print(f"Could not find valid start URL for course: {course}")
+        return []
+
     all_content = []
     visited_urls = set()  # Track visited URLs
 
@@ -98,6 +138,26 @@ def scrape_course(course):
         try:
             page_content, next_url = analyze_page_content(url)
             all_content.append(page_content)
+            
+            # If next_url ends with .asp and fails, try .php version
+            if next_url and next_url.endswith('.asp'):
+                try:
+                    response = requests.get(next_url)
+                    if response.status_code != 200:
+                        php_url = next_url.replace('.asp', '.php')
+                        php_response = requests.get(php_url)
+                        if php_response.status_code == 200:
+                            next_url = php_url
+                except Exception:
+                    # If .asp fails, try .php
+                    php_url = next_url.replace('.asp', '.php')
+                    try:
+                        php_response = requests.get(php_url)
+                        if php_response.status_code == 200:
+                            next_url = php_url
+                    except Exception:
+                        next_url = None
+            
             url = next_url  # Move to the next page
         except Exception as e:
             print(f"Error analyzing {url}: {e}")
@@ -123,7 +183,7 @@ def scrape_courses_from_list(course_list):
 
 def main():
     # List of courses to scrape
-    course_list = ["html", "css", "js","sql","python",'java','php','cpp','cs','react','mysql','jquery','nodejs','git','numpy']  # Example list of courses
+    course_list = ["typescript", "django", 'dsa', 'kotlin', 'vue', 'gen_ai', 'scipy', 'cybersecurity']
     scrape_courses_from_list(course_list)
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
-from sentence_transformers import SentenceTransformer
+from sklearn.feature_extraction.text import TfidfVectorizer
 
-model = SentenceTransformer("all-MiniLM-L6-v2")
+# Modèle de vectorisation TF-IDF
+model = TfidfVectorizer()
 
 def get_course_text(course):
     return f"{course.get('titre', '')}. {course.get('description', '')}"
@@ -15,9 +16,15 @@ def get_profile_text(profile):
 
 def vectorize_courses(courses):
     texts = [get_course_text(c) for c in courses]
-    vectors = model.encode(texts)
-    return vectors
+    texts = [t for t in texts if t.strip()]  # supprime les textes vides
+    if not texts:
+        return []
+    return model.fit_transform(texts).toarray()
+
 
 def vectorize_profile(profile):
     text = get_profile_text(profile)
-    return model.encode([text])[0]
+    if not text.strip():
+        return []
+    return model.transform([text]).toarray()[0]
+

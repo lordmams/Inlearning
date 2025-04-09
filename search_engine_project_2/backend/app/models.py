@@ -1,3 +1,6 @@
-# Ce fichier contiendrait la définition des modèles de données si vous en avez besoin.
-# Dans cet exemple, ce fichier peut être utilisé pour définir les classes ou structures
-# de données des étudiants et des cours, mais ici il est vide pour le moment.
+class Student:
+    def __init__(self, name, language, learning_mode, interests):
+        self.name = name
+        self.language = language
+        self.learning_mode = learning_mode
+        self.interests = interests

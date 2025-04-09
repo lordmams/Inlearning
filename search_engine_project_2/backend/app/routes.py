@@ -1,22 +1,15 @@
 from flask import Blueprint, request, jsonify
-from .recommendation import recommend_courses
-from .utils import load_data
+from app.recommendation import get_recommendations
 
-main_bp = Blueprint('main', __name__)
+routes = Blueprint('routes', __name__)
 
-@main_bp.route('/')
-def index():
-    return "Bienvenue sur l'API de recommandation de cours!"
-
-@main_bp.route('/test_post', methods=['POST'])
-def test_post():
-    return jsonify({"message": "POST request successful!"})
-
-@main_bp.route('/api/recommendations', methods=['POST'])
-def get_recommendations():
-    student_data = request.json
-    courses, students = load_data()
+@routes.route('/recommend', methods=['POST'])
+def recommend():
+    data = request.get_json()
     
-    recommendations = recommend_courses(student_data, courses)
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+
+    recommendations = get_recommendations(data)
     
     return jsonify(recommendations)

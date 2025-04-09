@@ -12,9 +12,18 @@ def load_profiles(path):
     return data if isinstance(data, list) else [data]
 
 def flatten_course(course):
-    flat = course['cours']
-    flat['url'] = course.get('url')
-    return flat
+    # Si le champ 'cours' existe → ancien format
+    if 'cours' in course and isinstance(course['cours'], dict):
+        flat = course['cours']
+        flat['url'] = course.get('url', '')
+        return flat
+    # Sinon → cours déjà à plat (nouveau format)
+    elif 'titre' in course:
+        return course
+    else:
+        print("❌ Format inconnu :", course)
+        return None
+
 
 def preprocess_courses(courses):
-    return [flatten_course(c) for c in courses]
+    return [c for c in (flatten_course(c) for c in courses) if c]

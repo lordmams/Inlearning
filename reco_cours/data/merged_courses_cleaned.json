@@ -1,43 +1,18 @@
 [
-    {
-      "url": "https://www.w3schools.com/react/default.asp",
-      "cours": {
-        "titre": "React Tutorial",
-        "description": "React is a JavaScript library for building user interfaces. React is used to build single-page applications. React allows us to create reusable UI components.",
-        "lien": "https://www.w3schools.com/react/default.asp",
-        "niveau": 2,
-        "duree": "45 minutes"
-      }
-    },
-    {
-      "url": "https://www.w3schools.com/react/react_intro.asp",
-      "cours": {
-        "titre": "React Introduction",
-        "description": "Introduction aux concepts de base de React, un framework JavaScript moderne développé par Facebook.",
-        "lien": "https://www.w3schools.com/react/react_intro.asp",
-        "niveau": 1,
-        "duree": "30 minutes"
-      }
-    },
-    {
-      "url": "https://www.w3schools.com/python/",
-      "cours": {
-        "titre": "Python Basics",
-        "description": "Apprenez les bases de Python : variables, boucles, conditions, fonctions.",
-        "lien": "https://www.w3schools.com/python/",
-        "niveau": 1,
-        "duree": "40 minutes"
-      }
-    },
-    {
-      "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
-      "cours": {
-        "titre": "JavaScript Guide",
-        "description": "Documentation complète pour apprendre JavaScript du niveau débutant à avancé.",
-        "lien": "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
-        "niveau": 2,
-        "duree": "1h"
-      }
-    }
-  ]
-  
+  {
+    "titre": "React Introduction",
+    "description": "Apprenez les bases de React...",
+    "lien": "https://www.w3schools.com/react/react_intro.asp",
+    "niveau": 1,
+    "duree": "30 minutes",
+    "url": "https://www.w3schools.com/react/react_intro.asp"
+  },
+  {
+    "titre": "React Tutorial",
+    "description": "Approfondissez React et ses composants...",
+    "lien": "https://www.w3schools.com/react/default.asp",
+    "niveau": 2,
+    "duree": "45 minutes",
+    "url": "https://www.w3schools.com/react/default.asp"
+  }
+]

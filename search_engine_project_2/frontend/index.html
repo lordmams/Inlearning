@@ -1,79 +1,35 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recommandation de Cours</title>
+    <title>Search Engine</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Recommandation de Cours</h1>
-
-        <form id="studentForm">
-            <div class="form-group">
-                <label for="name">Nom :</label>
-                <input type="text" id="name" name="name" required>
-            </div>
-
-            <div class="form-group">
-                <label for="preferred_language">Langue préférée :</label>
-                <input type="text" id="preferred_language" name="preferred_language" required>
-            </div>
-
-            <div class="form-group">
-                <label for="learning_mode">Mode d'apprentissage :</label>
-                <input type="text" id="learning_mode" name="learning_mode" required>
-            </div>
-
-            <div class="form-group">
-                <label for="interests">Centres d'intérêt (séparés par des virgules) :</label>
-                <input type="text" id="interests" name="interests" required>
-            </div>
-
-            <button type="submit">Obtenir des recommandations</button>
-        </form>
-
-        <div id="recommendations">
-            <h2>Cours recommandés :</h2>
-            <ul id="courseList"></ul>
-        </div>
-    </div>
+    <h1>Course Recommendation</h1>
+    <input type="text" id="name" placeholder="Your Name">
+    <input type="text" id="language" placeholder="Language">
+    <input type="text" id="learning_mode" placeholder="Learning Mode">
+    <input type="text" id="interests" placeholder="Interests (comma-separated)">
+    <button id="recommend-btn">Get Recommendations</button>
+    <div id="result"></div>
 
     <script>
-        document.getElementById('studentForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            
-            const studentData = {
-                name: document.getElementById('name').value,
-                preferences: {
-                    preferred_language: document.getElementById('preferred_language').value,
-                    learning_mode: document.getElementById('learning_mode').value,
-                    interests: document.getElementById('interests').value.split(',')
-                }
-            };
+        document.getElementById("recommend-btn").addEventListener("click", async function() {
+            const name = document.getElementById("name").value;
+            const language = document.getElementById("language").value;
+            const learning_mode = document.getElementById("learning_mode").value;
+            const interests = document.getElementById("interests").value.split(",");
 
-            fetch('http://localhost:5000/api/recommendations', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(studentData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                const courseList = document.getElementById('courseList');
-                courseList.innerHTML = '';  // Reset the course list
-                
-                data.forEach(course => {
-                    const li = document.createElement('li');
-                    li.textContent = `${course.titre}: ${course.description}`;
-                    courseList.appendChild(li);
-                });
-            })
-            .catch(error => {
-                console.error('Erreur lors de la récupération des recommandations:', error);
+            const response = await fetch("http://backend:5000/recommend", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, language, learning_mode, interests })
             });
+
+            const data = await response.json();
+            document.getElementById("result").innerHTML = JSON.stringify(data, null, 2);
         });
     </script>
 </body>

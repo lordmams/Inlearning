@@ -1,0 +1,182 @@
+<!-- templates/courses/dashboard.html -->
+{% extends 'base.html' %}
+
+{% block title %}Tableau de bord{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <!-- Sidebar de navigation -->
+        <div class="col-md-3 mb-4">
+            <div class="sidebar p-3">
+                <h5 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mb-3">
+                    <span><i class="bi bi-speedometer2 me-2"></i>Navigation</span>
+                </h5>
+                <div class="nav flex-column">
+                    <a class="nav-link active" href="{% url 'dashboard' %}">
+                        <i class="bi bi-house-door me-2"></i>Tableau de bord
+                    </a>
+                    <a class="nav-link" href="{% url 'course_list' %}">
+                        <i class="bi bi-grid-3x3-gap me-2"></i>Tous les cours
+                    </a>
+                    {% if user.person_profile %}
+                    <a class="nav-link" href="{% url 'profile_detail' user.person_profile.pk %}">
+                        <i class="bi bi-person-circle me-2"></i>Mon profil
+                    </a>
+                    {% else %}
+                    <a class="nav-link" href="{% url 'create_profile' %}">
+                        <i class="bi bi-person-plus me-2"></i>Créer mon profil
+                    </a>
+                    {% endif %}
+                </div>
+                
+                <h5 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mb-3 mt-4">
+                    <span><i class="bi bi-folder me-2"></i>Catégories</span>
+                </h5>
+                <div class="nav flex-column">
+                    {% for category in categories %}
+                    <a class="nav-link" href="{% url 'course_list' %}?category={{ category.id }}">
+                        <i class="bi bi-tag me-2"></i>{{ category.name }}
+                    </a>
+                    {% empty %}
+                    <span class="text-muted px-3">Aucune catégorie disponible</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Contenu principal -->
+        <div class="col-md-9">
+            <!-- Section de bienvenue -->
+            <div class="card mb-4 shadow">
+                <div class="card-body">
+                    <h2 class="card-title">Bienvenue, {{ user.first_name|default:user.username }}!</h2>
+                    <p class="card-text">Voici votre espace personnel d'apprentissage. Retrouvez vos cours en cours, vos recommandations personnalisées et bien plus encore.</p>
+                </div>
+            </div>
+            
+            <!-- Cours en progression -->
+            <div class="card mb-4 shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title h5 mb-0"><i class="bi bi-bar-chart-line me-2"></i>Mes cours en cours</h3>
+                </div>
+                <div class="card-body">
+                    {% if in_progress_courses %}
+                    <div class="row">
+                        {% for enrollment in in_progress_courses %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card course-card h-100 shadow-sm">
+                                {% if enrollment.course.image %}
+                                <img src="{{ enrollment.course.image.url }}" class="card-img-top" alt="{{ enrollment.course.title }}">
+                                {% else %}
+                                <div class="card-img-top bg-light text-center py-5">
+                                    <i class="bi bi-book" style="font-size: 3rem;"></i>
+                                </div>
+                                {% endif %}
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ enrollment.course.title }}</h5>
+                                    <div class="progress mb-3">
+                                        <div class="progress-bar progress-{{ enrollment.progress }}" role="progressbar" aria-valuenow="{{ enrollment.progress }}" aria-valuemin="0" aria-valuemax="100">
+                                            aria-valuenow="{{ enrollment.progress }}" aria-valuemin="0" aria-valuemax="100">
+                                            {{ enrollment.progress }}%
+                                        </div>
+                                    </div>
+                                    <p class="card-text">
+                                        <small class="text-muted">Catégorie: {{ enrollment.course.category.name }}</small><br>
+                                        <small class="text-muted">Mode: {{ enrollment.course.get_learning_mode_display }}</small>
+                                    </p>
+                                    <a href="{% url 'course_detail' enrollment.course.id %}" class="btn btn-primary">Continuer</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info" role="alert">
+                        <i class="bi bi-info-circle me-2"></i>Vous n'avez pas encore commencé de cours. 
+                        <a href="{% url 'course_list' %}" class="alert-link">Parcourir les cours disponibles</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Cours recommandés -->
+            <div class="card mb-4 shadow">
+                <div class="card-header bg-success text-white">
+                    <h3 class="card-title h5 mb-0"><i class="bi bi-lightbulb me-2"></i>Recommandés pour vous</h3>
+                </div>
+                <div class="card-body">
+                    {% if recommended_courses %}
+                    <div class="row">
+                        {% for course in recommended_courses %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card course-card h-100 shadow-sm">
+                                {% if course.image %}
+                                <img src="{{ course.image.url }}" class="card-img-top" alt="{{ course.title }}">
+                                {% else %}
+                                <div class="card-img-top bg-light text-center py-5">
+                                    <i class="bi bi-book" style="font-size: 3rem;"></i>
+                                </div>
+                                {% endif %}
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ course.title }}</h5>
+                                    <p class="card-text">{{ course.description|truncatechars:100 }}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        {% if course.is_free %}
+                                        <span class="badge bg-success">Gratuit</span>
+                                        {% else %}
+                                        <span class="badge bg-primary">{{ course.price }} €</span>
+                                        {% endif %}
+                                        <span class="badge bg-secondary">{{ course.get_difficulty_display }}</span>
+                                    </div>
+                                </div>
+                                <div class="card-footer bg-white border-top-0">
+                                    <a href="{% url 'course_detail' course.id %}" class="btn btn-outline-primary w-100">Voir détails</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info" role="alert">
+                        <i class="bi bi-info-circle me-2"></i>Aucun cours recommandé pour le moment.
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'course_list' %}" class="btn btn-outline-success">Voir tous les cours</a>
+                </div>
+            </div>
+            
+            <!-- Cours terminés -->
+            <div class="card mb-4 shadow">
+                <div class="card-header bg-secondary text-white">
+                    <h3 class="card-title h5 mb-0"><i class="bi bi-check-circle me-2"></i>Mes cours terminés</h3>
+                </div>
+                <div class="card-body">
+                    {% if completed_courses %}
+                    <div class="list-group">
+                        {% for enrollment in completed_courses %}
+                        <a href="{% url 'course_detail' enrollment.course.id %}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">{{ enrollment.course.title }}</h5>
+                                <span class="badge bg-success rounded-pill">Terminé</span>
+                            </div>
+                            <p class="mb-1">{{ enrollment.course.description|truncatechars:150 }}</p>
+                            <small class="text-muted">
+                                <i class="bi bi-calendar me-1"></i>Terminé le {{ enrollment.enrolled_at|date:"d/m/Y" }}
+                            </small>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info" role="alert">
+                        <i class="bi bi-info-circle me-2"></i>Vous n'avez pas encore terminé de cours.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

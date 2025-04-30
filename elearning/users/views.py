@@ -14,6 +14,7 @@ from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.contrib.auth import login
+from django.views.generic import TemplateView
 
 from .models import (
     Person, Preferences, Interest, AcademicBackground, FieldOfStudy,
@@ -243,3 +244,13 @@ class PersonListView(LoginRequiredMixin, ListView):
         else:
             # Les utilisateurs normaux ne peuvent voir que leur propre profil
             return Person.objects.filter(user=self.request.user)
+
+class DashboardView(LoginRequiredMixin, TemplateView):
+    template_name = 'users/dashboard.html'
+    login_url = 'login'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['user'] = self.request.user
+        # Add any other context data you want to display on the dashboard
+        return context

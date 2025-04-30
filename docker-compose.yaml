@@ -1,19 +1,30 @@
 services:
   app:
-    build: .
+    build: ./elearning
     environment:
       POSTGRES_HOST: db
       POSTGRES_PORT: 5432
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
       POSTGRES_DB: elearning_db
+      DJANGO_SETTINGS_MODULE: elearning.settings
+      PYTHONPATH: /app
+      SECRET_KEY: test123
+      
     volumes:
-      - .:/app
+      - ./elearning:/app
+      - static_volume:/app/elearning/staticfiles
+      - media_volume:/app/elearning/media
     ports:
       - "8000:8000"
     depends_on:
       - db
-    command: sh -c "cd elearning && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    command: >
+      sh -c "
+             python manage.py makemigrations &&
+             python manage.py migrate &&
+             python manage.py collectstatic --noinput --clear &&
+             python manage.py runserver 0.0.0.0:8000"
   
   db:
     image: postgres:14
@@ -38,3 +49,5 @@ services:
 
 volumes:
   pg_data:
+  static_volume:
+  media_volume:

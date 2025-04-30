@@ -6,6 +6,8 @@ from .views import (
     LessonDetailView, MarkLessonCompletedView
 )
 
+print("\n=== Loading Courses URLs ===")
+
 urlpatterns = [
     path('dashboard/', DashboardView.as_view(), name='dashboard'),
     path('', CourseListView.as_view(), name='course_list'),
@@ -15,3 +17,8 @@ urlpatterns = [
     path('lesson/<int:pk>/', LessonDetailView.as_view(), name='lesson_detail'),
     path('lesson/<int:lesson_pk>/complete/', MarkLessonCompletedView.as_view(), name='mark_lesson_completed'),
 ]
+
+print("Courses URLs patterns:")
+for pattern in urlpatterns:
+    print(f"- {pattern.pattern} -> {pattern.name}")
+print("=== Courses URLs loaded ===\n")

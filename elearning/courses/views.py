@@ -4,12 +4,38 @@ from django.shortcuts import render
 # courses/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
-from django.views.generic import ListView, DetailView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.db.models import Q
-from .models import Course, Category, Enrollment, Lesson
+from django.urls import reverse_lazy, reverse
+from .models import Course, Category, Enrollment, Lesson, LearningPath
 from .forms import CourseFilterForm
+from django.http import JsonResponse
+import requests
+import json
+import os
+import logging
+
+logger = logging.getLogger(__name__)
+
+def convert_level_to_number(level):
+    """
+    Convertit le niveau textuel en nombre (1-5)
+    Débutant -> 1
+    Junior -> 2
+    Intermédiaire -> 3
+    Senior -> 4
+    Expert -> 5
+    """
+    level_mapping = {
+        'débutant': 1,
+        'junior': 2,
+        'intermédiaire': 3,
+        'senior': 4,
+        'expert': 5
+    }
+    return level_mapping.get(level.lower(), 1)
 
 class DashboardView(LoginRequiredMixin, View):
     template_name = 'courses/dashboard.html'
@@ -277,3 +303,133 @@ class MarkLessonCompletedView(LoginRequiredMixin, View):
             return redirect('lesson_detail', pk=next_lesson.pk)
         else:
             return redirect('course_detail', pk=course.pk)
+
+class GenerateLearningPathView(LoginRequiredMixin, View):
+    template_name = 'courses/generate_learning_path.html'
+
+    def get(self, request):
+        # Vérifier si l'utilisateur a un profil
+        if not hasattr(request.user, 'person_profile'):
+            return redirect('create_profile')
+        
+        return render(request, self.template_name)
+
+    def post(self, request):
+        try:
+            # Récupérer les données du formulaire
+            subject = request.POST.get('subject')
+            interests = json.loads(request.POST.get('interests', '[]'))
+            
+            # Vérifier que la matière est sélectionnée
+            if not subject:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Veuillez sélectionner une matière'
+                })
+
+            # Vérifier qu'au moins un centre d'intérêt est sélectionné
+            if not interests:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Veuillez sélectionner au moins un centre d\'intérêt'
+                })
+
+            # Convertir le niveau textuel en numérique
+            user_level = convert_level_to_number(request.user.person_profile.predicted_level)
+
+            # Préparer les données pour l'API
+            user_data = {
+                'user_id': request.user.id,
+                'level': user_level,
+                'subject': subject,
+                'interests': interests
+            }
+
+            # Appel à l'API pour générer le parcours
+            api_url = os.environ.get('FLASK_API_URL', 'http://flask_api:5000') + '/api/generate-learning-path'
+            logger.info(f"Tentative de connexion à l'API: {api_url}")
+            logger.info(f"Données envoyées à l'API: {user_data}")
+
+            response = requests.post(api_url, json={'user_data': user_data})
+            
+            if response.status_code == 200:
+                result = response.json()
+                if result.get('success'):
+                    learning_path_data = result.get('learning_path')
+                    
+                    # Sauvegarder le parcours dans la base de données
+                    learning_path = LearningPath.objects.create(
+                        user=request.user,
+                        language=learning_path_data['language'],
+                        level=learning_path_data['level'],
+                        interests=learning_path_data['interests'],
+                        modules=learning_path_data['modules']
+                    )
+                    
+                    # Sauvegarder le parcours généré dans la session
+                    request.session['learning_path'] = learning_path_data
+                    return JsonResponse({
+                        'success': True,
+                        'message': 'Parcours généré et sauvegardé avec succès!',
+                        'redirect_url': reverse('learning_path_detail')
+                    })
+                else:
+                    return JsonResponse({
+                        'success': False,
+                        'error': result.get('error', 'Erreur lors de la génération du parcours')
+                    })
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Erreur de communication avec l\'API'
+                })
+
+        except Exception as e:
+            logger.error(f"Erreur lors de la génération du parcours: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': 'Une erreur est survenue lors de la génération du parcours'
+            })
+
+class CourseCreateView(LoginRequiredMixin, CreateView):
+    model = Course
+    template_name = 'courses/course_form.html'
+    fields = ['title', 'description', 'category', 'difficulty', 'learning_mode', 'is_free']
+    success_url = reverse_lazy('course_list')
+
+    def form_valid(self, form):
+        form.instance.instructor = self.request.user.get_full_name() or self.request.user.username
+        messages.success(self.request, 'Cours créé avec succès!')
+        return super().form_valid(form)
+
+class CourseUpdateView(LoginRequiredMixin, UpdateView):
+    model = Course
+    template_name = 'courses/course_form.html'
+    fields = ['title', 'description', 'category', 'difficulty', 'learning_mode', 'is_free']
+    success_url = reverse_lazy('course_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Cours mis à jour avec succès!')
+        return super().form_valid(form)
+
+class CourseDeleteView(LoginRequiredMixin, DeleteView):
+    model = Course
+    template_name = 'courses/course_confirm_delete.html'
+    success_url = reverse_lazy('course_list')
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Cours supprimé avec succès!')
+        return super().delete(request, *args, **kwargs)
+
+class LearningPathDetailView(LoginRequiredMixin, View):
+    template_name = 'courses/learning_path_detail.html'
+
+    def get(self, request):
+        # Récupérer le parcours d'apprentissage depuis la session
+        learning_path = request.session.get('learning_path')
+        
+        if not learning_path:
+            messages.warning(request, "Aucun parcours d'apprentissage trouvé.")
+            return redirect('generate_learning_path')
+        
+        return render(request, self.template_name, {'learning_path': learning_path})

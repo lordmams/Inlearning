@@ -80,3 +80,19 @@ class Lesson(models.Model):
     
     def __str__(self):
         return f"{self.course.title} - {self.title}"
+
+class LearningPath(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='learning_paths', verbose_name="Utilisateur")
+    language = models.CharField(max_length=50, verbose_name="Langage")
+    level = models.IntegerField(verbose_name="Niveau")
+    interests = models.JSONField(verbose_name="Centres d'intérêt")
+    modules = models.JSONField(verbose_name="Modules")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
+    
+    class Meta:
+        verbose_name = "Parcours d'apprentissage"
+        verbose_name_plural = "Parcours d'apprentissage"
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"Parcours {self.language} - {self.user.username}"

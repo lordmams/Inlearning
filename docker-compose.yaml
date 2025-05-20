@@ -10,6 +10,7 @@ services:
       DJANGO_SETTINGS_MODULE: elearning.settings
       PYTHONPATH: /app
       SECRET_KEY: test123
+      FLASK_API_URL: http://flask_api:5000
       
     volumes:
       - ./elearning:/app
@@ -19,6 +20,7 @@ services:
       - "8000:8000"
     depends_on:
       - db
+      - flask_api
     command: >
       sh -c "
              python manage.py makemigrations &&
@@ -26,6 +28,17 @@ services:
              python manage.py collectstatic --noinput --clear &&
              python manage.py runserver 0.0.0.0:8000"
   
+  flask_api:
+    build: ./learning_platform
+    volumes:
+      - ./learning_platform:/app
+    ports:
+      - "5000:5000"
+    environment:
+      - PYTHONPATH=/app
+    depends_on:
+      - db
+
   db:
     image: postgres:14
     environment:

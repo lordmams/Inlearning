@@ -18,6 +18,7 @@ class Person(models.Model):
     email = models.EmailField(verbose_name="Adresse e-mail")
     phone = models.CharField(max_length=20, blank=True, verbose_name="Numéro de téléphone")
     profile_picture = models.ImageField(upload_to='profile_pics', blank=True, null=True, verbose_name="Photo de profil")
+    predicted_level = models.CharField(max_length=50, blank=True, null=True, verbose_name="Niveau prédit")
 
     def __str__(self):
         return self.name
@@ -75,8 +76,8 @@ class FieldOfStudy(models.Model):
         return f"{self.field_name} à {self.institution}"
 
 class ProfessionalBackground(models.Model):
-    person = models.OneToOneField(Person, on_delete=models.CASCADE, related_name='professional_background')
-    total_experience_years = models.PositiveIntegerField(verbose_name="Nombre d'années d'expérience professionnelle")
+    person = models.OneToOneField(Person, on_delete=models.CASCADE)
+    total_experience_years = models.IntegerField(verbose_name="Années d'expérience totale", null=True, blank=True)
 
     def __str__(self):
         return f"Expérience professionnelle de {self.person.name}"

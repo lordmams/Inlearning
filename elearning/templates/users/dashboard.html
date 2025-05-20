@@ -9,6 +9,12 @@
                 <div class="card-body">
                     <h5 class="card-title">Profil</h5>
                     <p class="card-text">Bienvenue, {{ user.get_full_name|default:user.username }}!</p>
+                    {% if predicted_level %}
+                        <div class="alert alert-info">
+                            <i class="bi bi-graph-up me-2"></i>
+                            <strong>Votre niveau:</strong> {{ predicted_level }}
+                        </div>
+                    {% endif %}
                     <a href="{% url 'create_profile' %}" class="btn btn-primary">Gérer mon profil</a>
                 </div>
             </div>

@@ -13,7 +13,11 @@ from models.parcours_generation.recommender import recommend_courses
 from models.parcours_generation.preprocessing import preprocess_courses
 from models.parcours_generation.filtering import filter_courses
 from models.parcours_generation.sequencing import order_courses
-from models.search_engine.app import recherche_semantique
+import anthropic
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -27,6 +31,33 @@ from models.course_pipeline.course_classifier import CourseClassifier, CATEGORIE
 
 app = Flask(__name__)
 CORS(app)
+
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
+logger.info(f"ANTHROPIC_API_KEY loaded: {'Yes' if ANTHROPIC_API_KEY else 'No'}")
+logger.info(f"ANTHROPIC_API_KEY length: {len(ANTHROPIC_API_KEY) if ANTHROPIC_API_KEY else 0}")
+
+def call_claude_api(prompt):
+    if not ANTHROPIC_API_KEY:
+        logger.error("ANTHROPIC_API_KEY is not set")
+        return "Clé API Claude manquante (ANTHROPIC_API_KEY non définie)."
+    logger.info("Attempting to create Anthropic client...")
+    client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+    try:
+        logger.info("Sending request to Claude API...")
+        response = client.messages.create(
+            model="claude-3-7-sonnet-20250219",
+            max_tokens=512,
+            temperature=0.7,
+            messages=[
+                {"role": "user", "content": prompt}
+            ]
+        )
+        logger.info("Received response from Claude API")
+        # Pour la version anthropic>=0.7.7
+        return response.content[0].text if hasattr(response, "content") else str(response)
+    except Exception as e:
+        logger.error(f"Error calling Claude API: {str(e)}")
+        return f"Erreur lors de l'appel à Claude : {e}"
 
 def load_models():
     models_dir = Path(__file__).parent.parent / 'models'
@@ -285,46 +316,71 @@ def generate_learning_path():
             }), 404
 
         # Recommander les cours
-        recommended_courses = recommend_courses(user_profile, filtered_courses, top_k=10)
+        recommended_courses = recommend_courses(user_profile, filtered_courses, top_k=15)
 
-        # Organiser les cours en modules
-        modules = []
-        current_level = 1
-        current_module = {
-            'title': f'Module {current_level}: Introduction à {programming_language}',
-            'level': user_level,
-            'courses': []
-        }
+        # Préparer le prompt pour Claude
+        prompt = f"""En tant qu'expert en enseignement de la programmation, analyse et organise les cours suivants pour créer un parcours d'apprentissage progressif en {programming_language}.
+        
+Cours disponibles:
+{json.dumps(recommended_courses, indent=2, ensure_ascii=False)}
 
-        for course in recommended_courses:
-            course_level = course.get('niveau', 1)
-            
-            # Si le niveau change significativement, créer un nouveau module
-            if course_level > current_level + 1:
-                if current_module['courses']:
-                    modules.append(current_module)
-                current_level = course_level
-                current_module = {
-                    'title': f'Module {current_level}: {programming_language} Avancé',
-                    'level': 'advanced' if current_level > 2 else 'intermediate',
-                    'duration': '3 semaines',
-                    'courses': []
-                }
-            
-          
-            # Ajouter le cours au module actuel
-            current_module['courses'].append({
-                'title': course.get('titre', ''),
-                'description': course.get('description', ''),
-                'category': course.get('categories', ''),
-                'level': course.get('niveau', 1),
-                'url': course.get('lien', ''),
-                
-            })
+IMPORTANT: Ta réponse DOIT être UNIQUEMENT au format JSON valide, sans aucun texte supplémentaire avant ou après.
 
-        # Ajouter le dernier module s'il contient des cours
-        if current_module['courses']:
-            modules.append(current_module)
+Pour chaque cours, tu dois:
+1. Vérifier et améliorer la description si elle est trop courte ou manquante
+2. S'assurer que chaque cours a une URL valide
+3. Organiser les cours dans un ordre logique de progression
+4. Créer des modules thématiques cohérents
+5. Ajouter des prérequis pour chaque module
+6. Suggérer des ressources complémentaires si nécessaire
+
+Format JSON strict attendu (réponds UNIQUEMENT avec ce format, sans commentaires ni texte supplémentaire):
+{{
+    "modules": [
+        {{
+            "title": "Titre du module",
+            "description": "Description détaillée du module",
+            "prerequisites": ["prérequis 1", "prérequis 2"],
+            "level": "niveau",
+            "duration": "durée estimée",
+            "courses": [
+                {{
+                    "title": "Titre du cours",
+                    "description": "Description améliorée",
+                    "url": "lien vers la ressource",
+                    "category": "catégorie",
+                    "level": "niveau",
+                    "additional_resources": ["ressource 1", "ressource 2"]
+                }}
+            ]
+        }}
+    ]
+}}
+
+Rappel: Ta réponse doit être UNIQUEMENT le JSON ci-dessus, sans aucun texte supplémentaire."""
+
+        # Appeler Claude pour analyser et organiser les cours
+        client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+        response = client.messages.create(
+            model="claude-3-7-sonnet-20250219",
+            max_tokens=4000,
+            temperature=0.7,
+            system="Tu es un expert en pédagogie et en programmation. Ta tâche est d'organiser des cours dans un ordre logique et progressif, en enrichissant les descriptions et en ajoutant des ressources complémentaires pertinentes. IMPORTANT: Tu dois TOUJOURS répondre en JSON valide, sans aucun texte supplémentaire.",
+            messages=[
+                {"role": "user", "content": prompt}
+            ]
+        )
+
+        # Parser la réponse de Claude
+        try:
+            claude_response = json.loads(response.content[0].text)
+            modules = claude_response.get('modules', [])
+        except json.JSONDecodeError:
+            logger.error("Erreur lors du parsing de la réponse de Claude")
+            return jsonify({
+                'success': False,
+                'error': 'Erreur lors de l\'analyse des cours'
+            }), 500
 
         # Générer le parcours d'apprentissage
         learning_path = {
@@ -348,86 +404,204 @@ def generate_learning_path():
             'error': str(e)
         }), 400
 
-@app.route('/api/semantic-search', methods=['POST'])
-def semantic_search():
+@app.route('/api/improve-learning-path', methods=['POST'])
+def improve_learning_path():
     try:
         data = request.get_json()
-        if not data or 'query' not in data:
-            return jsonify({
-                'success': False,
-                'error': 'La requête de recherche est requise'
-            }), 400
+        learning_path = data.get('learning_path')
+        if not learning_path:
+            return jsonify({'success': False, 'error': 'Parcours d\'apprentissage manquant'}), 400
 
-        # Charger les cours depuis le fichier JSON
-        courses_file =  Path(__file__).parent.parent / 'data' / 'course_pipeline' / 'courses.json'
-        with open(courses_file, 'r', encoding='utf-8') as f:
-            courses = json.load(f)
+        # Préparer le prompt pour Claude
+        prompt = f"""En tant que conseiller pédagogique, analyse ce parcours d'apprentissage et propose des améliorations :
 
-        # Convertir les cours en DataFrame pour la recherche sémantique
-        df = pd.DataFrame(courses)
-        
-        # Adapter les noms de colonnes pour compatibilité avec le script de recherche
-        df = df.rename(columns={
-            'title': 'titre',
-            'content': 'contenus',
-            'category': 'categorie',
-            'level': 'niveau',
-            'duration': 'duree',
-            'url': 'lien'
-        })
+Parcours actuel :
+- Langage : {learning_path.get('language')}
+- Niveau : {learning_path.get('level')}
+- Centres d'intérêt : {', '.join(learning_path.get('interests', []))}
 
-        # S'assurer que 'contenus' est bien un dict avec 'paragraphs'
-        if 'contenus' in df.columns:
-            df['contenus'] = df['contenus'].apply(lambda c: c if isinstance(c, dict) else {'paragraphs': []})
-        else:
-            df['contenus'] = [{} for _ in range(len(df))]
+Modules :
+{json.dumps(learning_path.get('modules', []), indent=2, ensure_ascii=False)}
 
-        # Construction du texte complet
-        df["texte_complet"] = df.apply(
-            lambda row: f"{row.get('titre', '')} {row.get('description', '')} {' '.join(row.get('contenus', {}).get('paragraphs', []))}",
-            axis=1
-        )
+Je souhaite que tu analyses l'ensemble du parcours et que tu :
+1. Évalues la progression logique globale des cours
+4. Identifies les prérequis manquants dans l'ensemble
 
-        # Initialiser le modèle de transformation de phrases
-        from sentence_transformers import SentenceTransformer
-        model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
-        
-        # Encoder les textes des cours
-        embeddings = model.encode(df["texte_complet"].tolist(), show_progress_bar=True)
+Format de réponse souhaité :
+- Évaluation globale : [analyse de la progression d'ensemble]
+- Ajustements suggérés : [liste des changements recommandés dans l'organisation]
+- Cours complémentaires : [liste de suggestions pour enrichir le parcours]
+- Prérequis à ajouter : [liste des prérequis manquants]
 
-        # Effectuer la recherche sémantique
-        results = recherche_semantique(
-            df=df,
-            embeddings=embeddings,
-            model=model,
-            requete=data['query'],
-            n_results=data.get('n_results', 10),
-            min_score=data.get('min_score', 0.3)
-        )
+Merci de garder les suggestions concises et pratiques."""
 
-        # Formater les résultats
-        formatted_results = []
-        for _, row in results.iterrows():
-            formatted_results.append({
-                'title': row.get('titre', ''),
-                'description': row.get('description', ''),
-                'category': row.get('categorie', ''),
-                'level': row.get('niveau', ''),
-                'duration': row.get('duree', ''),
-                'url': row.get('lien', ''),
-                'score': float(row['similarite'])
-            })
+        # Appel à l'API Claude
+        improvements = call_claude_api(prompt)
 
         return jsonify({
             'success': True,
-            'results': formatted_results
+            'improvements': improvements,
+            'original_path': learning_path
+        })
+    except Exception as e:
+        logger.error(f"Error in improve-learning-path: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/claude-advice', methods=['POST'])
+def claude_advice_api():
+    try:
+        data = request.get_json()
+        modules = data.get('modules')
+        if not modules:
+            return jsonify({'success': False, 'error': 'Modules manquants'}), 400
+
+        # Préparer le prompt pour Claude
+        prompt = f"""En tant que conseiller pédagogique, analyse ces modules et propose des conseils pour enrichir le parcours d'apprentissage :
+
+Modules actuels :
+{json.dumps(modules, indent=2, ensure_ascii=False)}
+
+IMPORTANT: Ta réponse DOIT être UNIQUEMENT au format JSON valide, sans aucun texte supplémentaire avant ou après.
+
+Pour chaque suggestion, tu dois :
+1. Expliquer la pertinence du sujet en lien avec le parcours
+2. Préciser le niveau de difficulté
+3. Fournir des ressources gratuites en ligne
+4. Limiter les suggestions à 3-4 sujets maximum
+
+Format JSON strict attendu (réponds UNIQUEMENT avec ce format, sans commentaires ni texte supplémentaire) :
+{{
+    "suggestions": [
+        {{
+            "title": "Titre du sujet suggéré",
+            "relevance": "Explication de la pertinence",
+            "level": "débutant/intermédiaire/avancé",
+            "resources": [
+                {{
+                    "name": "Nom de la ressource",
+                    "url": "Lien vers la ressource",
+                    "type": "Type de ressource (site web, vidéo, documentation, etc.)"
+                }}
+            ]
+        }}
+    ]
+}}
+
+Rappel: Ta réponse doit être UNIQUEMENT le JSON ci-dessus, sans aucun texte supplémentaire."""
+
+        # Appeler Claude pour analyser et organiser les cours
+        client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+        response = client.messages.create(
+            model="claude-3-7-sonnet-20250219",
+            max_tokens=4000,
+            temperature=0.7,
+            system="Tu es un expert en pédagogie et en programmation. Ta tâche est de suggérer des sujets complémentaires pertinents pour enrichir un parcours d'apprentissage. IMPORTANT: Tu dois TOUJOURS répondre en JSON valide, sans aucun texte supplémentaire.",
+            messages=[
+                {"role": "user", "content": prompt}
+            ]
+        )
+
+        # Parser la réponse de Claude
+        try:
+            claude_response = json.loads(response.content[0].text)
+            suggestions = claude_response.get('suggestions', [])
+        except json.JSONDecodeError:
+            logger.error("Erreur lors du parsing de la réponse de Claude")
+            return jsonify({
+                'success': False,
+                'error': 'Erreur lors de l\'analyse des suggestions'
+            }), 500
+
+        return jsonify({
+            'success': True,
+            'suggestions': suggestions
         })
 
     except Exception as e:
-        logger.error(f"Erreur lors de la recherche sémantique: {str(e)}")
+        logger.error(f"Error in claude-advice: {str(e)}")
         return jsonify({
             'success': False,
-            'error': 'Une erreur est survenue lors de la recherche'
+            'error': str(e)
+        }), 500
+
+@app.route('/api/generate-quiz', methods=['POST'])
+def generate_quiz():
+    try:
+        data = request.json
+        learning_path = data.get('learning_path')
+        
+        if not learning_path:
+            return jsonify({
+                'success': False,
+                'error': 'Parcours d\'apprentissage manquant'
+            }), 400
+
+        # Initialiser le client Anthropic
+        client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+
+        # Préparer le prompt pour Claude
+        prompt = f"""En tant qu'expert en pédagogie, génère un quiz d'évaluation pour le parcours d'apprentissage suivant.
+        IMPORTANT: Réponds UNIQUEMENT en format JSON valide, sans aucun autre texte.
+
+        Parcours d'apprentissage:
+        Langage: {learning_path['language']}
+        Niveau: {learning_path['level']}
+        Modules: {json.dumps(learning_path['modules'], ensure_ascii=False)}
+
+        Format JSON strict attendu:
+        {{
+            "title": "Titre du quiz",
+            "description": "Description du quiz",
+            "passing_score": 70,
+            "questions": [
+                {{
+                    "text": "Question",
+                    "points": 1,
+                    "answers": [
+                        {{
+                            "text": "Réponse",
+                            "is_correct": true/false
+                        }}
+                    ]
+                }}
+            ]
+        }}
+
+        Règles pour le quiz:
+        1. Crée 5-7 questions pertinentes couvrant les concepts clés du parcours
+        2. Chaque question doit avoir 4 réponses possibles
+        3. Une seule réponse correcte par question
+        4. Les questions doivent être progressives en difficulté
+        5. Inclus des questions sur la théorie et la pratique
+        6. Assure-toi que les réponses sont claires et sans ambiguïté
+        7. Le score de passage est de 70%
+
+        IMPORTANT: Réponds UNIQUEMENT en format JSON valide."""
+
+        # Appeler Claude
+        response = client.messages.create(
+            model="claude-3-sonnet-20240229",
+            max_tokens=4000,
+            temperature=0.7,
+            system="Tu es un expert en pédagogie qui crée des quiz d'évaluation. Réponds UNIQUEMENT en format JSON valide.",
+            messages=[
+                {"role": "user", "content": prompt}
+            ]
+        )
+
+        # Extraire et parser la réponse JSON
+        quiz_data = json.loads(response.content[0].text)
+        
+        return jsonify({
+            'success': True,
+            'quiz': quiz_data
+        })
+
+    except Exception as e:
+        logger.error(f"Erreur lors de la génération du quiz: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
         }), 500
 
 if __name__ == '__main__':

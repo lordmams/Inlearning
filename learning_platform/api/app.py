@@ -9,6 +9,11 @@ import numpy as np
 import pandas as pd
 import logging
 import json
+from models.parcours_generation.recommender import recommend_courses
+from models.parcours_generation.preprocessing import preprocess_courses
+from models.parcours_generation.filtering import filter_courses
+from models.parcours_generation.sequencing import order_courses
+from models.search_engine.app import recherche_semantique
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -19,10 +24,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Import the course classifier and parcours generation modules
 from models.course_pipeline.course_classifier import CourseClassifier, CATEGORIES
-from models.parcours_generation.recommender import recommend_courses
-from models.parcours_generation.preprocessing import preprocess_courses
-from models.parcours_generation.filtering import filter_courses
-from models.parcours_generation.sequencing import order_courses
 
 app = Flask(__name__)
 CORS(app)
@@ -346,6 +347,88 @@ def generate_learning_path():
             'success': False,
             'error': str(e)
         }), 400
+
+@app.route('/api/semantic-search', methods=['POST'])
+def semantic_search():
+    try:
+        data = request.get_json()
+        if not data or 'query' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'La requête de recherche est requise'
+            }), 400
+
+        # Charger les cours depuis le fichier JSON
+        courses_file =  Path(__file__).parent.parent / 'data' / 'course_pipeline' / 'courses.json'
+        with open(courses_file, 'r', encoding='utf-8') as f:
+            courses = json.load(f)
+
+        # Convertir les cours en DataFrame pour la recherche sémantique
+        df = pd.DataFrame(courses)
+        
+        # Adapter les noms de colonnes pour compatibilité avec le script de recherche
+        df = df.rename(columns={
+            'title': 'titre',
+            'content': 'contenus',
+            'category': 'categorie',
+            'level': 'niveau',
+            'duration': 'duree',
+            'url': 'lien'
+        })
+
+        # S'assurer que 'contenus' est bien un dict avec 'paragraphs'
+        if 'contenus' in df.columns:
+            df['contenus'] = df['contenus'].apply(lambda c: c if isinstance(c, dict) else {'paragraphs': []})
+        else:
+            df['contenus'] = [{} for _ in range(len(df))]
+
+        # Construction du texte complet
+        df["texte_complet"] = df.apply(
+            lambda row: f"{row.get('titre', '')} {row.get('description', '')} {' '.join(row.get('contenus', {}).get('paragraphs', []))}",
+            axis=1
+        )
+
+        # Initialiser le modèle de transformation de phrases
+        from sentence_transformers import SentenceTransformer
+        model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
+        
+        # Encoder les textes des cours
+        embeddings = model.encode(df["texte_complet"].tolist(), show_progress_bar=True)
+
+        # Effectuer la recherche sémantique
+        results = recherche_semantique(
+            df=df,
+            embeddings=embeddings,
+            model=model,
+            requete=data['query'],
+            n_results=data.get('n_results', 10),
+            min_score=data.get('min_score', 0.3)
+        )
+
+        # Formater les résultats
+        formatted_results = []
+        for _, row in results.iterrows():
+            formatted_results.append({
+                'title': row.get('titre', ''),
+                'description': row.get('description', ''),
+                'category': row.get('categorie', ''),
+                'level': row.get('niveau', ''),
+                'duration': row.get('duree', ''),
+                'url': row.get('lien', ''),
+                'score': float(row['similarite'])
+            })
+
+        return jsonify({
+            'success': True,
+            'results': formatted_results
+        })
+
+    except Exception as e:
+        logger.error(f"Erreur lors de la recherche sémantique: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': 'Une erreur est survenue lors de la recherche'
+        }), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

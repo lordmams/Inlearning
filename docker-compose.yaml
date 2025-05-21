@@ -17,7 +17,7 @@ services:
       - static_volume:/app/elearning/staticfiles
       - media_volume:/app/elearning/media
     ports:
-      - "8000:8000"
+      - "80:8000"
     depends_on:
       - db
       - flask_api

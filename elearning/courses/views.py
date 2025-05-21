@@ -371,7 +371,7 @@ class GenerateLearningPathView(LoginRequiredMixin, View):
                     return JsonResponse({
                         'success': True,
                         'message': 'Parcours généré et sauvegardé avec succès!',
-                        'redirect_url': reverse('learning_path_detail')
+                        'redirect_url': reverse('learning_path_detail', kwargs={'path_id': learning_path.id})
                     })
                 else:
                     return JsonResponse({
@@ -424,12 +424,16 @@ class CourseDeleteView(LoginRequiredMixin, DeleteView):
 class LearningPathDetailView(LoginRequiredMixin, View):
     template_name = 'courses/learning_path_detail.html'
 
-    def get(self, request):
-        # Récupérer le parcours d'apprentissage depuis la session
-        learning_path = request.session.get('learning_path')
-        
-        if not learning_path:
-            messages.warning(request, "Aucun parcours d'apprentissage trouvé.")
-            return redirect('generate_learning_path')
-        
-        return render(request, self.template_name, {'learning_path': learning_path})
+    def get(self, request, path_id):
+        # Récupérer le parcours d'apprentissage depuis la base de données
+        try:
+            learning_path = LearningPath.objects.get(id=path_id, user=request.user)
+            return render(request, self.template_name, {'learning_path': {
+                'language': learning_path.language,
+                'level': learning_path.level,
+                'interests': learning_path.interests,
+                'modules': learning_path.modules
+            }})
+        except LearningPath.DoesNotExist:
+            messages.warning(request, "Parcours d'apprentissage non trouvé.")
+            return redirect('dashboard')

@@ -87,17 +87,22 @@ def load_data(json_file):
     df = pd.DataFrame(data)
     
     # Construction du texte complet et prétraitement
-    df["texte_complet"] = df.apply(
-        lambda row: f"{row.get('titre', '')} {row.get('description', '')} {' '.join(row.get('contenus', {}).get('paragraphs', []))}",
-        axis=1
-    )
+    def build_full_text(row):
+        title = row.get('title', '')
+        description = row.get('description', '')
+        content = row.get('content', {})
+        paragraphs = content.get('paragraphs', []) if isinstance(content, dict) else []
+        return f"{title} {description} {' '.join(paragraphs)}"
+    
+    if 'title' in df.columns:
+        df["texte_complet"] = df.apply(build_full_text, axis=1)
     
     # Prétraitement des dates si elles existent
     if 'date_creation' in df.columns:
         df['date_creation'] = pd.to_datetime(df['date_creation'], errors='coerce')
     
     # Nettoyer les données
-    df = df.dropna(subset=["titre", "texte_complet"])
+    df = df.dropna(subset=["title", "texte_complet"])
     df = df[df["texte_complet"].str.lower().str.strip() != "nan nan"]
     
     # Ajouter le nombre de mots pour analyse
@@ -139,7 +144,7 @@ def classer_cours_avance(df):
         else:
             return "Autres"
     
-    df["categorie"] = df["texte_complet"].apply(classification_avancee)
+    df["category"] = df["texte_complet"].apply(classification_avancee)
     
     # Analyse des mots-clés pour chaque catégorie (pour la sous-catégorisation)
     def extraire_mots_cles(text, min_length=3):
@@ -203,9 +208,9 @@ def classer_cours_avance(df):
         else:
             return "Intermédiaire"
     
-    # Appliquer l'estimation du niveau si la colonne 'niveau' n'existe pas
-    if 'niveau' not in df.columns or df['niveau'].isna().all():
-        df["niveau"] = df["texte_complet"].apply(estimer_niveau_difficulte)
+    # Appliquer l'estimation du niveau si la colonne 'level' n'existe pas
+    if 'level' not in df.columns or df['level'].isna().all():
+        df["level"] = df["texte_complet"].apply(estimer_niveau_difficulte)
     
     return df
 
@@ -276,7 +281,7 @@ def visualiser_clusters(df):
         x="x_tsne", 
         y="y_tsne", 
         color="cluster_name",
-        hover_data=["titre", "categorie", "sous_categorie", "niveau"],
+        hover_data=["title", "category", "sous_categorie", "level"],
         labels={"cluster_name": "Cluster"},
         title="Clustering des cours basé sur leur contenu (t-SNE)",
         color_discrete_sequence=px.colors.qualitative.Bold
@@ -296,9 +301,9 @@ def visualiser_categories(df):
         df, 
         x="x_tsne", 
         y="y_tsne", 
-        color="categorie",
+        color="category",
         symbol="sous_categorie",
-        hover_data=["titre", "niveau"],
+        hover_data=["title", "level"],
         title="Classification des cours par catégorie et sous-catégorie",
         color_discrete_sequence=px.colors.qualitative.Pastel
     )
@@ -354,14 +359,14 @@ def analyse_tendances(df):
     
     # Grouper par année et mois
     df['annee_mois'] = df['date_creation'].dt.strftime('%Y-%m')
-    cours_par_mois = df.groupby(['annee_mois', 'categorie']).size().reset_index(name='count')
+    cours_par_mois = df.groupby(['annee_mois', 'category']).size().reset_index(name='count')
     
     # Créer un graphique de tendances
     fig = px.line(
         cours_par_mois, 
         x='annee_mois', 
         y='count', 
-        color='categorie',
+        color='category',
         title='Évolution du nombre de cours par catégorie',
         labels={'count': 'Nombre de cours', 'annee_mois': 'Période'}
     )
@@ -369,8 +374,8 @@ def analyse_tendances(df):
     # Distribution par niveau
     niveau_fig = px.histogram(
         df, 
-        x='niveau', 
-        color='categorie',
+        x='level', 
+        color='category',
         title='Distribution des cours par niveau et catégorie',
         barmode='group'
     )
@@ -383,7 +388,7 @@ def analyser_longueur_cours(df):
     
     fig.add_trace(go.Box(
         y=df['nombre_mots'],
-        x=df['categorie'],
+        x=df['category'],
         name='Distribution',
         boxmean=True,
         marker_color='lightseagreen'
@@ -402,11 +407,11 @@ def analyser_longueur_cours(df):
 def analyser_correlation_niveau_longueur(df):
     fig = px.box(
         df, 
-        x='niveau', 
+        x='level', 
         y='nombre_mots',
-        color='niveau',
+        color='level',
         title='Relation entre le niveau et la longueur du cours',
-        labels={'nombre_mots': 'Nombre de mots', 'niveau': 'Niveau du cours'}
+        labels={'nombre_mots': 'Nombre de mots', 'level': 'Niveau du cours'}
     )
     
     return fig
@@ -429,13 +434,13 @@ def main():
             ```json
             [
                 {
-                    "titre": "Titre du cours",
+                    "title": "Titre du cours",
                     "description": "Description du cours",
-                    "contenus": {
+                    "content": {
                         "paragraphs": ["paragraphe 1", "paragraphe 2"]
                     },
-                    "niveau": "Débutant/Intermédiaire/Avancé",
-                    "lien": "https://...",
+                    "level": "Débutant/Intermédiaire/Avancé",
+                    "url": "https://...",
                     "date_creation": "2023-01-15"
                 },
                 ...
@@ -485,14 +490,14 @@ def main():
                 with col_cat:
                     selected_categories = st.multiselect(
                         "Catégories",
-                        df["categorie"].unique().tolist(),
+                        df["category"].unique().tolist(),
                         default=[]
                     )
                 
                 with col_niv:
-                    selected_niveaux = st.multiselect(
+                    selected_levels = st.multiselect(
                         "Niveaux",
-                        df["niveau"].unique().tolist(),
+                        df["level"].unique().tolist(),
                         default=[]
                     )
                 
@@ -514,9 +519,9 @@ def main():
                 df_filtered = df.copy()
                 
                 if selected_categories:
-                    df_filtered = df_filtered[df_filtered["categorie"].isin(selected_categories)]
-                if selected_niveaux:
-                    df_filtered = df_filtered[df_filtered["niveau"].isin(selected_niveaux)]
+                    df_filtered = df_filtered[df_filtered["category"].isin(selected_categories)]
+                if selected_levels:
+                    df_filtered = df_filtered[df_filtered["level"].isin(selected_levels)]
                 if selected_sous_cat:
                     df_filtered = df_filtered[df_filtered["sous_categorie"].isin(selected_sous_cat)]
                 if selected_clusters:
@@ -535,7 +540,7 @@ def main():
                     st.markdown('<div class="metric-label">Cours sélectionnés</div>', unsafe_allow_html=True)
                 
                 with metric_col2:
-                    st.markdown(f'<div class="metric-value">{df_filtered["categorie"].nunique()}</div>', unsafe_allow_html=True)
+                    st.markdown(f'<div class="metric-value">{df_filtered["category"].nunique()}</div>', unsafe_allow_html=True)
                     st.markdown('<div class="metric-label">Catégories</div>', unsafe_allow_html=True)
                 
                 with metric_col3:
@@ -584,14 +589,14 @@ def main():
                 with col_cat:
                     search_categories = st.multiselect(
                         "Filtrer par catégorie",
-                        df["categorie"].unique().tolist(),
+                        df["category"].unique().tolist(),
                         default=[]
                     )
                 
                 with col_niv:
-                    search_niveaux = st.multiselect(
+                    search_levels = st.multiselect(
                         "Filtrer par niveau",
-                        df["niveau"].unique().tolist(),
+                        df["level"].unique().tolist(),
                         default=[]
                     )
             
@@ -600,9 +605,9 @@ def main():
                     # Filtrer d'abord selon les critères choisis
                     df_search = df.copy()
                     if search_categories:
-                        df_search = df_search[df_search["categorie"].isin(search_categories)]
-                    if search_niveaux:
-                        df_search = df_search[df_search["niveau"].isin(search_niveaux)]
+                        df_search = df_search[df_search["category"].isin(search_categories)]
+                    if search_levels:
+                        df_search = df_search[df_search["level"].isin(search_levels)]
                     
                     # Si des filtres ont été appliqués, recalculer les embeddings
                     if len(df_search) != len(df):
@@ -619,8 +624,8 @@ def main():
                     st.markdown(f"<div class='highlight'>Score moyen de pertinence: {avg_score:.2f}</div>", unsafe_allow_html=True)
                     
                     # Trier les résultats similaires par catégorie
-                    categories_similaires = resultats["categorie"].value_counts().reset_index()
-                    categories_similaires.columns = ["categorie", "count"]
+                    categories_similaires = resultats["category"].value_counts().reset_index()
+                    categories_similaires.columns = ["category", "count"]
                     
                     if len(categories_similaires) > 1:
                         col1, col2 = st.columns([2, 1])
@@ -630,20 +635,20 @@ def main():
                             cat_fig = px.pie(
                                 categories_similaires, 
                                 values="count", 
-                                names="categorie",
+                                names="category",
                                 hole=0.4
                             )
                             st.plotly_chart(cat_fig, use_container_width=True)
                         
                         with col2:
                             st.markdown("### Résultats par niveau")
-                            niveau_counts = resultats["niveau"].value_counts().reset_index()
-                            niveau_counts.columns = ["niveau", "count"]
+                            level_counts = resultats["level"].value_counts().reset_index()
+                            level_counts.columns = ["level", "count"]
                             niv_fig = px.bar(
-                                niveau_counts, 
-                                x="niveau", 
+                                level_counts, 
+                                x="level", 
                                 y="count",
-                                color="niveau"
+                                color="level"
                             )
                             st.plotly_chart(niv_fig, use_container_width=True)
                     
@@ -655,14 +660,14 @@ def main():
                             # En-tête avec score
                             col1, col2 = st.columns([3, 1])
                             with col1:
-                                st.markdown(f"### {row['titre']}")
+                                st.markdown(f"### {row['title']}")
                             with col2:
                                 st.markdown(f"<div class='highlight'>Score: {row['similarite']:.2f}</div>", unsafe_allow_html=True)
                             
                             # Métadonnées
                             st.markdown(f"""
-                            **Catégorie:** {row['categorie']} | **Sous-catégorie:** {row['sous_categorie']}  
-                            **Niveau:** {row.get('niveau', 'Non spécifié')} | **Cluster:** {row.get('cluster_name', 'Non classifié')}
+                            **Catégorie:** {row['category']} | **Sous-catégorie:** {row['sous_categorie']}  
+                            **Niveau:** {row.get('level', 'Non spécifié')} | **Cluster:** {row.get('cluster_name', 'Non classifié')}
                             """)
                             
                             # Description
@@ -671,9 +676,9 @@ def main():
                                 st.markdown(f"**Description:** {description}")
                             
                             # Lien vers le cours
-                            lien = str(row.get("lien", "") or "").strip()
-                            if lien:
-                                st.markdown(f"[Accéder au cours]({lien})", unsafe_allow_html=True)
+                            url = str(row.get("url", "") or "").strip()
+                            if url:
+                                st.markdown(f"[Accéder au cours]({url})", unsafe_allow_html=True)
                             
                             # Extrait du contenu avec mise en évidence des mots-clés de la requête
                             if "texte_complet" in row:
@@ -693,7 +698,7 @@ def main():
                     
                     # Option pour exporter les résultats
                     if st.button("Exporter les résultats en CSV"):
-                        csv = resultats[["titre", "categorie", "sous_categorie", "niveau", "similarite"]].to_csv(index=False)
+                        csv = resultats[["title", "category", "sous_categorie", "level", "similarite"]].to_csv(index=False)
                         st.download_button(
                             label="Télécharger le CSV",
                             data=csv,
@@ -709,15 +714,15 @@ def main():
             
             # Distribution des catégories
             st.markdown("### Distribution des cours par catégorie")
-            cat_dist = df["categorie"].value_counts().reset_index()
-            cat_dist.columns = ["categorie", "count"]
+            cat_dist = df["category"].value_counts().reset_index()
+            cat_dist.columns = ["category", "count"]
             
             fig_cat = px.bar(
                 cat_dist, 
-                x="categorie", 
+                x="category", 
                 y="count",
-                color="categorie",
-                labels={"count": "Nombre de cours", "categorie": "Catégorie"},
+                color="category",
+                labels={"count": "Nombre de cours", "category": "Catégorie"},
                 title="Répartition des cours par catégorie"
             )
             st.plotly_chart(fig_cat, use_container_width=True)
@@ -744,10 +749,10 @@ def main():
                 
                 fig_complexite = px.box(
                     df, 
-                    x="categorie", 
+                    x="category", 
                     y="complexite_lexicale",
-                    color="niveau",
-                    labels={"complexite_lexicale": "Complexité lexicale", "categorie": "Catégorie"},
+                    color="level",
+                    labels={"complexite_lexicale": "Complexité lexicale", "category": "Catégorie"},
                     title="Complexité lexicale par catégorie et niveau"
                 )
                 st.plotly_chart(fig_complexite, use_container_width=True)
@@ -756,7 +761,7 @@ def main():
             st.markdown("### Corrélation entre catégories et sous-catégories")
             
             # Créer une matrice pivot
-            pivot = pd.crosstab(df["categorie"], df["sous_categorie"])
+            pivot = pd.crosstab(df["category"], df["sous_categorie"])
             
             # Normaliser les valeurs par ligne
             pivot_norm = pivot.div(pivot.sum(axis=1), axis=0)
@@ -778,14 +783,14 @@ def main():
             # Sélectionner la catégorie pour le nuage de mots
             word_cloud_cat = st.selectbox(
                 "Sélectionnez une catégorie pour le nuage de mots",
-                ["Toutes les catégories"] + df["categorie"].unique().tolist()
+                ["Toutes les catégories"] + df["category"].unique().tolist()
             )
             
             # Filtrer selon la catégorie choisie
             if word_cloud_cat == "Toutes les catégories":
                 df_wordcloud = df.copy()
             else:
-                df_wordcloud = df[df["categorie"] == word_cloud_cat]
+                df_wordcloud = df[df["category"] == word_cloud_cat]
             
             # Générer le nuage de mots
             with st.spinner("Génération du nuage de mots en cours..."):
@@ -827,17 +832,17 @@ def main():
             with col1:
                 view_categories = st.multiselect(
                     "Filtrer par catégorie",
-                    df["categorie"].unique().tolist(),
+                    df["category"].unique().tolist(),
                     default=[],
                     key="view_categories"
                 )
 
             with col2:
-                view_niveaux = st.multiselect(
+                view_levels = st.multiselect(
                     "Filtrer par niveau",
-                    df["niveau"].unique().tolist(),
+                    df["level"].unique().tolist(),
                     default=[],
-                    key="view_niveaux"
+                    key="view_levels"
                 )
 
             with col3:
@@ -853,21 +858,21 @@ def main():
             df_view = df.copy()
             
             if view_categories:
-                df_view = df_view[df_view["categorie"].isin(view_categories)]
-            if view_niveaux:
-                df_view = df_view[df_view["niveau"].isin(view_niveaux)]
+                df_view = df_view[df_view["category"].isin(view_categories)]
+            if view_levels:
+                df_view = df_view[df_view["level"].isin(view_levels)]
             if view_sous_cat:
                 df_view = df_view[df_view["sous_categorie"].isin(view_sous_cat)]
             
             # Sélectionner les colonnes à afficher
-            colonnes_affichage = ["titre", "categorie", "sous_categorie", "niveau", "cluster_name"]
+            colonnes_affichage = ["title", "category", "sous_categorie", "level", "cluster_name"]
             if "date_creation" in df_view.columns:
                 colonnes_affichage.append("date_creation")
             
             # Option de recherche textuelle
             search_text = st.text_input("Rechercher par titre", "")
             if search_text:
-                df_view = df_view[df_view["titre"].str.contains(search_text, case=False, na=False)]
+                df_view = df_view[df_view["title"].str.contains(search_text, case=False, na=False)]
             
             # Afficher les données
             st.dataframe(

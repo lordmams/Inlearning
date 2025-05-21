@@ -10,8 +10,8 @@ RUN apt-get update && apt-get install -y \
 # Copier les fichiers de dépendances
 COPY requirements.txt .
 
-# Installer les dépendances Python
-RUN pip install --no-cache-dir -r requirements.txt
+# Installer les dépendances Python avec des options pour améliorer la fiabilité
+RUN pip install --no-cache-dir --timeout 1000 --retries 3 -r requirements.txt
 
 # Copier le reste des fichiers
 COPY . .

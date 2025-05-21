@@ -96,7 +96,7 @@
                                                 <p class="card-text">
                                                     <small class="text-muted">Créé le {{ path.created_at|date:"d/m/Y" }}</small>
                                                 </p>
-                                                <a href="{% url 'learning_path_detail' %}" class="btn btn-primary">
+                                                <a href="{% url 'learning_path_detail' path_id=path.id %}" class="btn btn-primary">
                                                     <i class="bi bi-book me-2"></i>Voir le parcours
                                                 </a>
                                             </div>

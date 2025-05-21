@@ -22,7 +22,7 @@ urlpatterns = [
     path('course/<int:pk>/update/', CourseUpdateView.as_view(), name='course_update'),
     path('course/<int:pk>/delete/', CourseDeleteView.as_view(), name='course_delete'),
     path('generate-learning-path/', GenerateLearningPathView.as_view(), name='generate_learning_path'),
-    path('learning-path/', LearningPathDetailView.as_view(), name='learning_path_detail'),
+    path('learning-path/<int:path_id>/', LearningPathDetailView.as_view(), name='learning_path_detail'),
 ]
 
 print("Courses URLs patterns:")

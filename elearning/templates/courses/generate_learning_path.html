@@ -17,6 +17,15 @@
                 <div class="card-body">
                     <div id="alert-container"></div>
                     
+                    <!-- Ajout du conteneur pour l'animation de chargement -->
+                    <div id="loading-container" class="text-center d-none">
+                        <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                            <span class="visually-hidden">Chargement...</span>
+                        </div>
+                        <h5 class="text-primary">Génération de votre parcours en cours...</h5>
+                        <p class="text-muted">Cela peut prendre quelques instants</p>
+                    </div>
+
                     <form id="learning-path-form" method="post">
                         {% csrf_token %}
                         
@@ -35,6 +44,18 @@
                                 <option value="go">Go</option>
                                 <option value="rust">Rust</option>
                             </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="level" class="form-label">Niveau</label>
+                            <select class="form-select" id="level" name="level" required>
+                                <option value="debutant" {% if user.person_profile.predicted_level|lower == 'debutant' or user.person_profile.predicted_level|lower == 'débutant' %}selected="selected"{% endif %}>Débutant</option>
+                                <option value="junior" {% if user.person_profile.predicted_level|lower == 'junior' %}selected="selected"{% endif %}>Junior</option>
+                                <option value="intermediaire" {% if user.person_profile.predicted_level|lower == 'intermediaire' or user.person_profile.predicted_level|lower == 'intermédiaire' %}selected="selected"{% endif %}>Intermédiaire</option>
+                                <option value="senior" {% if user.person_profile.predicted_level|lower == 'senior' %}selected="selected"{% endif %}>Senior</option>
+                                <option value="expert" {% if user.person_profile.predicted_level|lower == 'expert' %}selected="selected"{% endif %}>Expert</option>
+                            </select>
+                            
                         </div>
 
                         <div class="mb-4">
@@ -97,8 +118,36 @@
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('learning-path-form');
     const alertContainer = document.getElementById('alert-container');
+    const loadingContainer = document.getElementById('loading-container');
     const interestCheckboxes = document.querySelectorAll('.interest-checkbox');
     const maxInterests = 3;
+    const levelSelect = document.getElementById('level');
+
+    // Fonction pour normaliser le texte (enlever les accents et mettre en minuscules)
+    function normalizeText(text) {
+        return text.toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '');
+    }
+
+    // Sélectionner automatiquement le niveau prédit
+    const predictedLevel = "{{ user.person_profile.predicted_level }}";
+    console.log("Niveau prédit original:", predictedLevel);
+    
+    if (predictedLevel) {
+        const normalizedPredictedLevel = normalizeText(predictedLevel);
+        console.log("Niveau prédit normalisé:", normalizedPredictedLevel);
+        
+        // Trouver l'option correspondante
+        const options = Array.from(levelSelect.options);
+        const matchingOption = options.find(option => normalizeText(option.value) === normalizedPredictedLevel);
+        
+        if (matchingOption) {
+            matchingOption.selected = true;
+            console.log("Niveau sélectionné:", matchingOption.value);
+            levelSelect.dispatchEvent(new Event('change'));
+        }
+    }
 
     // Fonction pour afficher les alertes
     function showAlert(message, type = 'success') {
@@ -124,11 +173,23 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // Fonction pour afficher/masquer l'animation de chargement
+    function toggleLoading(show) {
+        if (show) {
+            loadingContainer.classList.remove('d-none');
+            form.classList.add('d-none');
+        } else {
+            loadingContainer.classList.add('d-none');
+            form.classList.remove('d-none');
+        }
+    }
+
     // Gérer la soumission du formulaire
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         
         const subject = document.getElementById('subject').value;
+        const level = document.getElementById('level').value;
         const selectedInterests = Array.from(document.querySelectorAll('.interest-checkbox:checked'))
             .map(checkbox => checkbox.value);
 
@@ -137,13 +198,18 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        if (!level) {
+            showAlert('Veuillez sélectionner votre niveau.', 'warning');
+            return;
+        }
+
         if (selectedInterests.length === 0) {
             showAlert('Veuillez sélectionner au moins un centre d\'intérêt.', 'warning');
             return;
         }
 
-        // Afficher un message de chargement
-        showAlert('Génération de votre parcours en cours...', 'info');
+        // Afficher l'animation de chargement
+        toggleLoading(true);
 
         // Envoyer les données au serveur
         fetch('{% url "generate_learning_path" %}', {
@@ -154,6 +220,7 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             body: new URLSearchParams({
                 'subject': subject,
+                'level': level,
                 'interests': JSON.stringify(selectedInterests)
             })
         })
@@ -167,11 +234,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     }, 1500);
                 }
             } else {
+                toggleLoading(false);
                 showAlert(data.error, 'danger');
             }
         })
         .catch(error => {
             console.error('Error:', error);
+            toggleLoading(false);
             showAlert('Une erreur est survenue lors de la génération du parcours.', 'danger');
         });
     });

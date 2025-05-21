@@ -1,9 +1,10 @@
 from django.db import models
+from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 # Create your models here.
 # courses/models.py
 from django.db import models
-from django.contrib.auth.models import User
 from users.models import Person
 
 class Category(models.Model):
@@ -96,3 +97,51 @@ class LearningPath(models.Model):
     
     def __str__(self):
         return f"Parcours {self.language} - {self.user.username}"
+
+class Quiz(models.Model):
+    learning_path = models.ForeignKey(LearningPath, on_delete=models.CASCADE, related_name='quizzes')
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    passing_score = models.IntegerField(default=70, validators=[MinValueValidator(0), MaxValueValidator(100)])
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Quiz pour {self.learning_path.language} - {self.title}"
+
+class Question(models.Model):
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='questions')
+    text = models.TextField()
+    order = models.IntegerField(default=0)
+    points = models.IntegerField(default=1)
+
+    def __str__(self):
+        return f"Question {self.order}: {self.text[:50]}..."
+
+class Answer(models.Model):
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='answers')
+    text = models.TextField()
+    is_correct = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Réponse: {self.text[:50]}..."
+
+class QuizAttempt(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
+    score = models.IntegerField(null=True, blank=True)
+    passed = models.BooleanField(null=True, blank=True)
+    started_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Tentative de {self.user.username} pour {self.quiz.title}"
+
+class UserAnswer(models.Model):
+    attempt = models.ForeignKey(QuizAttempt, on_delete=models.CASCADE, related_name='user_answers')
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    selected_answer = models.ForeignKey(Answer, on_delete=models.CASCADE)
+    is_correct = models.BooleanField()
+
+    def __str__(self):
+        return f"Réponse de {self.attempt.user.username} pour {self.question.text[:50]}..."

@@ -5,7 +5,10 @@ from .views import (
     EnrollCourseView, UnenrollCourseView,
     LessonDetailView, MarkLessonCompletedView,
     CourseCreateView, CourseUpdateView, CourseDeleteView,
-    GenerateLearningPathView, LearningPathDetailView
+    GenerateLearningPathView, LearningPathDetailView,
+    claude_advice, improve_learning_path,
+    QuizView, QuizResultView,
+    generate_quiz
 )
 
 print("\n=== Loading Courses URLs ===")
@@ -23,6 +26,11 @@ urlpatterns = [
     path('course/<int:pk>/delete/', CourseDeleteView.as_view(), name='course_delete'),
     path('generate-learning-path/', GenerateLearningPathView.as_view(), name='generate_learning_path'),
     path('learning-path/<int:path_id>/', LearningPathDetailView.as_view(), name='learning_path_detail'),
+    path('api/claude-advice/', claude_advice, name='claude_advice'),
+    path('api/improve-learning-path/', improve_learning_path, name='improve_learning_path'),
+    path('api/generate-quiz/', generate_quiz, name='generate_quiz'),
+    path('quiz/<int:quiz_id>/', QuizView.as_view(), name='quiz'),
+    path('quiz/result/<int:attempt_id>/', QuizResultView.as_view(), name='quiz_result'),
 ]
 
 print("Courses URLs patterns:")

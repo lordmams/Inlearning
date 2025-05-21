@@ -9,13 +9,16 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.db.models import Q
 from django.urls import reverse_lazy, reverse
-from .models import Course, Category, Enrollment, Lesson, LearningPath
+from .models import Course, Category, Enrollment, Lesson, LearningPath, Quiz, Question, Answer, QuizAttempt, UserAnswer
 from .forms import CourseFilterForm
 from django.http import JsonResponse
 import requests
 import json
 import os
 import logging
+from django.views.decorators.http import require_GET, require_POST, require_http_methods
+from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -319,6 +322,7 @@ class GenerateLearningPathView(LoginRequiredMixin, View):
             # Récupérer les données du formulaire
             subject = request.POST.get('subject')
             interests = json.loads(request.POST.get('interests', '[]'))
+            provided_level = request.POST.get('level')
             
             # Vérifier que la matière est sélectionnée
             if not subject:
@@ -334,8 +338,11 @@ class GenerateLearningPathView(LoginRequiredMixin, View):
                     'error': 'Veuillez sélectionner au moins un centre d\'intérêt'
                 })
 
-            # Convertir le niveau textuel en numérique
-            user_level = convert_level_to_number(request.user.person_profile.predicted_level)
+            # Utiliser le niveau fourni s'il est spécifié, sinon utiliser le niveau prédit de l'utilisateur
+            if provided_level:
+                user_level = convert_level_to_number(provided_level)
+            else:
+                user_level = convert_level_to_number(request.user.person_profile.predicted_level)
 
             # Préparer les données pour l'API
             user_data = {
@@ -361,7 +368,7 @@ class GenerateLearningPathView(LoginRequiredMixin, View):
                     learning_path = LearningPath.objects.create(
                         user=request.user,
                         language=learning_path_data['language'],
-                        level=learning_path_data['level'],
+                        level=user_level,  # Utiliser le niveau converti
                         interests=learning_path_data['interests'],
                         modules=learning_path_data['modules']
                     )
@@ -425,15 +432,280 @@ class LearningPathDetailView(LoginRequiredMixin, View):
     template_name = 'courses/learning_path_detail.html'
 
     def get(self, request, path_id):
-        # Récupérer le parcours d'apprentissage depuis la base de données
+        learning_path = get_object_or_404(LearningPath, id=path_id, user=request.user)
+        
+        # Préparer les données des quiz avec les tentatives de l'utilisateur
+        quizzes_with_attempts = []
+        for quiz in learning_path.quizzes.all():
+            attempts = quiz.quizattempt_set.filter(user=request.user).order_by('-completed_at')
+            quizzes_with_attempts.append({
+                'quiz': quiz,
+                'attempts': attempts
+            })
+        
+        return render(request, self.template_name, {
+            'learning_path': learning_path,
+            'quizzes_with_attempts': quizzes_with_attempts
+        })
+
+@require_http_methods(["GET"])
+def claude_advice(request):
+    try:
+        parcours_id = request.GET.get('parcours_id')
+        if not parcours_id:
+            return JsonResponse({'success': False, 'error': 'ID du parcours manquant'}, status=400)
+
+        learning_path = LearningPath.objects.get(id=parcours_id)
+        
+        # Préparer les données pour l'API Flask
+        data = {
+            'modules': learning_path.modules
+        }
+        
+        # Appeler l'API Flask
+        api_url = os.environ.get('FLASK_API_URL', 'http://flask_api:5000')
+        if not api_url.startswith('http'):
+            api_url = f'http://{api_url}'
+        api_url = f'{api_url}/api/claude-advice'
+        
+        logger.info(f"Tentative de connexion à l'API: {api_url}")
+        logger.info(f"Données envoyées à l'API: {data}")
+        
         try:
-            learning_path = LearningPath.objects.get(id=path_id, user=request.user)
-            return render(request, self.template_name, {'learning_path': {
+            response = requests.post(
+                api_url,
+                json=data,
+                headers={'Content-Type': 'application/json'},
+                timeout=30  # Ajout d'un timeout de 30 secondes
+            )
+            response.raise_for_status()  # Lève une exception pour les codes d'erreur HTTP
+            
+            api_response = response.json()
+            if api_response.get('success'):
+                return JsonResponse({
+                    'success': True,
+                    'suggestions': api_response.get('suggestions', [])
+                })
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'error': api_response.get('error', 'Erreur inconnue')
+                }, status=500)
+                
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Erreur de connexion à l'API Flask: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': f'Erreur de connexion à l\'API: {str(e)}'
+            }, status=503)
+            
+    except LearningPath.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'Parcours non trouvé'
+        }, status=404)
+    except Exception as e:
+        logger.error(f"Erreur dans claude_advice: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+@csrf_exempt
+@require_POST
+def improve_learning_path(request):
+    try:
+        data = json.loads(request.body)
+        learning_path = data.get('learning_path')
+        
+        if not learning_path:
+            return JsonResponse({
+                'success': False,
+                'error': 'Parcours d\'apprentissage manquant'
+            }, status=400)
+
+        # Appeler l'API Flask pour obtenir les améliorations
+        flask_api_url = os.environ.get('FLASK_API_URL', 'http://localhost:5000')
+        response = requests.post(
+            f'{flask_api_url}/api/improve-learning-path',
+            json={'learning_path': learning_path}
+        )
+
+        if response.status_code == 200:
+            return JsonResponse(response.json())
+        else:
+            logger.error(f"Erreur API Flask: {response.status_code} - {response.text}")
+            return JsonResponse({
+                'success': False,
+                'error': 'Erreur lors de l\'amélioration du parcours'
+            }, status=500)
+
+    except Exception as e:
+        logger.error(f"Erreur dans improve_learning_path: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+class QuizView(LoginRequiredMixin, View):
+    template_name = 'courses/quiz.html'
+
+    def get(self, request, quiz_id):
+        quiz = get_object_or_404(Quiz, id=quiz_id)
+        
+        # Vérifier si l'utilisateur a déjà une tentative en cours
+        attempt = QuizAttempt.objects.filter(
+            user=request.user,
+            quiz=quiz,
+            completed_at__isnull=True
+        ).first()
+        
+        if not attempt:
+            attempt = QuizAttempt.objects.create(
+                user=request.user,
+                quiz=quiz
+            )
+        
+        questions = quiz.questions.all().order_by('order')
+        return render(request, self.template_name, {
+            'quiz': quiz,
+            'questions': questions,
+            'attempt': attempt
+        })
+
+    def post(self, request, quiz_id):
+        quiz = get_object_or_404(Quiz, id=quiz_id)
+        attempt = get_object_or_404(QuizAttempt, 
+            user=request.user,
+            quiz=quiz,
+            completed_at__isnull=True
+        )
+        
+        # Calculer le score
+        total_points = 0
+        earned_points = 0
+        
+        for question in quiz.questions.all():
+            answer_id = request.POST.get(f'question_{question.id}')
+            if answer_id:
+                selected_answer = Answer.objects.get(id=answer_id)
+                is_correct = selected_answer.is_correct
+                
+                # Enregistrer la réponse de l'utilisateur
+                UserAnswer.objects.create(
+                    attempt=attempt,
+                    question=question,
+                    selected_answer=selected_answer,
+                    is_correct=is_correct
+                )
+                
+                if is_correct:
+                    earned_points += question.points
+            
+            total_points += question.points
+        
+        # Calculer le pourcentage
+        score = (earned_points / total_points) * 100 if total_points > 0 else 0
+        passed = score >= quiz.passing_score
+        
+        # Mettre à jour la tentative
+        attempt.score = score
+        attempt.passed = passed
+        attempt.completed_at = timezone.now()
+        attempt.save()
+        
+        return redirect('quiz_result', attempt_id=attempt.id)
+
+class QuizResultView(LoginRequiredMixin, View):
+    template_name = 'courses/quiz_result.html'
+    
+    def get(self, request, attempt_id):
+        attempt = get_object_or_404(QuizAttempt, id=attempt_id, user=request.user)
+        user_answers = attempt.user_answers.all().select_related('question', 'selected_answer')
+        
+        return render(request, self.template_name, {
+            'attempt': attempt,
+            'user_answers': user_answers
+        })
+
+@csrf_exempt
+@require_POST
+def generate_quiz(request):
+    try:
+        data = json.loads(request.body)
+        learning_path_id = data.get('learning_path_id')
+        
+        if not learning_path_id:
+            return JsonResponse({
+                'success': False,
+                'error': 'ID du parcours manquant'
+            }, status=400)
+
+        learning_path = get_object_or_404(LearningPath, id=learning_path_id)
+        
+        # Préparer les données pour l'API Flask
+        api_data = {
+            'learning_path': {
                 'language': learning_path.language,
                 'level': learning_path.level,
-                'interests': learning_path.interests,
                 'modules': learning_path.modules
-            }})
-        except LearningPath.DoesNotExist:
-            messages.warning(request, "Parcours d'apprentissage non trouvé.")
-            return redirect('dashboard')
+            }
+        }
+        
+        # Appeler l'API Flask
+        flask_api_url = os.environ.get('FLASK_API_URL', 'http://localhost:5000')
+        response = requests.post(
+            f'{flask_api_url}/api/generate-quiz',
+            json=api_data
+        )
+
+        if response.status_code == 200:
+            result = response.json()
+            if result.get('success'):
+                quiz_data = result.get('quiz')
+                
+                # Créer le quiz dans la base de données
+                quiz = Quiz.objects.create(
+                    learning_path=learning_path,
+                    title=quiz_data['title'],
+                    description=quiz_data['description'],
+                    passing_score=quiz_data['passing_score']
+                )
+                
+                # Créer les questions et réponses
+                for q_data in quiz_data['questions']:
+                    question = Question.objects.create(
+                        quiz=quiz,
+                        text=q_data['text'],
+                        points=q_data['points']
+                    )
+                    
+                    for a_data in q_data['answers']:
+                        Answer.objects.create(
+                            question=question,
+                            text=a_data['text'],
+                            is_correct=a_data['is_correct']
+                        )
+                
+                return JsonResponse({
+                    'success': True,
+                    'quiz_id': quiz.id,
+                    'message': 'Quiz généré avec succès'
+                })
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'error': result.get('error', 'Erreur lors de la génération du quiz')
+                }, status=500)
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Erreur de communication avec l\'API'
+            }, status=500)
+
+    except Exception as e:
+        logger.error(f"Erreur dans generate_quiz: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)

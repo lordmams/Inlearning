@@ -1,0 +1,66 @@
+services:
+  app:
+    build: ./elearning
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: elearning_db
+      DJANGO_SETTINGS_MODULE: elearning.settings
+      PYTHONPATH: /app
+      SECRET_KEY: test123
+      FLASK_API_URL: http://flask_api:5000
+      
+    volumes:
+      - ./elearning:/app
+      - static_volume:/app/elearning/staticfiles
+      - media_volume:/app/elearning/media
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - flask_api
+    command: >
+      sh -c "
+             python manage.py makemigrations &&
+             python manage.py migrate &&
+             python manage.py collectstatic --noinput --clear &&
+             python manage.py runserver 0.0.0.0:8000"
+  
+  flask_api:
+    build: ./learning_platform
+    volumes:
+      - ./learning_platform:/app
+    ports:
+      - "5000:5000"
+    environment:
+      - PYTHONPATH=/app
+    depends_on:
+      - db
+
+  db:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: elearning_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+  
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "9090:80"
+    depends_on:
+      - db
+
+volumes:
+  pg_data:
+  static_volume:
+  media_volume:

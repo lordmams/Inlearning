@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Parcours d'apprentissage{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">Votre parcours d'apprentissage personnalisé</h1>
+            
+            <!-- Informations générales -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Informations du parcours</h5>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <p><strong>Langage:</strong> {{ learning_path.language }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p><strong>Niveau:</strong> {{ learning_path.level }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p><strong>Centres d'intérêt:</strong> {{ learning_path.interests|join:", " }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modules -->
+            {% for module in learning_path.modules %}
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">{{ module.title }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for course in module.courses %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ course.title }}</h5>
+                                    {% if course.description %}
+                                    <p class="card-text">{{ course.description }}</p>
+                                    {% endif %}
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge bg-info">{{ course.category }}</span>
+                                        {% if course.duration %}
+                                        <small class="text-muted">{{ course.duration }}</small>
+                                        {% endif %}
+                                    </div>
+                                    {% if course.url %}
+                                    <a href="{{ course.url }}" target="_blank" class="btn btn-primary mt-3">
+                                        <i class="bi bi-box-arrow-up-right me-2"></i>Accéder au cours
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            <!-- Boutons d'action -->
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{% url 'generate_learning_path' %}" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-left me-2"></i>Générer un nouveau parcours
+                </a>
+                <a href="{% url 'dashboard' %}" class="btn btn-primary">
+                    <i class="bi bi-house me-2"></i>Retour au tableau de bord
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

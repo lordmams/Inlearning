@@ -162,206 +162,147 @@
 </div>
 
 <script>
-document.getElementById('ask-claude-btn').addEventListener('click', function() {
-    const parcoursId = "{{ learning_path.id }}";
-    console.log("Parcours ID:", parcoursId);
-    const responseDiv = document.getElementById('claude-response');
-    responseDiv.innerHTML = `
-        <div class="text-center">
-            <div class="spinner-border text-warning" role="status">
-                <span class="visually-hidden">Chargement...</span>
-            </div>
-            <p class="mt-2">Analyse de Claude en cours...</p>
-        </div>`;
+document.addEventListener('DOMContentLoaded', function() {
+    // Gestionnaire pour le bouton ask-claude
+    const askClaudeBtn = document.getElementById('ask-claude-btn');
+    if (askClaudeBtn) {
+        askClaudeBtn.addEventListener('click', function() {
+            const parcoursId = "{{ learning_path.id }}";
+            console.log("Parcours ID:", parcoursId);
+            const responseDiv = document.getElementById('claude-response');
+            responseDiv.innerHTML = `
+                <div class="text-center">
+                    <div class="spinner-border text-warning" role="status">
+                        <span class="visually-hidden">Chargement...</span>
+                    </div>
+                    <p class="mt-2">Analyse de Claude en cours...</p>
+                </div>`;
 
-    fetch(`/courses/api/claude-advice/?parcours_id=${parcoursId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.suggestions && data.suggestions.length > 0) {
-                let suggestionsHtml = '';
-                data.suggestions.forEach(suggestion => {
-                    suggestionsHtml += `
-                        <div class="suggestion-item mb-4">
-                            <h5 class="text-primary">${suggestion.title}</h5>
-                            <p><strong>Pertinence:</strong> ${suggestion.relevance}</p>
-                            <p><strong>Niveau:</strong> ${suggestion.level}</p>
-                            <div class="resources-section">
-                                <strong>Ressources:</strong>
-                                <ul class="list-unstyled ms-3">
-                                    ${suggestion.resources.map(resource => `
-                                        <li>
-                                            <a href="${resource.url}" target="_blank" class="text-decoration-none">
-                                                <i class="bi bi-link-45deg"></i> ${resource.name}
-                                            </a>
-                                            <small class="text-muted">(${resource.type})</small>
-                                        </li>
-                                    `).join('')}
-                                </ul>
-                            </div>
-                        </div>
-                    `;
+            fetch(`/courses/api/claude-advice/?parcours_id=${parcoursId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.suggestions && data.suggestions.length > 0) {
+                        let suggestionsHtml = '';
+                        data.suggestions.forEach(suggestion => {
+                            suggestionsHtml += `
+                                <div class="suggestion-item mb-4">
+                                    <h5 class="text-primary">${suggestion.title}</h5>
+                                    <p><strong>Pertinence:</strong> ${suggestion.relevance}</p>
+                                    <p><strong>Niveau:</strong> ${suggestion.level}</p>
+                                    <div class="resources-section">
+                                        <strong>Ressources:</strong>
+                                        <ul class="list-unstyled ms-3">
+                                            ${suggestion.resources.map(resource => `
+                                                <li>
+                                                    <a href="${resource.url}" target="_blank" class="text-decoration-none">
+                                                        <i class="bi bi-link-45deg"></i> ${resource.name}
+                                                    </a>
+                                                    <small class="text-muted">(${resource.type})</small>
+                                                </li>
+                                            `).join('')}
+                                        </ul>
+                                    </div>
+                                </div>
+                            `;
+                        });
+
+                        responseDiv.innerHTML = `
+                            <div class="card mt-4">
+                                <div class="card-header bg-warning text-dark">
+                                    <h4 class="mb-0">
+                                        <i class="bi bi-lightbulb me-2"></i>
+                                        Suggestions de Claude
+                                    </h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="claude-advice">
+                                        ${suggestionsHtml}
+                                    </div>
+                                </div>
+                            </div>`;
+                    } else {
+                        responseDiv.innerHTML = `
+                            <div class="alert alert-warning mt-4">
+                                <i class="bi bi-exclamation-circle me-2"></i>
+                                ${data.error || 'Aucune suggestion disponible pour le moment.'}
+                            </div>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    responseDiv.innerHTML = `
+                        <div class="alert alert-danger mt-4">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Erreur lors de la communication avec Claude.
+                        </div>`;
                 });
-
-                responseDiv.innerHTML = `
-                    <div class="card mt-4">
-                        <div class="card-header bg-warning text-dark">
-                            <h4 class="mb-0">
-                                <i class="bi bi-lightbulb me-2"></i>
-                                Suggestions de Claude
-                            </h4>
-                        </div>
-                        <div class="card-body">
-                            <div class="claude-advice">
-                                ${suggestionsHtml}
-                            </div>
-                        </div>
-                    </div>`;
-            } else {
-                responseDiv.innerHTML = `
-                    <div class="alert alert-warning mt-4">
-                        <i class="bi bi-exclamation-circle me-2"></i>
-                        ${data.error || 'Aucune suggestion disponible pour le moment.'}
-                    </div>`;
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            responseDiv.innerHTML = `
-                <div class="alert alert-danger mt-4">
-                    <i class="bi bi-exclamation-triangle me-2"></i>
-                    Erreur lors de la communication avec Claude.
-                </div>`;
         });
-});
+    }
 
-document.getElementById('improve-path-btn').addEventListener('click', function() {
-    const responseDiv = document.getElementById('claude-response');
-    responseDiv.innerHTML = `
-        <div class="text-center">
-            <div class="spinner-border text-info" role="status">
-                <span class="visually-hidden">Chargement...</span>
-            </div>
-            <p class="mt-2">Amélioration du parcours en cours...</p>
-        </div>`;
-
-    // Préparer les données du parcours
-    const learningPath = {
-        language: "{{ learning_path.language }}",
-        level: "{{ learning_path.level }}",
-        interests: {{ learning_path.interests|safe }},
-        modules: {{ learning_path.modules|safe }}
-    };
-
-    fetch('/courses/api/improve-learning-path/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ learning_path: learningPath })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Formater la réponse pour le rendu HTML
-            const formattedImprovements = data.improvements
-                .replace(/\n\n/g, '</p><p>')
-                .replace(/\n/g, '<br>')
-                .replace(/(Module \d+)/g, '<h5 class="mt-4">$1</h5>')
-                .replace(/- (.*?):/g, '<strong>$1:</strong>')
-                .replace(/\n\s*- (.*?)(?=\n|$)/g, '<li>$1</li>')
-                .replace(/<li>/g, '<ul class="list-unstyled ms-3"><li>')
-                .replace(/<\/li>/g, '</li></ul>');
-
+    // Gestionnaire pour le bouton generate-quiz
+    const generateQuizBtn = document.getElementById('generate-quiz-btn');
+    if (generateQuizBtn) {
+        generateQuizBtn.addEventListener('click', function() {
+            const responseDiv = document.getElementById('claude-response');
             responseDiv.innerHTML = `
-                <div class="card mt-4">
-                    <div class="card-header bg-info text-white">
-                        <h4 class="mb-0">
-                            <i class="bi bi-magic me-2"></i>
-                            Améliorations suggérées
-                        </h4>
+                <div class="text-center">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Chargement...</span>
                     </div>
-                    <div class="card-body">
-                        <div class="claude-advice">
-                            ${formattedImprovements}
-                        </div>
-                    </div>
+                    <p class="mt-2">Génération du quiz en cours...</p>
                 </div>`;
-        } else {
-            responseDiv.innerHTML = `
-                <div class="alert alert-danger mt-4">
-                    <i class="bi bi-exclamation-triangle me-2"></i>
-                    Erreur : ${data.error}
-                </div>`;
-        }
-    })
-    .catch(() => {
-        responseDiv.innerHTML = `
-            <div class="alert alert-danger mt-4">
-                <i class="bi bi-exclamation-triangle me-2"></i>
-                Erreur lors de l'amélioration du parcours.
-            </div>`;
-    });
-});
 
-document.getElementById('generate-quiz-btn')?.addEventListener('click', function() {
-    const responseDiv = document.getElementById('claude-response');
-    responseDiv.innerHTML = `
-        <div class="text-center">
-            <div class="spinner-border text-success" role="status">
-                <span class="visually-hidden">Chargement...</span>
-            </div>
-            <p class="mt-2">Génération du quiz en cours...</p>
-        </div>`;
+            fetch('/courses/api/generate-quiz/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    learning_path_id: "{{ learning_path.id }}"
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    responseDiv.innerHTML = `
+                        <div class="alert alert-success mt-4">
+                            <i class="bi bi-check-circle me-2"></i>
+                            Quiz généré avec succès !
+                            <a href="/courses/quiz/${data.quiz_id}/" class="btn btn-success ms-3">
+                                <i class="bi bi-play-circle me-2"></i>Commencer le quiz
+                            </a>
+                        </div>`;
+                    // Recharger la page après 5 secondes pour afficher le nouveau quiz
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 5000);
+                } else {
+                    responseDiv.innerHTML = `
+                        <div class="alert alert-danger mt-4">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Erreur : ${data.error}
+                        </div>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                responseDiv.innerHTML = `
+                    <div class="alert alert-danger mt-4">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Erreur lors de la génération du quiz.
+                    </div>`;
+            });
+        });
+    }
 
-    fetch('/courses/api/generate-quiz/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            learning_path_id: "{{ learning_path.id }}"
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            responseDiv.innerHTML = `
-                <div class="alert alert-success mt-4">
-                    <i class="bi bi-check-circle me-2"></i>
-                    Quiz généré avec succès !
-                    <a href="/courses/quiz/${data.quiz_id}/" class="btn btn-success ms-3">
-                        <i class="bi bi-play-circle me-2"></i>Commencer le quiz
-                    </a>
-                </div>`;
-            // Recharger la page après 5 secondes pour afficher le nouveau quiz
-            setTimeout(() => {
-                window.location.reload();
-            }, 5000);
-        } else {
-            responseDiv.innerHTML = `
-                <div class="alert alert-danger mt-4">
-                    <i class="bi bi-exclamation-triangle me-2"></i>
-                    Erreur : ${data.error}
-                </div>`;
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        responseDiv.innerHTML = `
-            <div class="alert alert-danger mt-4">
-                <i class="bi bi-exclamation-triangle me-2"></i>
-                Erreur lors de la génération du quiz.
-            </div>`;
-    });
-});
-
-// Ajouter le gestionnaire pour l'icône de toggle
-document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(header => {
-    header.addEventListener('click', function() {
-        const icon = this.querySelector('.toggle-icon');
-        if (icon) {
-            icon.style.transform = this.classList.contains('collapsed') ? 'rotate(0deg)' : 'rotate(-180deg)';
-        }
+    // Gestionnaire pour les icônes de toggle
+    document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(header => {
+        header.addEventListener('click', function() {
+            const icon = this.querySelector('.toggle-icon');
+            if (icon) {
+                icon.style.transform = this.classList.contains('collapsed') ? 'rotate(0deg)' : 'rotate(-180deg)';
+            }
+        });
     });
 });
 </script>

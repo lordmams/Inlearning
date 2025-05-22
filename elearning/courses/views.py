@@ -32,11 +32,14 @@ def convert_level_to_number(level):
     Expert -> 5
     """
     level_mapping = {
-        'débutant': 1,
+        'debutant': 1,
         'junior': 2,
-        'intermédiaire': 3,
+        'intermediaire': 3,
         'senior': 4,
-        'expert': 5
+        'expert': 5,
+        # Ajout des variantes avec accents
+        'débutant': 1,
+        'intermédiaire': 3
     }
     return level_mapping.get(level.lower(), 1)
 

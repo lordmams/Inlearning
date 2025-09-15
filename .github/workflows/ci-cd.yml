@@ -117,7 +117,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     if: github.ref == 'refs/heads/main'
-    environment: production
+    environment: inLearning
     
     steps:
     - name: Debug secrets (for troubleshooting)

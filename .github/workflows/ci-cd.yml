@@ -86,6 +86,13 @@ jobs:
     environment: staging
     
     steps:
+    - name: Configure SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.STAGING_HOST }} >> ~/.ssh/known_hosts
+    
     - name: Deploy to staging
       run: |
         echo "Deploying to staging environment..."
@@ -114,6 +121,13 @@ jobs:
     environment: production
     
     steps:
+    - name: Configure SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.PRODUCTION_SSH_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.PRODUCTION_HOST }} >> ~/.ssh/known_hosts
+    
     - name: Deploy to production
       run: |
         echo "Deploying to production environment..."

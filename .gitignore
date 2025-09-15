@@ -48,3 +48,9 @@ Thumbs.db
 # Docker
 .dockerignore
 .env
+
+# Environment files with secrets
+env.staging
+env.production
+.env.local
+.env.airflow

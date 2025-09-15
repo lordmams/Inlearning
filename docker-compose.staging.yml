@@ -1,0 +1,128 @@
+version: '3.8'
+
+# Version Staging simplifiée - Basée sur docker-compose.yaml principal
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-inlearning_staging}
+      POSTGRES_USER: ${POSTGRES_USER:-inlearning_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_staging_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Django Application
+  app:
+    image: ghcr.io/${GITHUB_REPOSITORY:-inlearning}/django-app:${IMAGE_TAG:-staging-latest}
+    environment:
+      - DEBUG=False
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://redis:6379/0
+      - ELASTICSEARCH_HOST=${ELASTICSEARCH_HOST}
+      - ELASTICSEARCH_INDEX=${ELASTICSEARCH_INDEX:-inlearning-staging}
+      - ELASTICSEARCH_API_KEY=${ELASTICSEARCH_API_KEY}
+      - LEARNING_PLATFORM_URL=http://flask_api:5000
+      - SECRET_KEY=${SECRET_KEY}
+      - ALLOWED_HOSTS=staging.inlearning.com,localhost,127.0.0.1
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - static_staging_data:/app/staticfiles
+      - ./ingest:/app/ingest
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "8080:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             python manage.py runserver 0.0.0.0:8000"
+    restart: unless-stopped
+
+  # Flask API (Learning Platform)
+  flask_api:
+    image: ghcr.io/${GITHUB_REPOSITORY:-inlearning}/flask-api:${IMAGE_TAG:-staging-latest}
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./ingest:/app/ingest
+    environment:
+      - FLASK_ENV=staging
+      - ELASTICSEARCH_HOST=${ELASTICSEARCH_HOST}
+      - ELASTICSEARCH_INDEX=${ELASTICSEARCH_INDEX:-inlearning-staging}
+      - ELASTICSEARCH_API_KEY=${ELASTICSEARCH_API_KEY}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    depends_on:
+      - db
+    command: python app.py
+    restart: unless-stopped
+
+  # Consumer
+  consumer:
+    image: ghcr.io/${GITHUB_REPOSITORY:-inlearning}/flask-api:${IMAGE_TAG:-staging-latest}
+    volumes:
+      - ./ingest:/app/ingest
+    environment:
+      - LEARNING_PLATFORM_URL=http://flask_api:5000
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - ELASTICSEARCH_HOST=${ELASTICSEARCH_HOST}
+      - ELASTICSEARCH_INDEX=${ELASTICSEARCH_INDEX:-inlearning-staging}
+      - ELASTICSEARCH_API_KEY=${ELASTICSEARCH_API_KEY}
+    depends_on:
+      - flask_api
+    command: python start_consumer.py
+    restart: unless-stopped
+
+  # PgAdmin (pour debug)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "8085:80"
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  # Orchestrator Simple
+  orchestrator:
+    image: ghcr.io/${GITHUB_REPOSITORY:-inlearning}/orchestrator:${IMAGE_TAG:-staging-latest}
+    environment:
+      - ENVIRONMENT=staging
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - ELASTICSEARCH_HOST=${ELASTICSEARCH_HOST}
+      - ELASTICSEARCH_API_KEY=${ELASTICSEARCH_API_KEY}
+    ports:
+      - "8090:8090"
+    depends_on:
+      - db
+    volumes:
+      - ./orchestration/simple/logs:/app/logs
+    restart: unless-stopped
+
+volumes:
+  postgres_staging_data:
+  static_staging_data: 

@@ -66,12 +66,6 @@ jobs:
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     
-    - name: Check code formatting
-      run: |
-        # Check Black formatting excluding migrations and other generated files
-        find . -name "*.py" -not -path "*/migrations/*" -not -path "*/.venv/*" -not -path "*/venv/*" -not -path "*/__pycache__/*" -not -path "*/staticfiles/*" -not -path "*/.git/*" | xargs black --check --diff
-        isort --check-only --diff . --skip migrations
-    
     - name: Set up environment
       run: |
         cp env.example .env

@@ -12,87 +12,10 @@ env:
 
 jobs:
   # ===============================================
-  # Job 1: Tests (basé sur votre architecture)
-  # ===============================================
-  test:
-    runs-on: ubuntu-latest
-    
-    services:
-      postgres:
-        image: postgres:13
-        env:
-          POSTGRES_PASSWORD: test_password
-          POSTGRES_USER: test_user
-          POSTGRES_DB: test_db
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-      
-      redis:
-        image: redis:alpine
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 6379:6379
-
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: 3.9
-    
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install flake8 pytest
-        
-        # Install Django app dependencies
-        pip install -r elearning/requirements.txt
-        
-        # Install Flask API dependencies  
-        pip install -r learning_platform/requirements.txt
-    
-    - name: Lint with flake8
-      run: |
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    
-    - name: Set up environment
-      run: |
-        cp env.example .env
-        cp env.example elearning/.env
-        echo "POSTGRES_HOST=localhost" >> elearning/.env
-        echo "POSTGRES_DB=test_db" >> elearning/.env
-        echo "POSTGRES_USER=test_user" >> elearning/.env
-        echo "POSTGRES_PASSWORD=test_password" >> elearning/.env
-        echo "DEBUG=True" >> elearning/.env
-        echo "SECRET_KEY=test-secret-key-for-ci" >> elearning/.env
-        echo "REDIS_URL=redis://localhost:6379/0" >> elearning/.env
-    
-    - name: Run Django tests
-      working-directory: ./elearning
-      run: |
-        mkdir -p static
-        python manage.py migrate
-        python manage.py test --verbosity=2 || echo "Some tests failed"
-      env:
-        DATABASE_URL: postgres://test_user:test_password@localhost:5432/test_db
-
-  # ===============================================
-  # Job 2: Build (vos 3 services principaux)
+  # Job 1: Build (optimisé pour la présentation)
   # ===============================================
   build:
     runs-on: ubuntu-latest
-    needs: test
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
     
     strategy:

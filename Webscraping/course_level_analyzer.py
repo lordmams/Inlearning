@@ -1,7 +1,8 @@
 import json
-import spacy
-from typing import Dict, List
 import re
+from typing import Dict, List
+
+import spacy
 
 
 class ProgrammingCourseLevelAnalyzer:

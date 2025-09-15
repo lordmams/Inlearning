@@ -1,17 +1,18 @@
+import concurrent.futures
 import json
+import logging
 import os
-import pandas as pd
-import matplotlib.pyplot as plt
+import re
 from collections import Counter
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.cluster import KMeans
-import logging
-from pathlib import Path
-from typing import Dict, List, Optional, Any, Tuple
-import concurrent.futures
-import re
-import numpy as np
 
 # Configuration du logging
 logging.basicConfig(

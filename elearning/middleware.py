@@ -1,7 +1,8 @@
 # elearning/elearning/middleware.py
 import logging
-from django.urls import resolve
+
 from django.conf import settings
+from django.urls import resolve
 
 logger = logging.getLogger(__name__)
 

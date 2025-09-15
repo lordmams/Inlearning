@@ -3,12 +3,13 @@ Tests d'intégration Apache Spark pour InLearning Platform
 Valide le fonctionnement du cluster Spark et des traitements distribués
 """
 
-import unittest
-import requests
 import json
-import time
 import os
+import time
+import unittest
 from pathlib import Path
+
+import requests
 
 
 class TestSparkIntegration(unittest.TestCase):

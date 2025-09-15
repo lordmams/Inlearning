@@ -1,11 +1,11 @@
-from django.contrib import admin
-from django import forms
-from django.db import models
 import json
 
+from django import forms
 # Register your models here.
 # courses/admin.py
 from django.contrib import admin
+from django.db import models
+
 from .models import Category, Course, Enrollment, Lesson
 
 
@@ -250,8 +250,9 @@ class CourseAdmin(admin.ModelAdmin):
 
         # Ici vous pouvez ajouter la logique pour envoyer vers Elasticsearch
         # ou simplement afficher le JSON
-        from django.http import JsonResponse
         import json
+
+        from django.http import JsonResponse
 
         response = JsonResponse(
             courses_json,

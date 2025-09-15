@@ -1,8 +1,9 @@
-import anthropic
 import json
-import random
 import os
+import random
 import time
+
+import anthropic
 
 # Configuration de l'API pour Claude
 client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))

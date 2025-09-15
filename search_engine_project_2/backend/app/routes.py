@@ -1,5 +1,5 @@
-from flask import Blueprint, request, jsonify
 from app.recommendation import get_recommendations
+from flask import Blueprint, jsonify, request
 
 routes = Blueprint("routes", __name__)
 

@@ -1,19 +1,18 @@
-from flask import Flask, request, jsonify, render_template
-from flask_cors import CORS
-import sys
-import os
-import joblib
-import pickle
-from pathlib import Path
-import numpy as np
-import pandas as pd
-import logging
 import json
-import requests
+import logging
+import os
+import pickle
+import sys
 import uuid
 from datetime import datetime
-import sys
-import os
+from pathlib import Path
+
+import joblib
+import numpy as np
+import pandas as pd
+import requests
+from flask import Flask, jsonify, render_template, request
+from flask_cors import CORS
 
 # Configuration des chemins pour les imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -25,9 +24,9 @@ sys.path.append(
 
 # Imports du projet
 try:
-    from models.parcours_generation.recommender import recommend_courses
-    from models.parcours_generation.preprocessing import preprocess_courses
     from models.parcours_generation.filtering import filter_courses
+    from models.parcours_generation.preprocessing import preprocess_courses
+    from models.parcours_generation.recommender import recommend_courses
     from models.parcours_generation.sequencing import order_courses
 except ImportError as e:
     print(f"Warning: Could not import course generation models: {e}")
@@ -79,7 +78,8 @@ logger = logging.getLogger(__name__)
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Import the course classifier and parcours generation modules
-from models.course_pipeline.course_classifier import CourseClassifier, CATEGORIES
+from models.course_pipeline.course_classifier import (CATEGORIES,
+                                                      CourseClassifier)
 
 app = Flask(__name__)
 CORS(app)

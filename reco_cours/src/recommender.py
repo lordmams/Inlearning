@@ -1,8 +1,8 @@
-from src.vectorization import vectorize_courses, vectorize_profile
-from src.similarity import compute_similarity
 from src.filtering import filter_courses
-from src.sequencing import order_courses
 from src.preprocessing import preprocess_courses
+from src.sequencing import order_courses
+from src.similarity import compute_similarity
+from src.vectorization import vectorize_courses, vectorize_profile
 
 
 def recommend_courses(profile, raw_courses, top_k=5):

@@ -3,11 +3,11 @@
 Serveur HTTP simple pour les vérifications de santé de l'orchestrateur
 """
 
-from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 import threading
 import time
 from datetime import datetime
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 
 class HealthHandler(BaseHTTPRequestHandler):

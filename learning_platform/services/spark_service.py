@@ -3,13 +3,14 @@ Service d'interface avec Apache Spark pour la platforme InLearning
 Permet de soumettre des jobs Spark et récupérer les résultats
 """
 
-import requests
 import json
 import logging
 import os
 import time
-from typing import Dict, Any, List, Optional
 from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+import requests
 
 logger = logging.getLogger(__name__)
 

@@ -3,11 +3,12 @@
 Tâches Elasticsearch pour l'orchestration simple
 """
 
-import requests
 import logging
 import os
 import sys
 from datetime import datetime
+
+import requests
 
 logger = logging.getLogger(__name__)
 

@@ -1,38 +1,20 @@
-from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from django.contrib.auth.models import User
-from django.utils.html import format_html
-from django.urls import reverse
-from django.db.models import Count, Avg, Q
-from django.utils.safestring import mark_safe
-from django.contrib.admin import SimpleListFilter
-from django.http import HttpResponse
 import csv
 from datetime import datetime, timedelta
 
-from users.models import (
-    Person,
-    Preferences,
-    Interest,
-    AcademicBackground,
-    FieldOfStudy,
-    ProfessionalBackground,
-    Job,
-    Goals,
-    ShortTermGoal,
-    LongTermGoal,
-)
-from courses.models import (
-    Category,
-    Course,
-    Enrollment,
-    Lesson,
-    LearningPath,
-    Quiz,
-    Question,
-    Answer,
-    QuizAttempt,
-)
+from courses.models import (Answer, Category, Course, Enrollment, LearningPath,
+                            Lesson, Question, Quiz, QuizAttempt)
+from django.contrib import admin
+from django.contrib.admin import SimpleListFilter
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.models import User
+from django.db.models import Avg, Count, Q
+from django.http import HttpResponse
+from django.urls import reverse
+from django.utils.html import format_html
+from django.utils.safestring import mark_safe
+from users.models import (AcademicBackground, FieldOfStudy, Goals, Interest,
+                          Job, LongTermGoal, Person, Preferences,
+                          ProfessionalBackground, ShortTermGoal)
 
 # Personnalisation de l'interface admin
 admin.site.site_header = "🎓 Administration E-Learning Platform"

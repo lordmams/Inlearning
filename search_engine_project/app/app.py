@@ -1,10 +1,11 @@
-import os
 import json
+import os
 import time
+
 import numpy as np
-from flask import Flask, request, jsonify, render_template
-from pymongo import MongoClient
+from flask import Flask, jsonify, render_template, request
 from gensim.models import Word2Vec
+from pymongo import MongoClient
 
 app = Flask(__name__)
 

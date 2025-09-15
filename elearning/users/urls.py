@@ -1,14 +1,9 @@
 # users/urls.py
-from django.urls import path
 from django.contrib.auth.views import LogoutView
-from .views import (
-    CustomLoginView,
-    RegisterView,
-    UserProfileView,
-    PersonDetailView,
-    PersonListView,
-    DashboardView,
-)
+from django.urls import path
+
+from .views import (CustomLoginView, DashboardView, PersonDetailView,
+                    PersonListView, RegisterView, UserProfileView)
 
 print("\n=== Loading Users URLs ===")
 

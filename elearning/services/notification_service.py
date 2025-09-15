@@ -1,9 +1,10 @@
 import logging
-from typing import Dict, Any, List
-from django.core.mail import send_mail
+from datetime import datetime
+from typing import Any, Dict, List
+
 from django.conf import settings
 from django.contrib.auth.models import User
-from datetime import datetime
+from django.core.mail import send_mail
 
 logger = logging.getLogger(__name__)
 

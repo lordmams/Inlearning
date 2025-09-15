@@ -1,19 +1,21 @@
-from django.shortcuts import render, redirect
-from django.contrib.admin.views.decorators import staff_member_required
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.http import JsonResponse, FileResponse
-from django.utils import timezone
-from datetime import timedelta
-from django.contrib.auth.models import User
-from django.conf import settings
-from courses.models import Course, Enrollment, QuizAttempt
-from users.models import Person
-from services.elasticsearch_service import elasticsearch_service
-from .services import health_checker
-from .log_service import log_service
 import logging
 import os
+from datetime import timedelta
+
+from courses.models import Course, Enrollment, QuizAttempt
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.http import FileResponse, JsonResponse
+from django.shortcuts import redirect, render
+from django.utils import timezone
+from services.elasticsearch_service import elasticsearch_service
+from users.models import Person
+
+from .log_service import log_service
+from .services import health_checker
 
 logger = logging.getLogger(__name__)
 
@@ -125,8 +127,9 @@ def admin_dashboard(request):
 @staff_member_required
 def analytics_api(request):
     """API pour les données d'analytics en temps réel"""
-    from django.db.models import Count, Avg
     from datetime import timedelta
+
+    from django.db.models import Avg, Count
     from django.utils import timezone
     from services.elasticsearch_service import elasticsearch_service
 
@@ -242,7 +245,7 @@ def analytics_api(request):
 @staff_member_required
 def user_analytics(request):
     """Analytics détaillées des utilisateurs"""
-    from django.db.models import Count, Case, When, IntegerField
+    from django.db.models import Case, Count, IntegerField, When
 
     try:
         # Distribution par âge
@@ -911,8 +914,9 @@ def elasticsearch_import(request):
 @staff_member_required
 def download_course_template(request):
     """Vue pour télécharger le template de cours"""
-    from django.http import FileResponse
     import os
+
+    from django.http import FileResponse
 
     try:
         file_path = os.path.join(

@@ -1,7 +1,8 @@
-import os
-import requests
 import logging
-from typing import List, Dict, Any, Optional
+import os
+from typing import Any, Dict, List, Optional
+
+import requests
 from django.conf import settings
 
 logger = logging.getLogger(__name__)

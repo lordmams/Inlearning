@@ -1,8 +1,8 @@
-from etl import extract, transform, load
+import os
 
 # from etl import load
 import yaml
-import os
+from etl import extract, load, transform
 
 
 def load_config(filepath: str):

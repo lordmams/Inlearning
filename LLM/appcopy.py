@@ -1,7 +1,7 @@
-import streamlit as st
-import pandas as pd
 import joblib
 import numpy as np
+import pandas as pd
+import streamlit as st
 
 # Chargement du modèle sauvegardé
 model_details = joblib.load("best_model_rff.pkl")

@@ -1,8 +1,9 @@
-import os
 import json
-import anthropic
+import os
 import uuid
 from time import sleep
+
+import anthropic
 
 # Initialiser le client Anthropic
 client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))

@@ -3,12 +3,13 @@
 Tâches de monitoring pour l'orchestration simple
 """
 
-import requests
 import logging
 import os
 import sys
-import psutil
 from datetime import datetime, timedelta
+
+import psutil
+import requests
 
 logger = logging.getLogger(__name__)
 

@@ -1,10 +1,12 @@
+import json
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+from course_pipeline import CoursePipeline
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import List, Dict, Any, Optional
-from pathlib import Path
-import json
-from course_pipeline import CoursePipeline
-from reco_cours.data.course_classifier import CourseClassifier, CATEGORIES
+
+from reco_cours.data.course_classifier import CATEGORIES, CourseClassifier
 
 # Initialisation de l'application FastAPI
 app = FastAPI(

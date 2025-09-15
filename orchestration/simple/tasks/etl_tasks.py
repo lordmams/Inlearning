@@ -3,13 +3,14 @@
 Tâches ETL pour l'orchestration simple
 """
 
+import json
+import logging
+import os
+import sys
+from datetime import datetime
+
 import pandas as pd
 import psycopg2
-import logging
-from datetime import datetime
-import os
-import json
-import sys
 
 logger = logging.getLogger(__name__)
 

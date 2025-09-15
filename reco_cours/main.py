@@ -1,5 +1,5 @@
-from src.recommender import recommend_courses
 from src.preprocessing import load_courses, load_profiles
+from src.recommender import recommend_courses
 
 courses = load_courses("data/simplified_courses.json")
 students = load_profiles("data/students_profiles.json")

@@ -5,9 +5,10 @@ from pathlib import Path
 # Ajouter le chemin racine du projet au PYTHONPATH
 sys.path.append(str(Path(__file__).parent.parent))
 
-from typing import Dict, Any, Tuple, List
-import joblib
 import logging
+from typing import Any, Dict, List, Tuple
+
+import joblib
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from tqdm import tqdm
@@ -195,7 +196,7 @@ def main():
     VECTORIZER_PATH = "./vectorizer.joblib"
 
     # Initialiser le classifier de catégories
-    from reco_cours.data.course_classifier import CourseClassifier, CATEGORIES
+    from reco_cours.data.course_classifier import CATEGORIES, CourseClassifier
 
     categories_classifier = CourseClassifier(CATEGORIES)
 

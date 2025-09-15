@@ -1,12 +1,14 @@
-import json
 import csv
 import io
+import json
 import logging
 from datetime import datetime
-from typing import List, Dict, Any, Tuple
-from django.db import transaction
+from typing import Any, Dict, List, Tuple
+
+from courses.models import Category, Course, Lesson
 from django.core.exceptions import ValidationError
-from courses.models import Course, Category, Lesson
+from django.db import transaction
+
 from .course_processor import CourseProcessor
 from .elastic_service import ElasticService
 

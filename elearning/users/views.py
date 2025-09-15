@@ -1,53 +1,34 @@
-from django.shortcuts import render
-from django.http import JsonResponse
+import json
+import logging
 import os
 
-# Create your views here.
-# users/views.py
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views import View
+import requests
 from django.contrib import messages
-from django.db import transaction
-from django.urls import reverse_lazy
-from django.views.generic.edit import CreateView, UpdateView, DeleteView
-from django.views.generic.detail import DetailView
-from django.views.generic.list import ListView
-from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth import login
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
-from django.contrib.auth import login
+from django.contrib.auth.views import LoginView, LogoutView
+from django.db import transaction
+from django.http import JsonResponse
+# Create your views here.
+# users/views.py
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse_lazy
+from django.views import View
 from django.views.generic import TemplateView
-from django.contrib.auth.decorators import login_required
-import requests
-import logging
-import json
+from django.views.generic.detail import DetailView
+from django.views.generic.edit import CreateView, DeleteView, UpdateView
+from django.views.generic.list import ListView
 
-from .models import (
-    Person,
-    Preferences,
-    Interest,
-    AcademicBackground,
-    FieldOfStudy,
-    ProfessionalBackground,
-    Job,
-    Goals,
-    ShortTermGoal,
-    LongTermGoal,
-)
-from .forms import (
-    UserRegisterForm,
-    LoginForm,
-    PersonForm,
-    PreferencesForm,
-    InterestFormSet,
-    AcademicBackgroundForm,
-    FieldOfStudyFormSet,
-    ProfessionalBackgroundForm,
-    JobFormSet,
-    GoalsForm,
-    ShortTermGoalFormSet,
-    LongTermGoalFormSet,
-)
+from .forms import (AcademicBackgroundForm, FieldOfStudyFormSet, GoalsForm,
+                    InterestFormSet, JobFormSet, LoginForm,
+                    LongTermGoalFormSet, PersonForm, PreferencesForm,
+                    ProfessionalBackgroundForm, ShortTermGoalFormSet,
+                    UserRegisterForm)
+from .models import (AcademicBackground, FieldOfStudy, Goals, Interest, Job,
+                     LongTermGoal, Person, Preferences, ProfessionalBackground,
+                     ShortTermGoal)
 
 # Configuration du logging
 logger = logging.getLogger(__name__)

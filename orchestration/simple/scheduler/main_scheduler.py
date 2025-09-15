@@ -4,14 +4,15 @@ Système d'orchestration simple pour InLearning Platform
 Remplace Airflow avec une approche plus légère et fiable
 """
 
-import schedule
-import time
 import logging
 import os
 import sys
 import threading
+import time
 from datetime import datetime
 from pathlib import Path
+
+import schedule
 
 # Configuration du logging
 logging.basicConfig(
@@ -94,8 +95,8 @@ class SimpleScheduler:
 
 def start_health_server():
     """Démarre le serveur de santé en arrière-plan"""
-    from http.server import HTTPServer, BaseHTTPRequestHandler
     import json
+    from http.server import BaseHTTPRequestHandler, HTTPServer
 
     class HealthHandler(BaseHTTPRequestHandler):
         def do_GET(self):
@@ -130,11 +131,11 @@ scheduler = SimpleScheduler()
 
 if __name__ == "__main__":
     # Import des tâches
-    import sys
     import os
+    import sys
 
     sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-    from tasks import etl_tasks, elasticsearch_tasks, monitoring_tasks
+    from tasks import elasticsearch_tasks, etl_tasks, monitoring_tasks
 
     # Enregistrement des tâches
     scheduler.register_task(

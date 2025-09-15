@@ -3,13 +3,14 @@ Système de recommandations distribué avec Apache Spark MLlib
 Utilise l'algorithme ALS (Alternating Least Squares) pour les recommandations collaboratives
 """
 
+import json
+import logging
+
+from pyspark.ml.evaluation import RegressionEvaluator
+from pyspark.ml.recommendation import ALS
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
 from pyspark.sql.types import *
-from pyspark.ml.recommendation import ALS
-from pyspark.ml.evaluation import RegressionEvaluator
-import logging
-import json
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

@@ -5,8 +5,9 @@ Script de démarrage du consumer de fichiers de cours
 
 import os
 import sys
-import django
 from pathlib import Path
+
+import django
 
 # Ajouter le répertoire du projet au path
 project_root = Path(__file__).parent

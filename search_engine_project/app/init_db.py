@@ -1,8 +1,9 @@
-import os
 import json
+import os
+
 import numpy as np
-from pymongo import MongoClient
 from gensim.models import Word2Vec
+from pymongo import MongoClient
 
 # Connexion à MongoDB
 client = MongoClient("mongodb://mongo:27017/")

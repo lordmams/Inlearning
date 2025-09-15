@@ -3,10 +3,10 @@
 Script de test pour vérifier la connexion à Elasticsearch Cloud
 """
 
+import json
 import os
 import sys
 from pathlib import Path
-import json
 
 # Configuration
 ELASTICSEARCH_HOST = (

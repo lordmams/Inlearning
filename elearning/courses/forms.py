@@ -1,6 +1,7 @@
 # courses/forms.py
 from django import forms
-from .models import Course, Category, Lesson
+
+from .models import Category, Course, Lesson
 
 
 class CourseFilterForm(forms.Form):

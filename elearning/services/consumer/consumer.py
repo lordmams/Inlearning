@@ -1,22 +1,24 @@
-import os
 import json
-import time
 import logging
+import os
 import shutil
-from pathlib import Path
+import time
 from datetime import datetime
-from typing import Dict, Any, List
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
+from pathlib import Path
+from typing import Any, Dict, List
+
 import django
 from django.conf import settings
 from django.db import models
+from watchdog.events import FileSystemEventHandler
+from watchdog.observers import Observer
 
 # Configuration Django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "elearning.settings")
 django.setup()
 
 from courses.models import Course, ImportLog
+
 from ..course_importer import CourseImporter
 from ..elastic_service import ElasticService
 from ..notification_service import NotificationService

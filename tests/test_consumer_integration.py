@@ -6,8 +6,9 @@ Script de test pour la nouvelle architecture Consumer intégrée
 import json
 import os
 import time
-import requests
 from pathlib import Path
+
+import requests
 
 
 def test_consumer_integration():

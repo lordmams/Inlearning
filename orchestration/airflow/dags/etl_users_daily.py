@@ -3,17 +3,18 @@ DAG ETL Users Daily: Extract-Transform-Load des utilisateurs depuis Excel vers P
 Exécution quotidienne à 02:00 AM
 """
 
-from datetime import datetime, timedelta
-from airflow import DAG
-from airflow.operators.python import PythonOperator
-from airflow.operators.bash import BashOperator
-from airflow.providers.postgres.operators.postgres import PostgresOperator
-from airflow.providers.postgres.hooks.postgres import PostgresHook
-from airflow.models import Variable
-import pandas as pd
-import os
 import logging
+import os
+from datetime import datetime, timedelta
+
+import pandas as pd
 import psycopg2.extras
+from airflow import DAG
+from airflow.models import Variable
+from airflow.operators.bash import BashOperator
+from airflow.operators.python import PythonOperator
+from airflow.providers.postgres.hooks.postgres import PostgresHook
+from airflow.providers.postgres.operators.postgres import PostgresOperator
 
 # Configuration par défaut du DAG
 default_args = {

@@ -1,6 +1,6 @@
-from pymongo import MongoClient
-from gensim.models import Word2Vec
 import numpy as np
+from gensim.models import Word2Vec
+from pymongo import MongoClient
 from sklearn.metrics.pairwise import cosine_similarity
 
 # Connexion à MongoDB

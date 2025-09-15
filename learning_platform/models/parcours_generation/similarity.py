@@ -1,5 +1,5 @@
-from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
 
 
 def compute_similarity(profile_vector, course_vectors):

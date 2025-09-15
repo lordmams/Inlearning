@@ -3,10 +3,11 @@
 Script de test pour l'API Learning Platform (compatible Django)
 """
 
-import requests
 import json
 import sys
 from datetime import datetime
+
+import requests
 
 
 def test_api_health():

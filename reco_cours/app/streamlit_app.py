@@ -2,8 +2,8 @@ import streamlit as st
 
 st.set_page_config(page_title="Recommandation de Cours", layout="wide")
 
-from src.recommender import recommend_courses
 from src.preprocessing import load_courses, preprocess_courses
+from src.recommender import recommend_courses
 
 
 # 📦 Chargement des cours

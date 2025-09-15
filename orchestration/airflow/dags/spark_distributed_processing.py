@@ -3,12 +3,14 @@ DAG Airflow pour orchestrer les traitements Spark distribués
 Exécution horaire pour traiter les nouveaux cours et générer les recommandations
 """
 
-from datetime import datetime, timedelta
-from airflow import DAG
-from airflow.operators.python import PythonOperator
-from airflow.operators.bash import BashOperator
-from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 import logging
+from datetime import datetime, timedelta
+
+from airflow import DAG
+from airflow.operators.bash import BashOperator
+from airflow.operators.python import PythonOperator
+from airflow.providers.apache.spark.operators.spark_submit import \
+    SparkSubmitOperator
 
 # Configuration par défaut du DAG
 default_args = {
@@ -35,8 +37,9 @@ dag = DAG(
 
 def check_spark_cluster(**context):
     """Vérifie que le cluster Spark est disponible"""
-    import requests
     import time
+
+    import requests
 
     spark_master_url = "http://spark-master:8080"
     max_retries = 5
@@ -67,8 +70,8 @@ def check_spark_cluster(**context):
 
 def prepare_data_for_spark(**context):
     """Prépare les données pour le traitement Spark"""
-    import os
     import json
+    import os
     from pathlib import Path
 
     # Répertoires

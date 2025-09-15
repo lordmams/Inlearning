@@ -1,16 +1,17 @@
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
-from django.contrib.admin.views.decorators import staff_member_required
-from django.utils.decorators import method_decorator
-from django.views import View
 import json
 import logging
 from datetime import datetime
 
-from .forms import CourseImportForm
-from services.course_importer import CourseImporter
 from courses.models import ImportLog
+from django.contrib.admin.views.decorators import staff_member_required
+from django.http import JsonResponse
+from django.utils.decorators import method_decorator
+from django.views import View
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+from services.course_importer import CourseImporter
+
+from .forms import CourseImportForm
 
 logger = logging.getLogger(__name__)
 
@@ -184,8 +185,9 @@ def consumer_status_api(request):
 def consumer_health_check(request):
     """Health check du consumer via API"""
     try:
-        import requests
         import os
+
+        import requests
 
         # Tester la connexion au consumer (si il expose une API)
         consumer_url = os.getenv("CONSUMER_URL", "http://flask_api:5000")

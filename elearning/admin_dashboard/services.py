@@ -3,14 +3,16 @@ Service de monitoring des services InLearning
 Vérifie la santé de tous les services et maintient les statistiques
 """
 
-import requests
-import time
 import logging
+import time
 from datetime import datetime, timedelta
-from django.utils import timezone
-from django.conf import settings
 from typing import Dict, List, Tuple
-from .models import ServiceMonitoring, ServiceHealthHistory, SystemAlert
+
+import requests
+from django.conf import settings
+from django.utils import timezone
+
+from .models import ServiceHealthHistory, ServiceMonitoring, SystemAlert
 
 logger = logging.getLogger(__name__)
 

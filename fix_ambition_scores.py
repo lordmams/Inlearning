@@ -4,10 +4,11 @@ Script pour corriger le problème d'ambition dans le dataset des étudiants.
 Génère des objectifs variés pour créer des scores d'ambition réalistes.
 """
 
-import pandas as pd
-import numpy as np
 import random
 from collections import Counter
+
+import numpy as np
+import pandas as pd
 
 
 def generate_varied_goals():

@@ -1,16 +1,8 @@
 from django.contrib import admin
-from .models import (
-    Person,
-    Preferences,
-    Interest,
-    AcademicBackground,
-    FieldOfStudy,
-    ProfessionalBackground,
-    Job,
-    Goals,
-    ShortTermGoal,
-    LongTermGoal,
-)
+
+from .models import (AcademicBackground, FieldOfStudy, Goals, Interest, Job,
+                     LongTermGoal, Person, Preferences, ProfessionalBackground,
+                     ShortTermGoal)
 
 
 class InterestInline(admin.TabularInline):

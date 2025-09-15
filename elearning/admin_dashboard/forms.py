@@ -1,9 +1,10 @@
-from django import forms
-from django.core.exceptions import ValidationError
-import json
 import csv
 import io
+import json
 from pathlib import Path
+
+from django import forms
+from django.core.exceptions import ValidationError
 
 
 class CourseImportForm(forms.Form):

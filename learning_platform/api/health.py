@@ -1,7 +1,8 @@
-from flask import Blueprint, jsonify
 import os
 import sys
 from pathlib import Path
+
+from flask import Blueprint, jsonify
 
 # Ajouter le chemin des services
 sys.path.append(str(Path(__file__).parent.parent))

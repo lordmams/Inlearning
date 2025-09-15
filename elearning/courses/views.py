@@ -1,42 +1,28 @@
-from django.shortcuts import render
+import json
+import logging
+import os
 
+import requests
+from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Q
+from django.http import JsonResponse
 # Create your views here.
 # courses/views.py
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views import View
-from django.views.generic import (
-    ListView,
-    DetailView,
-    CreateView,
-    UpdateView,
-    DeleteView,
-)
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib import messages
-from django.db.models import Q
-from django.urls import reverse_lazy, reverse
-from .models import (
-    Course,
-    Category,
-    Enrollment,
-    Lesson,
-    LearningPath,
-    Quiz,
-    Question,
-    Answer,
-    QuizAttempt,
-    UserAnswer,
-)
-from .forms import CourseFilterForm
-from django.http import JsonResponse
-import requests
-import json
-import os
-import logging
-from django.views.decorators.http import require_GET, require_POST, require_http_methods
-from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse, reverse_lazy
 from django.utils import timezone
+from django.views import View
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import (require_GET, require_http_methods,
+                                          require_POST)
+from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
+                                  UpdateView)
 from services.elasticsearch_service import elasticsearch_service
+
+from .forms import CourseFilterForm
+from .models import (Answer, Category, Course, Enrollment, LearningPath,
+                     Lesson, Question, Quiz, QuizAttempt, UserAnswer)
 
 logger = logging.getLogger(__name__)
 

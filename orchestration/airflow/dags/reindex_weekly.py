@@ -3,16 +3,17 @@ DAG Reindex Weekly: Réindexation hebdomadaire d'Elasticsearch avec snapshots
 Exécution hebdomadaire le dimanche à 01:00 AM
 """
 
-from datetime import datetime, timedelta
-from airflow import DAG
-from airflow.operators.python import PythonOperator
-from airflow.operators.bash import BashOperator
-from airflow.models import Variable
-import requests
 import json
-import os
 import logging
+import os
 import time
+from datetime import datetime, timedelta
+
+import requests
+from airflow import DAG
+from airflow.models import Variable
+from airflow.operators.bash import BashOperator
+from airflow.operators.python import PythonOperator
 
 # Configuration par défaut du DAG
 default_args = {

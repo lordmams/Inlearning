@@ -1,9 +1,10 @@
-import streamlit as st
-import pandas as pd
+import json
+
 import joblib
 import openai
+import pandas as pd
 import pdfplumber
-import json
+import streamlit as st
 
 # === CONFIGURATION API GROQ ===
 openai.api_key = (

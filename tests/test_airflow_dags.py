@@ -4,11 +4,11 @@ Script de test et validation des DAGs Airflow
 Teste la syntaxe, les dépendances et la structure des DAGs
 """
 
+import importlib.util
+import logging
 import os
 import sys
-import importlib.util
 from datetime import datetime, timedelta
-import logging
 
 # Configuration du logging
 logging.basicConfig(

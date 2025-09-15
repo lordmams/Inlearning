@@ -1,15 +1,16 @@
-import os
 import json
-import time
 import logging
+import os
 import shutil
-import requests
-from pathlib import Path
-from datetime import datetime
-from typing import Dict, Any, List
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
+import time
 import uuid
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List
+
+import requests
+from watchdog.events import FileSystemEventHandler
+from watchdog.observers import Observer
 
 # Configuration du logging
 logging.basicConfig(

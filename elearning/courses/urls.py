@@ -1,24 +1,13 @@
 # courses/urls.py
 from django.urls import path
-from .views import (
-    DashboardView,
-    CourseListView,
-    CourseDetailView,
-    EnrollCourseView,
-    UnenrollCourseView,
-    LessonDetailView,
-    MarkLessonCompletedView,
-    CourseCreateView,
-    CourseUpdateView,
-    CourseDeleteView,
-    GenerateLearningPathView,
-    LearningPathDetailView,
-    claude_advice,
-    improve_learning_path,
-    QuizView,
-    QuizResultView,
-    generate_quiz,
-)
+
+from .views import (CourseCreateView, CourseDeleteView, CourseDetailView,
+                    CourseListView, CourseUpdateView, DashboardView,
+                    EnrollCourseView, GenerateLearningPathView,
+                    LearningPathDetailView, LessonDetailView,
+                    MarkLessonCompletedView, QuizResultView, QuizView,
+                    UnenrollCourseView, claude_advice, generate_quiz,
+                    improve_learning_path)
 
 print("\n=== Loading Courses URLs ===")
 

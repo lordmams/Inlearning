@@ -3,16 +3,17 @@ Module de traitement distribué des cours avec Apache Spark
 Permet de traiter des milliers de cours en parallèle avec classification ML distribuée
 """
 
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import *
-from pyspark.sql.types import *
-from pyspark.ml.feature import *
-from pyspark.ml.classification import LogisticRegression
-from pyspark.ml import Pipeline
 import json
 import logging
 import os
 from pathlib import Path
+
+from pyspark.ml import Pipeline
+from pyspark.ml.classification import LogisticRegression
+from pyspark.ml.feature import *
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import *
+from pyspark.sql.types import *
 
 # Configuration du logging
 logging.basicConfig(level=logging.INFO)

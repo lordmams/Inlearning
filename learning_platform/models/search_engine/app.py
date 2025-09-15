@@ -1,24 +1,25 @@
-import streamlit as st
+import json
+import re
+import time
+from collections import Counter
+from datetime import datetime
+
+import matplotlib.pyplot as plt
+import nltk
+import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from sentence_transformers import SentenceTransformer, util
-import json
-import re
-from collections import Counter
-import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.decomposition import TruncatedSVD, PCA
-from sklearn.cluster import KMeans
-from sklearn.manifold import TSNE
-import nltk
+import seaborn as sns
+import streamlit as st
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
+from sentence_transformers import SentenceTransformer, util
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA, TruncatedSVD
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.manifold import TSNE
 from wordcloud import WordCloud
-import matplotlib.pyplot as plt
-import seaborn as sns
-from datetime import datetime
-import time
 
 # Configuration de la page
 st.set_page_config(

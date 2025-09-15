@@ -1,5 +1,6 @@
-import os
 import json
+import os
+
 import anthropic
 
 # Initialiser le client Anthropic avec la clé API depuis les variables d'environnement

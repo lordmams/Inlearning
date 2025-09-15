@@ -1,8 +1,8 @@
+import joblib
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.model_selection import train_test_split
-import joblib
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 # Charger les données
 data = pd.read_csv("generated_student_data_100k_final.csv")

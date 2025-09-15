@@ -3,13 +3,14 @@ Service de récupération des logs pour les différents services
 Version améliorée qui utilise les endpoints de santé et les commandes Docker
 """
 
-import os
 import json
 import logging
-import requests
+import os
 import subprocess
-from typing import Dict, List, Optional
 from datetime import datetime, timedelta
+from typing import Dict, List, Optional
+
+import requests
 
 logger = logging.getLogger(__name__)
 

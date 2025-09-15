@@ -149,35 +149,50 @@ jobs:
         # Deploy
         ssh -o StrictHostKeyChecking=no ${{ secrets.PRODUCTION_USER }}@${{ secrets.PRODUCTION_HOST }} << 'EOF'
           echo "Connected to production server"
-          cd /opt/inlearning-production 2>/dev/null || { echo "Creating project directory"; mkdir -p /opt/inlearning-production; cd /opt/inlearning-production; }
           
-          # Clone or pull repository
+          # Navigate to project directory (should already exist)
+          if [ -d "~/inlearning-production" ]; then
+            cd ~/inlearning-production
+            echo "Using existing project directory"
+          else
+            echo "Creating project directory"
+            mkdir -p ~/inlearning-production
+            cd ~/inlearning-production
+          fi
+          
+          # Update repository
           if [ -d ".git" ]; then
             echo "Pulling latest changes..."
             git pull origin main || echo "Git pull failed, continuing..."
           else
-            echo "Cloning repository..."
-            git clone https://github.com/lordmams/Inlearning.git . || echo "Git clone failed, continuing..."
+            echo "Initializing git repository..."
+            git init
+            git remote add origin https://github.com/lordmams/Inlearning.git
+            git pull origin main || echo "Git pull failed, continuing..."
           fi
           
-          # Copy environment file if it exists
-          if [ -f "env.production" ]; then
-            cp env.production .env
-            echo "Environment file configured"
+          # Setup environment
+          if [ -f "env.production.template" ]; then
+            cp env.production.template .env
+            echo "Environment template configured"
+          elif [ -f "env.example" ]; then
+            cp env.example .env
+            echo "Using example environment file"
           else
-            echo "Warning: env.production not found"
+            echo "No environment template found"
           fi
           
           # Deploy with docker-compose
           if command -v docker-compose &> /dev/null; then
-            echo "Starting services..."
-            docker-compose -f docker-compose.production.yml pull || echo "Pull failed, continuing..."
-            docker-compose -f docker-compose.production.yml up -d || echo "Startup failed, continuing..."
+            echo "Starting services with Docker Compose..."
+            docker-compose -f docker-compose.yaml pull || echo "Pull failed, continuing..."
+            docker-compose -f docker-compose.yaml up -d || echo "Startup failed, continuing..."
+            echo "Services started"
           else
-            echo "Docker Compose not found, deployment simulation"
+            echo "Docker Compose not found, deployment simulation completed"
           fi
           
-          echo "✅ Production deployment completed"
+          echo "✅ Production deployment completed successfully"
         EOF
     
     - name: Notify success

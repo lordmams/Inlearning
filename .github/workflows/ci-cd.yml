@@ -68,21 +68,26 @@ jobs:
     
     - name: Check code formatting
       run: |
-        black --check --diff . || echo "Code formatting issues found"
-        isort --check-only --diff . || echo "Import sorting issues found"
+        # Check Black formatting excluding migrations and other generated files
+        find . -name "*.py" -not -path "*/migrations/*" -not -path "*/.venv/*" -not -path "*/venv/*" -not -path "*/__pycache__/*" -not -path "*/staticfiles/*" -not -path "*/.git/*" | xargs black --check --diff
+        isort --check-only --diff . --skip migrations
     
     - name: Set up environment
       run: |
         cp env.example .env
-        echo "POSTGRES_HOST=localhost" >> .env
-        echo "POSTGRES_DB=test_db" >> .env
-        echo "POSTGRES_USER=test_user" >> .env
-        echo "POSTGRES_PASSWORD=test_password" >> .env
-        echo "DEBUG=True" >> .env
+        cp env.example elearning/.env
+        echo "POSTGRES_HOST=localhost" >> elearning/.env
+        echo "POSTGRES_DB=test_db" >> elearning/.env
+        echo "POSTGRES_USER=test_user" >> elearning/.env
+        echo "POSTGRES_PASSWORD=test_password" >> elearning/.env
+        echo "DEBUG=True" >> elearning/.env
+        echo "SECRET_KEY=test-secret-key-for-ci" >> elearning/.env
+        echo "REDIS_URL=redis://localhost:6379/0" >> elearning/.env
     
     - name: Run Django tests
       working-directory: ./elearning
       run: |
+        mkdir -p static
         python manage.py migrate
         python manage.py test --verbosity=2 || echo "Some tests failed"
       env:
@@ -155,7 +160,7 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
 
   # ===============================================
-  # Job 3: Deploy Staging (simple)
+  # Job 3: Deploy Staging 
   # ===============================================
   deploy-staging:
     runs-on: ubuntu-latest

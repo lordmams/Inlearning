@@ -1,0 +1,283 @@
+{% extends 'admin_dashboard/base_admin.html' %}
+{% load static %}
+
+{% block title %}Analytics Cours{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0 text-gray-800">
+                    <i class="fas fa-book text-primary"></i>
+                    Analytics Cours
+                </h1>
+                <div>
+                    <a href="{% url 'admin_dashboard:dashboard' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Retour au Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques générales -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Cours
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="total-courses">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-book fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Cours Populaires
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="popular-courses">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-fire fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Catégories
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="total-categories">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-tags fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Taux de Complétion
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="completion-rate">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Graphiques -->
+    <div class="row">
+        <!-- Performance par catégorie -->
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Performance par Catégorie</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tendances de difficulté -->
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Tendances de Difficulté</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="difficultyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top cours populaires -->
+    <div class="row">
+        <div class="col-xl-12 col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Top Cours Populaires</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="popularCoursesTable">
+                            <thead>
+                                <tr>
+                                    <th>Rang</th>
+                                    <th>Titre du Cours</th>
+                                    <th>Catégorie</th>
+                                    <th>Niveau</th>
+                                    <th>Inscriptions</th>
+                                    <th>Note Moyenne</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Les données seront chargées via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Données des graphiques
+    const categoryData = {{ category_performance|safe }};
+    const difficultyData = {{ difficulty_trends|safe }};
+    const popularCourses = {{ popular_courses|safe }};
+
+    // Graphique de performance par catégorie
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    new Chart(categoryCtx, {
+        type: 'bar',
+        data: {
+            labels: categoryData.map(item => item.category),
+            datasets: [{
+                label: 'Nombre de cours',
+                data: categoryData.map(item => item.count),
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Graphique des tendances de difficulté
+    const difficultyCtx = document.getElementById('difficultyChart').getContext('2d');
+    new Chart(difficultyCtx, {
+        type: 'line',
+        data: {
+            labels: difficultyData.map(item => item.period),
+            datasets: [{
+                label: 'Cours Débutant',
+                data: difficultyData.map(item => item.beginner || 0),
+                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.1
+            }, {
+                label: 'Cours Intermédiaire',
+                data: difficultyData.map(item => item.intermediate || 0),
+                borderColor: 'rgba(255, 206, 86, 1)',
+                backgroundColor: 'rgba(255, 206, 86, 0.2)',
+                tension: 0.1
+            }, {
+                label: 'Cours Avancé',
+                data: difficultyData.map(item => item.advanced || 0),
+                borderColor: 'rgba(255, 99, 132, 1)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Charger le tableau des cours populaires
+    loadPopularCourses(popularCourses);
+    
+    // Charger les statistiques générales
+    loadCourseStats();
+});
+
+function loadPopularCourses(courses) {
+    const tbody = document.querySelector('#popularCoursesTable tbody');
+    tbody.innerHTML = '';
+    
+    courses.forEach((course, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${course.title || 'N/A'}</td>
+            <td><span class="badge badge-primary">${course.category || 'N/A'}</span></td>
+            <td><span class="badge badge-info">${course.level || 'N/A'}</span></td>
+            <td>${course.enrollments || 0}</td>
+            <td>${course.rating || 'N/A'}</td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function loadCourseStats() {
+    // Données réelles depuis Elasticsearch
+    fetch("/admin-dashboard/analytics/api/")
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("total-courses").textContent = data.total_courses || "0";
+            document.getElementById("popular-courses").textContent = data.popular_courses || "0";
+            document.getElementById("total-categories").textContent = data.total_categories || "0";
+            document.getElementById("completion-rate").textContent = data.completion_rate || "0%";
+        })
+        .catch(error => {
+            console.error("Erreur lors du chargement des statistiques:", error);
+            document.getElementById("total-courses").textContent = "0";
+            document.getElementById("popular-courses").textContent = "0";
+            document.getElementById("total-categories").textContent = "0";
+            document.getElementById("completion-rate").textContent = "0%";
+        });
+}
+</script>
+{% endblock %}

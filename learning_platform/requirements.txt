@@ -1,11 +1,36 @@
+# Flask et extensions
 flask>=2.3.0
 flask-cors>=4.0.0
+
+# Machine Learning
+scikit-learn>=1.3.0
 numpy>=1.24.0
 pandas>=2.0.0
-scikit-learn>=1.3.0
-python-dotenv>=1.0.0
 joblib>=1.3.0
+
+# Plotting et visualisation
 matplotlib>=3.7.0
+
+# NLP et traitement de texte
 nltk>=3.8.0
-streamlit>=1.20.0
+
+# API externes
 anthropic>=0.7.7
+openai>=1.0.0
+langchain>=0.0.300
+tiktoken>=0.5.0
+
+# File monitoring
+watchdog>=3.0.0
+
+# HTTP requests
+requests>=2.31.0
+
+# Elasticsearch
+elasticsearch>=8.11.0
+
+# Environment variables
+python-dotenv>=1.0.0
+
+# Streamlit (si utilisé)
+streamlit>=1.20.0

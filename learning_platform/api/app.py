@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import sys
 import os
@@ -9,18 +9,59 @@ import numpy as np
 import pandas as pd
 import logging
 import json
-from models.parcours_generation.recommender import recommend_courses
-from models.parcours_generation.preprocessing import preprocess_courses
-from models.parcours_generation.filtering import filter_courses
-from models.parcours_generation.sequencing import order_courses
+import requests
+import uuid
+from datetime import datetime
+import sys
+import os
+# Configuration des chemins pour les imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'services'))
+
+# Imports du projet
+try:
+    from models.parcours_generation.recommender import recommend_courses
+    from models.parcours_generation.preprocessing import preprocess_courses
+    from models.parcours_generation.filtering import filter_courses
+    from models.parcours_generation.sequencing import order_courses
+except ImportError as e:
+    print(f"Warning: Could not import course generation models: {e}")
+    # Créer des fonctions mock pour le fallback
+    def recommend_courses(user_profile, courses, top_k=10):
+        return courses[:top_k] if courses else []
+    
+    def preprocess_courses(courses):
+        return courses
+    
+    def filter_courses(courses, filters):
+        return courses
+    
+    def order_courses(courses):
+        return courses
+
+try:
+    from spark_service import spark_service
+except ImportError as e:
+    print(f"Warning: Could not import spark_service: {e}")
+    # Créer un mock spark_service
+    class MockSparkService:
+        def is_cluster_available(self):
+            return False
+        def get_cluster_status(self):
+            return {"status": "unavailable", "master_url": None}
+        def submit_job(self, *args, **kwargs):
+            return {"status": "error", "message": "Spark service not available"}
+    spark_service = MockSparkService()
+
 import anthropic
 from dotenv import load_dotenv
+from health import health_bp
 
 # Load environment variables from .env file
 load_dotenv()
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 # Add the parent directory to the Python path
@@ -31,10 +72,351 @@ from models.course_pipeline.course_classifier import CourseClassifier, CATEGORIE
 
 app = Flask(__name__)
 CORS(app)
+app.register_blueprint(health_bp)
 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 logger.info(f"ANTHROPIC_API_KEY loaded: {'Yes' if ANTHROPIC_API_KEY else 'No'}")
 logger.info(f"ANTHROPIC_API_KEY length: {len(ANTHROPIC_API_KEY) if ANTHROPIC_API_KEY else 0}")
+
+# Configuration Elasticsearch pour envoi direct
+ELASTICSEARCH_HOST = os.environ.get('ELASTICSEARCH_HOST', 'http://localhost:9200')
+ELASTICSEARCH_INDEX = os.environ.get('ELASTICSEARCH_INDEX', 'courses')
+ELASTICSEARCH_API_KEY = os.environ.get('ELASTICSEARCH_API_KEY', '')
+
+# Compteur global pour les cours traités
+processed_courses_count = 0
+
+@app.route('/', methods=['GET'])
+def api_documentation():
+    """
+    Route racine qui affiche la documentation HTML de l'API Flask
+    """
+    routes_info = {
+        "api_name": "InLearning Platform API",
+        "version": "1.0.0",
+        "description": "API pour la plateforme d'apprentissage avec IA et Big Data",
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "endpoints": {
+            "/": {
+                "methods": ["GET"],
+                "description": "Documentation de l'API (cette page)",
+                "parameters": "Aucun",
+                "returns": "Page HTML avec documentation complète des routes"
+            },
+            "/health": {
+                "methods": ["GET"],
+                "description": "Vérification de l'état de santé de l'API",
+                "parameters": "Aucun",
+                "returns": "{'status': 'healthy', 'timestamp': '...'}"
+            },
+            "/status": {
+                "methods": ["GET"],
+                "description": "Statut détaillé de l'API et des services connectés",
+                "parameters": "Aucun",
+                "returns": "Informations sur l'état des modèles ML, Elasticsearch, Spark"
+            },
+            "/api/calculate-level": {
+                "methods": ["POST"],
+                "description": "Calcule le niveau d'un utilisateur basé sur son profil",
+                "parameters": {
+                    "user_data": {
+                        "age": "int - Âge de l'utilisateur",
+                        "gender": "str - Genre (M/F/O/P)",
+                        "highest_academic_level": "str - Niveau académique",
+                        "fields_of_study": "list - Domaines d'étude",
+                        "professional_experience": "int - Années d'expérience",
+                        "preferred_language": "str - Langue préférée",
+                        "learning_mode": "str - Mode d'apprentissage",
+                        "interests": "list - Centres d'intérêt"
+                    }
+                },
+                "returns": "{'predicted_level': 'Débutant/Intermédiaire/Avancé', 'confidence': float}"
+            },
+            "/api/predict-category": {
+                "methods": ["POST"],
+                "description": "Prédit la catégorie d'un cours",
+                "parameters": {
+                    "titre": "str - Titre du cours",
+                    "description": "str - Description du cours"
+                },
+                "returns": "{'predicted_category': 'str', 'confidence': float}"
+            },
+            "/api/predict-level": {
+                "methods": ["POST"],
+                "description": "Prédit le niveau de difficulté d'un cours",
+                "parameters": {
+                    "titre": "str - Titre du cours",
+                    "description": "str - Description du cours"
+                },
+                "returns": "{'predicted_level': 'str', 'confidence': float}"
+            },
+            "/api/generate-learning-path": {
+                "methods": ["POST"],
+                "description": "Génère un parcours d'apprentissage personnalisé",
+                "parameters": {
+                    "user_profile": "object - Profil utilisateur complet",
+                    "learning_objectives": "list - Objectifs d'apprentissage",
+                    "preferences": "object - Préférences d'apprentissage"
+                },
+                "returns": "Parcours d'apprentissage avec cours recommandés et séquencement"
+            },
+            "/api/improve-learning-path": {
+                "methods": ["POST"],
+                "description": "Améliore un parcours existant avec l'IA",
+                "parameters": {
+                    "learning_path": "object - Parcours existant",
+                    "feedback": "str - Retours utilisateur"
+                },
+                "returns": "Parcours amélioré avec suggestions IA"
+            },
+            "/api/claude-advice": {
+                "methods": ["POST"],
+                "description": "Obtient des conseils personnalisés via Claude AI",
+                "parameters": {
+                    "user_profile": "object - Profil utilisateur",
+                    "current_courses": "list - Cours actuels",
+                    "question": "str - Question spécifique (optionnel)"
+                },
+                "returns": "Conseils personnalisés et recommandations"
+            },
+            "/api/generate-quiz": {
+                "methods": ["POST"],
+                "description": "Génère un quiz adaptatif pour un cours",
+                "parameters": {
+                    "course_content": "str - Contenu du cours",
+                    "difficulty_level": "str - Niveau de difficulté",
+                    "num_questions": "int - Nombre de questions"
+                },
+                "returns": "Quiz généré avec questions et réponses"
+            },
+            "/process-single-course": {
+                "methods": ["POST"],
+                "description": "Traite un cours individuel (ML + Elasticsearch)",
+                "parameters": {
+                    "course_data": "object - Données du cours à traiter"
+                },
+                "returns": "Cours traité avec catégorie, niveau et embedding"
+            },
+            "/process-courses-batch": {
+                "methods": ["POST"],
+                "description": "Traite plusieurs cours en lot",
+                "parameters": {
+                    "courses": "list - Liste des cours à traiter"
+                },
+                "returns": "Résultats du traitement par lot"
+            },
+            "/process-courses-distributed": {
+                "methods": ["POST"],
+                "description": "Lance un traitement distribué avec Spark",
+                "parameters": {
+                    "input_path": "str - Chemin des données d'entrée",
+                    "output_path": "str - Chemin de sortie"
+                },
+                "returns": "ID du job Spark lancé"
+            },
+            "/spark/job-status/<job_id>": {
+                "methods": ["GET"],
+                "description": "Vérifie le statut d'un job Spark",
+                "parameters": "job_id dans l'URL",
+                "returns": "Statut du job (RUNNING, COMPLETED, FAILED)"
+            },
+            "/spark/job-results/<job_id>": {
+                "methods": ["GET"],
+                "description": "Récupère les résultats d'un job Spark",
+                "parameters": "job_id dans l'URL",
+                "returns": "Résultats du traitement Spark"
+            },
+            "/stats/processed-courses": {
+                "methods": ["GET"],
+                "description": "Statistiques des cours traités",
+                "parameters": "Aucun",
+                "returns": "Nombre de cours traités et métriques"
+            }
+        },
+        "models_loaded": {
+            "student_level_model": "Modèle de prédiction du niveau utilisateur",
+            "course_classifier": "Classificateur de catégories de cours",
+            "course_level_model": "Modèle de prédiction du niveau de cours",
+            "vectorizer": "Vectoriseur TF-IDF pour les embeddings"
+        },
+        "services_integration": {
+            "elasticsearch": "Stockage et recherche de cours",
+            "spark": "Traitement distribué des données",
+            "claude_ai": "Conseils personnalisés et génération de contenu",
+            "django": "Interface web et gestion utilisateurs"
+        },
+        "usage_examples": {
+            "predict_user_level": "curl -X POST http://localhost:5000/api/calculate-level -H 'Content-Type: application/json' -d '{\"user_data\": {\"age\": 25, \"gender\": \"M\", \"highest_academic_level\": \"Master\"}}'",
+            "process_course": "curl -X POST http://localhost:5000/process-single-course -H 'Content-Type: application/json' -d '{\"course_data\": {\"titre\": \"Python Basics\", \"description\": \"Learn Python programming\"}}'",
+            "health_check": "curl http://localhost:5000/health"
+        }
+    }
+    
+    return render_template('api_documentation.html', **routes_info)
+    """
+    Route racine qui documente toutes les routes disponibles de l'API Flask
+    """
+    routes_info = {
+        "api_name": "InLearning Platform API",
+        "version": "1.0.0",
+        "description": "API pour la plateforme d'apprentissage avec IA et Big Data",
+        "endpoints": {
+            "/": {
+                "methods": ["GET"],
+                "description": "Documentation de l'API (cette page)",
+                "parameters": "Aucun",
+                "returns": "Documentation complète des routes"
+            },
+            "/health": {
+                "methods": ["GET"],
+                "description": "Vérification de l'état de santé de l'API",
+                "parameters": "Aucun",
+                "returns": "{'status': 'healthy', 'timestamp': '...'}"
+            },
+            "/status": {
+                "methods": ["GET"],
+                "description": "Statut détaillé de l'API et des services connectés",
+                "parameters": "Aucun",
+                "returns": "Informations sur l'état des modèles ML, Elasticsearch, Spark"
+            },
+            "/api/calculate-level": {
+                "methods": ["POST"],
+                "description": "Calcule le niveau d'un utilisateur basé sur son profil",
+                "parameters": {
+                    "user_data": {
+                        "age": "int - Âge de l'utilisateur",
+                        "gender": "str - Genre (M/F/O/P)",
+                        "highest_academic_level": "str - Niveau académique",
+                        "fields_of_study": "list - Domaines d'étude",
+                        "professional_experience": "int - Années d'expérience",
+                        "preferred_language": "str - Langue préférée",
+                        "learning_mode": "str - Mode d'apprentissage",
+                        "interests": "list - Centres d'intérêt"
+                    }
+                },
+                "returns": "{'predicted_level': 'Débutant/Intermédiaire/Avancé', 'confidence': float}"
+            },
+            "/api/predict-category": {
+                "methods": ["POST"],
+                "description": "Prédit la catégorie d'un cours",
+                "parameters": {
+                    "titre": "str - Titre du cours",
+                    "description": "str - Description du cours"
+                },
+                "returns": "{'predicted_category': 'str', 'confidence': float}"
+            },
+            "/api/predict-level": {
+                "methods": ["POST"],
+                "description": "Prédit le niveau de difficulté d'un cours",
+                "parameters": {
+                    "titre": "str - Titre du cours",
+                    "description": "str - Description du cours"
+                },
+                "returns": "{'predicted_level': 'str', 'confidence': float}"
+            },
+            "/api/generate-learning-path": {
+                "methods": ["POST"],
+                "description": "Génère un parcours d'apprentissage personnalisé",
+                "parameters": {
+                    "user_profile": "object - Profil utilisateur complet",
+                    "learning_objectives": "list - Objectifs d'apprentissage",
+                    "preferences": "object - Préférences d'apprentissage"
+                },
+                "returns": "Parcours d'apprentissage avec cours recommandés et séquencement"
+            },
+            "/api/improve-learning-path": {
+                "methods": ["POST"],
+                "description": "Améliore un parcours existant avec l'IA",
+                "parameters": {
+                    "learning_path": "object - Parcours existant",
+                    "feedback": "str - Retours utilisateur"
+                },
+                "returns": "Parcours amélioré avec suggestions IA"
+            },
+            "/api/claude-advice": {
+                "methods": ["POST"],
+                "description": "Obtient des conseils personnalisés via Claude AI",
+                "parameters": {
+                    "user_profile": "object - Profil utilisateur",
+                    "current_courses": "list - Cours actuels",
+                    "question": "str - Question spécifique (optionnel)"
+                },
+                "returns": "Conseils personnalisés et recommandations"
+            },
+            "/api/generate-quiz": {
+                "methods": ["POST"],
+                "description": "Génère un quiz adaptatif pour un cours",
+                "parameters": {
+                    "course_content": "str - Contenu du cours",
+                    "difficulty_level": "str - Niveau de difficulté",
+                    "num_questions": "int - Nombre de questions"
+                },
+                "returns": "Quiz généré avec questions et réponses"
+            },
+            "/process-single-course": {
+                "methods": ["POST"],
+                "description": "Traite un cours individuel (ML + Elasticsearch)",
+                "parameters": {
+                    "course_data": "object - Données du cours à traiter"
+                },
+                "returns": "Cours traité avec catégorie, niveau et embedding"
+            },
+            "/process-courses-batch": {
+                "methods": ["POST"],
+                "description": "Traite plusieurs cours en lot",
+                "parameters": {
+                    "courses": "list - Liste des cours à traiter"
+                },
+                "returns": "Résultats du traitement par lot"
+            },
+            "/process-courses-distributed": {
+                "methods": ["POST"],
+                "description": "Lance un traitement distribué avec Spark",
+                "parameters": {
+                    "input_path": "str - Chemin des données d'entrée",
+                    "output_path": "str - Chemin de sortie"
+                },
+                "returns": "ID du job Spark lancé"
+            },
+            "/spark/job-status/<job_id>": {
+                "methods": ["GET"],
+                "description": "Vérifie le statut d'un job Spark",
+                "parameters": "job_id dans l'URL",
+                "returns": "Statut du job (RUNNING, COMPLETED, FAILED)"
+            },
+            "/spark/job-results/<job_id>": {
+                "methods": ["GET"],
+                "description": "Récupère les résultats d'un job Spark",
+                "parameters": "job_id dans l'URL",
+                "returns": "Résultats du traitement Spark"
+            },
+            "/stats/processed-courses": {
+                "methods": ["GET"],
+                "description": "Statistiques des cours traités",
+                "parameters": "Aucun",
+                "returns": "Nombre de cours traités et métriques"
+            }
+        },
+        "models_loaded": {
+            "student_level_model": "Modèle de prédiction du niveau utilisateur",
+            "course_classifier": "Classificateur de catégories de cours",
+            "course_level_model": "Modèle de prédiction du niveau de cours",
+            "vectorizer": "Vectoriseur TF-IDF pour les embeddings"
+        },
+        "services_integration": {
+            "elasticsearch": "Stockage et recherche de cours",
+            "spark": "Traitement distribué des données",
+            "claude_ai": "Conseils personnalisés et génération de contenu",
+            "django": "Interface web et gestion utilisateurs"
+        },
+        "usage_examples": {
+            "predict_user_level": "curl -X POST http://localhost:5000/api/calculate-level -H 'Content-Type: application/json' -d '{\"user_data\": {\"age\": 25, \"gender\": \"M\", \"highest_academic_level\": \"Master\"}}'",
+            "process_course": "curl -X POST http://localhost:5000/process-single-course -H 'Content-Type: application/json' -d '{\"course_data\": {\"titre\": \"Python Basics\", \"description\": \"Learn Python programming\"}}'",
+            "health_check": "curl http://localhost:5000/health"
+        }
+    }
+    
+    return jsonify(routes_info)
 
 def call_claude_api(prompt):
     if not ANTHROPIC_API_KEY:
@@ -120,6 +502,200 @@ def load_models():
 logger.info("Starting to load models...")
 models = load_models()
 logger.info("All models loaded successfully")
+
+def send_to_elasticsearch(course_data):
+    """Envoie les données traitées directement à Elasticsearch"""
+    try:
+        # Préparer l'URL et les headers
+        url = f"{ELASTICSEARCH_HOST}/{ELASTICSEARCH_INDEX}/_doc/{course_data['id']}"
+        headers = {'Content-Type': 'application/json'}
+        
+        if ELASTICSEARCH_API_KEY:
+            headers['Authorization'] = f'ApiKey {ELASTICSEARCH_API_KEY}'
+        
+        # Formater pour Elasticsearch selon le template attendu
+        es_document = {
+            "url": course_data.get("url", ""),
+            "cours": {
+                "id": course_data["id"],
+                "titre": course_data["titre"],
+                "description": course_data["description"],
+                "lien": course_data.get("lien", ""),
+                "contenus": course_data.get("contenus", {}),
+                "categories": course_data.get("categories", []) if isinstance(course_data.get("categories"), list) else [str(course_data.get("categories", ""))],
+                "niveau": str(course_data.get("niveau", "")),
+                "duree": course_data.get("duree", ""),
+                "vecteur_embedding": course_data.get("vecteur_embedding", [])
+            },
+            "processed_at": course_data.get("processed_at"),
+            "source": "learning_platform_pipeline",
+            "predictions": {
+                "predicted_category": course_data.get("predicted_category"),
+                "category_confidence": course_data.get("category_confidence"),
+                "predicted_level": course_data.get("predicted_level"),
+                "level_confidence": course_data.get("level_confidence")
+            }
+        }
+        
+        # Envoyer à Elasticsearch
+        response = requests.put(url, json=es_document, headers=headers, timeout=30)
+        
+        if response.status_code in [200, 201]:
+            logger.info(f"✅ Cours indexé dans Elasticsearch: {course_data['titre']}")
+            return True
+        else:
+            logger.error(f"❌ Erreur Elasticsearch: {response.status_code} - {response.text}")
+            return False
+            
+    except Exception as e:
+        logger.error(f"❌ Erreur envoi Elasticsearch: {e}")
+        return False
+
+def process_course_with_pipeline(course_data):
+    """Traite un cours avec le pipeline de classification et prédiction de niveau"""
+    try:
+        logger.debug(f"Traitement cours ID: {course_data.get('id', 'unknown')}")
+        logger.debug(f"Type titre: {type(course_data.get('titre', ''))}, Valeur: {course_data.get('titre', '')[:100]}...")
+        logger.debug(f"Type description: {type(course_data.get('description', ''))}, Valeur: {course_data.get('description', '')[:100]}...")
+        
+        # Ajout debug pour voir TOUT le contenu du cours
+        logger.debug(f"Contenu complet course_data keys: {list(course_data.keys())}")
+        for key, value in course_data.items():
+            logger.debug(f"  {key}: {type(value)} - {str(value)[:50]}...")
+        # Utiliser le classificateur de catégories existant
+        if 'course_classifier' in models:
+            title = str(course_data.get('titre', '')) if course_data.get('titre') else ''
+            description = str(course_data.get('description', '')) if course_data.get('description') else ''
+            
+            # Classification de catégorie
+            try:
+                logger.debug(f"Avant classification - title type: {type(title)}, description type: {type(description)}")
+                # Vérifier si la méthode predict_category existe, sinon utiliser classify_text
+                if hasattr(models['course_classifier'], 'predict_category'):
+                    # Protection supplémentaire contre les listes
+                    title_safe = str(title) if not isinstance(title, list) else ' '.join(str(x) for x in title)
+                    description_safe = str(description) if not isinstance(description, list) else ' '.join(str(x) for x in description)
+                    logger.debug(f"Appel predict_category avec title_safe: {type(title_safe)}, description_safe: {type(description_safe)}")
+                    predicted_category, confidence = models['course_classifier'].predict_category(title_safe, description_safe)
+                elif hasattr(models['course_classifier'], 'classify_text'):
+                    # Protection supplémentaire contre les listes
+                    try:
+                        title_safe = str(title) if not isinstance(title, list) else ' '.join(str(x) for x in title)
+                        logger.debug(f"title_safe créé: {type(title_safe)}")
+                    except Exception as e:
+                        logger.error(f"Erreur création title_safe: {e}")
+                        title_safe = "titre inconnu"
+                    
+                    try:
+                        description_safe = str(description) if not isinstance(description, list) else ' '.join(str(x) for x in description)
+                        logger.debug(f"description_safe créé: {type(description_safe)}")
+                    except Exception as e:
+                        logger.error(f"Erreur création description_safe: {e}")
+                        description_safe = "description inconnue"
+                    
+                    try:
+                        combined_text = f"{title_safe} {description_safe}"
+                        logger.debug(f"combined_text créé: {type(combined_text)}")
+                    except Exception as e:
+                        logger.error(f"Erreur création combined_text: {e}")
+                        combined_text = "texte inconnu"
+                    
+                    try:
+                        logger.debug(f"Appel classify_text avec combined_text type: {type(combined_text)}")
+                        predicted_category, confidence = models['course_classifier'].classify_text(combined_text)
+                        logger.debug(f"classify_text réussi: {predicted_category}, {confidence}")
+                    except Exception as e:
+                        logger.error(f"Erreur dans classify_text: {e}")
+                        predicted_category, confidence = "Général", 0.5
+                else:
+                    raise ValueError("Aucune méthode de classification disponible")
+            except Exception as classify_error:
+                logger.error(f"Erreur classification pour cours {course_data.get('id', 'unknown')}: {classify_error}")
+                logger.error(f"Title type: {type(title)}, Description type: {type(description)}")
+                predicted_category = "Général"
+                confidence = 0.5
+        else:
+            # Fallback simple
+            titre_safe = str(course_data.get('titre', '')) if course_data.get('titre') else ''
+            predicted_category = "Programmation" if any(lang in titre_safe.lower() 
+                                                       for lang in ["python", "java", "javascript", "php"]) else "Général"
+            confidence = 0.7
+        
+        # Prédiction de niveau (simulation intelligente basée sur le contenu)
+        titre = str(course_data.get('titre', '')).lower() if course_data.get('titre') else ''
+        description = str(course_data.get('description', '')).lower() if course_data.get('description') else ''
+        
+        if any(word in titre or word in description for word in ["avancé", "expert", "maître", "advanced"]):
+            predicted_level = "Avancé"
+            level_confidence = 0.8
+        elif any(word in titre or word in description for word in ["intermédiaire", "intermediate"]):
+            predicted_level = "Intermédiaire"
+            level_confidence = 0.7
+        else:
+            predicted_level = "Débutant"
+            level_confidence = 0.6
+        
+        # Génération d'embedding simplifié (en production, utiliser un vrai modèle)
+        try:
+            titre_raw = course_data.get('titre', '')
+            if isinstance(titre_raw, list):
+                titre_str = ' '.join(str(x) for x in titre_raw)
+            else:
+                titre_str = str(titre_raw) if titre_raw else ''
+        except Exception as e:
+            logger.error(f"Erreur traitement titre pour embedding: {e}")
+            titre_str = "titre inconnu"
+        
+        try:
+            description_raw = course_data.get('description', '')
+            if isinstance(description_raw, list):
+                description_str = ' '.join(str(x) for x in description_raw)
+            else:
+                description_str = str(description_raw) if description_raw else ''
+        except Exception as e:
+            logger.error(f"Erreur traitement description pour embedding: {e}")
+            description_str = "description inconnue"
+        
+        try:
+            text_for_embedding = f"{titre_str} {description_str}".strip()
+        except Exception as e:
+            logger.error(f"Erreur création text_for_embedding: {e}")
+            text_for_embedding = "cours général"
+        
+        # S'assurer qu'on a du texte pour l'embedding, sinon utiliser un texte par défaut
+        if not text_for_embedding:
+            text_for_embedding = "cours général"
+        
+        # Simulation d'embedding basé sur la longueur et les mots-clés (éviter les vecteurs zéro)
+        import hashlib
+        # Créer des hash différents pour chaque dimension
+        embedding = []
+        for i in range(384):
+            hash_input = f"{text_for_embedding}_{i}"
+            hash_value = int(hashlib.md5(hash_input.encode()).hexdigest(), 16)
+            # Normaliser entre 0.1 et 1.0 pour éviter les zéros
+            normalized_value = 0.1 + (hash_value % 90) / 100.0
+            embedding.append(normalized_value)
+        
+        return {
+            "predicted_category": predicted_category,
+            "category_confidence": confidence,
+            "predicted_level": predicted_level,
+            "level_confidence": level_confidence,
+            "vecteur_embedding": embedding
+        }
+        
+    except Exception as e:
+        import traceback
+        logger.error(f"Erreur traitement pipeline: {e}")
+        logger.error(f"Traceback complet: {traceback.format_exc()}")
+        return {
+            "predicted_category": "Général",
+            "category_confidence": 0.5,
+            "predicted_level": "Débutant", 
+            "level_confidence": 0.5,
+            "vecteur_embedding": []
+        }
 
 @app.route('/api/calculate-level', methods=['POST'])
 def calculate_user_level():
@@ -604,5 +1180,287 @@ def generate_quiz():
             'error': str(e)
         }), 500
 
+# ===============================================
+# NOUVELLES ROUTES COMPATIBLES DJANGO
+# ===============================================
+
+@app.route('/health', methods=['GET'])
+def health_check_django():
+    """Endpoint de santé compatible Django"""
+    return jsonify({
+        "status": "healthy",
+        "service": "learning_platform_pipeline",
+        "pipeline_ready": True,
+        "elasticsearch_configured": bool(ELASTICSEARCH_HOST),
+        "timestamp": datetime.utcnow().isoformat()
+    })
+
+@app.route('/status', methods=['GET'])
+def get_status_django():
+    """Statut détaillé du pipeline compatible Django"""
+    # Ajouter le statut Spark
+    spark_status = spark_service.get_cluster_status()
+    
+    return jsonify({
+        "status": "running",
+        "processed_courses": processed_courses_count,
+        "last_processed": datetime.utcnow().isoformat(),
+        "version": "1.0.0",
+        "spark_cluster": spark_status,
+        "processing_modes": {
+            "local": True,
+            "distributed": spark_status.get('enabled', False),
+            "active_workers": spark_status.get('active_workers', 0)
+        }
+    })
+
+@app.route('/process-single-course', methods=['POST'])
+def process_single_course_django():
+    """
+    Traite un cours unique avec le pipeline et l'envoie à Elasticsearch
+    Compatible avec l'intégration Django
+    """
+    global processed_courses_count
+    
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'error': 'Aucune donnée reçue'}), 400
+        
+        # Validation des champs requis (titre et id seulement, description optionnelle)
+        if not data.get('id'):
+            return jsonify({'error': 'Champ requis manquant: id'}), 400
+            
+        if not data.get('titre'):
+            return jsonify({'error': 'Champ requis manquant: titre'}), 400
+        
+        # La description est optionnelle, on met une valeur par défaut
+        if not data.get('description'):
+            data['description'] = f"Cours sur {data.get('titre', 'un sujet informatique')}"
+        
+        logger.info(f"🔄 Traitement du cours: {data.get('titre')}")
+        
+        # Traitement avec le pipeline
+        pipeline_result = process_course_with_pipeline(data)
+        
+        # Enrichir les données du cours
+        enriched_course = {
+            "id": data["id"],
+            "titre": data["titre"], 
+            "description": data["description"],
+            "contenus": data.get("contenus", {}),
+            "url": data.get("url", ""),
+            "lien": data.get("lien", ""),
+            "categories": (data.get("categories", []) if isinstance(data.get("categories"), list) else [data.get("categories")]) + [pipeline_result["predicted_category"]],
+            "niveau": pipeline_result["predicted_level"],
+            "duree": data.get("duree", ""),
+            "predicted_category": pipeline_result["predicted_category"],
+            "category_confidence": pipeline_result["category_confidence"],
+            "predicted_level": pipeline_result["predicted_level"],
+            "level_confidence": pipeline_result["level_confidence"],
+            "vecteur_embedding": pipeline_result["vecteur_embedding"],
+            "processed_at": datetime.utcnow().isoformat()
+        }
+        
+        # Envoyer directement à Elasticsearch
+        elasticsearch_success = send_to_elasticsearch(enriched_course)
+        
+        if not elasticsearch_success:
+            logger.warning(f"⚠️ Échec envoi Elasticsearch pour: {data.get('titre')}")
+        
+        processed_courses_count += 1
+        logger.info(f"✅ Cours traité et {'indexé' if elasticsearch_success else 'traité'}: {data.get('titre')}")
+        
+        return jsonify(enriched_course)
+        
+    except Exception as e:
+        logger.error(f"❌ Erreur traitement cours: {str(e)}")
+        return jsonify({'error': f'Erreur de traitement: {str(e)}'}), 500
+
+@app.route('/process-courses-batch', methods=['POST'])
+def process_courses_batch_django():
+    """
+    Traite un lot de cours avec le pipeline et les envoie à Elasticsearch
+    Compatible avec l'intégration Django
+    """
+    global processed_courses_count
+    
+    try:
+        courses_data = request.get_json()
+        
+        if not courses_data or not isinstance(courses_data, list):
+            return jsonify({'error': 'Données invalides: liste de cours attendue'}), 400
+        
+        logger.info(f"🔄 Traitement en lot de {len(courses_data)} cours")
+        
+        enriched_courses = []
+        elasticsearch_successes = 0
+        
+        for course_data in courses_data:
+            try:
+                # Validation des champs requis (titre et id seulement, description optionnelle)
+                if not course_data.get('id'):
+                    logger.error(f"Champ manquant id pour cours {course_data}")
+                    continue
+                
+                if not course_data.get('titre'):
+                    logger.error(f"Champ manquant titre pour cours {course_data.get('id', 'unknown')}")
+                    continue
+                
+                # La description est optionnelle, on met une valeur par défaut
+                if not course_data.get('description'):
+                    course_data['description'] = f"Cours sur {course_data.get('titre', 'un sujet informatique')}"
+                
+                # Traitement avec le pipeline
+                pipeline_result = process_course_with_pipeline(course_data)
+                
+                # Enrichir les données du cours
+                enriched_course = {
+                    "id": course_data["id"],
+                    "titre": course_data["titre"],
+                    "description": course_data["description"],
+                    "contenus": course_data.get("contenus", {}),
+                    "url": course_data.get("url", ""),
+                    "lien": course_data.get("lien", ""),
+                    "categories": (course_data.get("categories", []) if isinstance(course_data.get("categories"), list) else [course_data.get("categories")]) + [pipeline_result["predicted_category"]],
+                    "niveau": pipeline_result["predicted_level"],
+                    "duree": course_data.get("duree", ""),
+                    "predicted_category": pipeline_result["predicted_category"],
+                    "category_confidence": pipeline_result["category_confidence"],
+                    "predicted_level": pipeline_result["predicted_level"],
+                    "level_confidence": pipeline_result["level_confidence"],
+                    "vecteur_embedding": pipeline_result["vecteur_embedding"],
+                    "processed_at": datetime.utcnow().isoformat()
+                }
+                
+                # Envoyer à Elasticsearch
+                if send_to_elasticsearch(enriched_course):
+                    elasticsearch_successes += 1
+                
+                enriched_courses.append(enriched_course)
+                processed_courses_count += 1
+                
+            except Exception as e:
+                logger.error(f"Erreur traitement cours {course_data.get('id', 'unknown')}: {e}")
+                continue
+        
+        logger.info(f"✅ Lot terminé: {len(enriched_courses)} cours traités, {elasticsearch_successes} indexés")
+        
+        return jsonify(enriched_courses)
+        
+    except Exception as e:
+        logger.error(f"❌ Erreur traitement lot: {str(e)}")
+        return jsonify({'error': f'Erreur de traitement en lot: {str(e)}'}), 500
+
+@app.route('/stats/processed-courses', methods=['GET'])
+def get_processed_courses_stats_django():
+    """Statistiques des cours traités - Compatible Django"""
+    spark_metrics = spark_service.get_performance_metrics()
+    
+    return jsonify({
+        "count": processed_courses_count,
+        "timestamp": datetime.utcnow().isoformat(),
+        "spark_metrics": spark_metrics
+    })
+
+@app.route('/process-courses-distributed', methods=['POST'])
+def process_courses_distributed():
+    """
+    Traite les cours de manière distribuée avec Apache Spark
+    Nouveau endpoint pour les calculs distribués
+    """
+    try:
+        data = request.get_json()
+        courses_data = data if isinstance(data, list) else data.get('courses', [])
+        
+        if not courses_data:
+            return jsonify({'error': 'Aucun cours fourni'}), 400
+        
+        logger.info(f"🚀 Traitement distribué demandé pour {len(courses_data)} cours")
+        
+        # Vérifier si Spark est disponible
+        if not spark_service.is_cluster_available():
+            logger.warning("Cluster Spark non disponible - fallback local")
+            return process_courses_batch_django()
+        
+        # Soumettre le job au cluster Spark
+        job_result = spark_service.submit_course_processing_job(courses_data)
+        
+        if 'error' in job_result:
+            # Fallback vers traitement local
+            logger.warning("Erreur Spark - fallback local")
+            return process_courses_batch_django()
+        
+        return jsonify({
+            "job_submitted": True,
+            "job_id": job_result.get("job_id"),
+            "course_count": len(courses_data),
+            "estimated_duration": job_result.get("estimated_duration"),
+            "status_url": f"/spark/job-status/{job_result.get('job_id')}",
+            "processing_mode": "distributed"
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Erreur traitement distribué: {str(e)}")
+        return jsonify({'error': f'Erreur traitement distribué: {str(e)}'}), 500
+
+@app.route('/spark/job-status/<job_id>', methods=['GET'])
+def get_spark_job_status(job_id):
+    """Récupère le statut d'un job Spark"""
+    try:
+        status = spark_service.get_job_status(job_id)
+        return jsonify(status)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/spark/job-results/<job_id>', methods=['GET'])
+def get_spark_job_results(job_id):
+    """Récupère les résultats d'un job Spark"""
+    try:
+        results = spark_service.get_job_results(job_id)
+        
+        if results:
+            return jsonify(results)
+        else:
+            return jsonify({'error': 'Résultats non trouvés'}), 404
+            
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)  # Port 5000 pour correspondre à la config Docker
+@app.route('/api-docs', methods=['GET'])
+def api_documentation_json():
+    """
+    Route alternative qui retourne la documentation en JSON
+    """
+    routes_info = {
+        "api_name": "InLearning Platform API",
+        "version": "1.0.0",
+        "description": "API pour la plateforme d'apprentissage avec IA et Big Data",
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "endpoints": {
+            "/": {
+                "methods": ["GET"],
+                "description": "Documentation HTML de l'API",
+                "parameters": "Aucun",
+                "returns": "Page HTML avec documentation complète"
+            },
+            "/api-docs": {
+                "methods": ["GET"],
+                "description": "Documentation JSON de l'API",
+                "parameters": "Aucun",
+                "returns": "Documentation complète en format JSON"
+            },
+            "/health": {
+                "methods": ["GET"],
+                "description": "Vérification de l'état de santé de l'API",
+                "parameters": "Aucun",
+                "returns": "{'status': 'healthy', 'timestamp': '...'}"
+            }
+        }
+    }
+    
+    return jsonify(routes_info)

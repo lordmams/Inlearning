@@ -39,6 +39,10 @@ class CustomLoginView(LoginView):
     form_class = LoginForm
     template_name = 'users/login.html'
     redirect_authenticated_user = True
+    def get_success_url(self):
+        if self.request.user.is_staff:
+            return reverse_lazy('admin_dashboard:dashboard')
+        return reverse_lazy('courses_dashboard')
 
 class RegisterView(CreateView):
     form_class = UserRegisterForm

@@ -43,6 +43,22 @@ class Course(models.Model):
     ]
     learning_mode = models.CharField(max_length=20, choices=learning_mode_choices, verbose_name="Mode d'apprentissage")
     
+    # Nouveaux champs pour le format JSON
+    source_url = models.URLField(blank=True, verbose_name="URL source du cours")
+    course_link = models.URLField(blank=True, verbose_name="Lien vers le cours")
+    
+    # Contenus structurés
+    paragraphs = models.JSONField(default=list, blank=True, verbose_name="Paragraphes de contenu")
+    content_lists = models.JSONField(default=list, blank=True, verbose_name="Listes de contenu")
+    examples = models.JSONField(default=list, blank=True, verbose_name="Exemples de code")
+    main_text = models.TextField(blank=True, verbose_name="Texte principal")
+    video_link = models.URLField(blank=True, verbose_name="Lien vidéo principal")
+    
+    # Métadonnées JSON
+    json_categories = models.JSONField(default=list, blank=True, verbose_name="Catégories JSON")
+    duration_text = models.CharField(max_length=100, blank=True, verbose_name="Durée (format texte)")
+    embedding_vector = models.JSONField(default=list, blank=True, verbose_name="Vecteur d'embedding")
+    
     class Meta:
         verbose_name = "Cours"
         verbose_name_plural = "Cours"
@@ -50,6 +66,31 @@ class Course(models.Model):
     
     def __str__(self):
         return self.title
+    
+    def to_elasticsearch_format(self):
+        """
+        Convertit le cours au format JSON attendu par Elasticsearch
+        """
+        return {
+            "url": self.source_url or self.course_link or "",
+            "cours": {
+                "id": str(self.id),
+                "titre": self.title,
+                "description": self.description,
+                "lien": self.course_link or "",
+                "contenus": {
+                    "paragraphs": self.paragraphs,
+                    "lists": self.content_lists,
+                    "examples": self.examples,
+                    "texte": self.main_text,
+                    "lienVideo": self.video_link
+                },
+                "categories": self.json_categories or [self.category.name] if self.category else [],
+                "niveau": self.get_difficulty_display(),
+                "duree": self.duration_text or f"{self.duration} heures",
+                "vecteur_embedding": self.embedding_vector
+            }
+        }
 
 class Enrollment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="enrollments", verbose_name="Utilisateur")
@@ -145,3 +186,39 @@ class UserAnswer(models.Model):
 
     def __str__(self):
         return f"Réponse de {self.attempt.user.username} pour {self.question.text[:50]}..."
+
+class ImportLog(models.Model):
+    """Modèle pour tracer les importations de cours"""
+    
+    STATUS_CHOICES = [
+        ('pending', 'En attente'),
+        ('processing', 'En cours'),
+        ('completed', 'Terminé'),
+        ('error', 'Erreur'),
+    ]
+    
+    filename = models.CharField(max_length=255, verbose_name="Nom du fichier")
+    file_path = models.TextField(verbose_name="Chemin du fichier")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    started_at = models.DateTimeField(verbose_name="Démarré à")
+    completed_at = models.DateTimeField(null=True, blank=True, verbose_name="Terminé à")
+    imported_count = models.IntegerField(default=0, verbose_name="Nombre importés")
+    updated_count = models.IntegerField(default=0, verbose_name="Nombre mis à jour")
+    error_count = models.IntegerField(default=0, verbose_name="Nombre d'erreurs")
+    error_message = models.TextField(blank=True, verbose_name="Message d'erreur")
+    result_data = models.JSONField(null=True, blank=True, verbose_name="Données de résultat")
+    
+    class Meta:
+        verbose_name = "Log d'importation"
+        verbose_name_plural = "Logs d'importation"
+        ordering = ['-started_at']
+    
+    def __str__(self):
+        return f"{self.filename} - {self.get_status_display()}"
+    
+    @property
+    def duration(self):
+        """Calcule la durée de traitement"""
+        if self.started_at and self.completed_at:
+            return self.completed_at - self.started_at
+        return None

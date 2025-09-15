@@ -1,0 +1,5 @@
+# Providers et dépendances uniquement - Airflow est déjà dans l'image de base
+apache-airflow-providers-postgres==5.7.1
+pandas==2.0.3
+requests==2.31.0
+psycopg2-binary==2.9.7 

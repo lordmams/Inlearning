@@ -1,46 +1,98 @@
 
-# InLearning
+# 🎓 InLearning Platform
 
-## Description du projet
+## 📖 Description du projet
 
 Dans l'ère numérique actuelle, l'éducation subit une transformation rapide, passant d'un modèle traditionnel à une approche plus personnalisée et flexible. Le projet **InLearning** vise à exploiter le Big Data et l'intelligence artificielle pour créer une plateforme innovante qui améliore l'expérience d'apprentissage et les résultats scolaires.
 
-## Livrables
+## 🏗️ Architecture
 
-- Document de Spécifications Fonctionnelles
-- Plan de Projet Détaillé avec Échéancier
-- Visualisation des Données Clés
-- Code des Modèles de Machine Learning
-- Plateforme Déployée en Production
-- Documentation Utilisateur et Matériel de Formation
-- Mises à Jour Régulières
+### Services principaux
+- **Django Application** - Interface web et administration
+- **Flask API** - Pipeline ML et traitement des cours
+- **Elasticsearch** - Moteur de recherche et analytics
+- **PostgreSQL** - Base de données principale
+- **Apache Airflow** - Orchestration des workflows
+- **Consumer** - Traitement automatique des fichiers
 
-## Ressources
+### Technologies utilisées
+- Python 3.9+, Django, Flask
+- Elasticsearch, PostgreSQL, Redis
+- Docker & Docker Compose
+- Apache Airflow, Pandas
+- Machine Learning (scikit-learn)
 
-Pour la mise en œuvre du projet InLearning, nous mobiliserons les éléments suivants :
+## 📁 Structure du projet
 
-- Rapports d'analyse
-- Code source
-- Outils d'analyse et de modélisation
-- Utilisateurs pilotes pour tests
-- Équipe dédiée et sprints de développement
+```
+InLearning/
+├── 📚 documentation/          # Guides et documentation technique
+├── 🧪 tests/                  # Scripts de test et validation
+├── 🐳 elearning/             # Application Django principale
+├── 🔧 learning_platform/     # API Flask et services ML
+├── 🌊 orchestration/         # DAGs Airflow et workflows
+├── 📊 LLM/                   # Modèles et analyses ML
+├── 🕷️ Webscraping/           # Scripts de collecte de données
+├── 📈 Model/                 # Modèles de classification
+├── 🔍 reco_cours/            # Système de recommandation
+└── 🛠️ ETL_users/             # Pipeline ETL utilisateurs
+```
 
-##
+## 🚀 Installation et lancement
 
-## Installation
+### Prérequis
+- Docker et Docker Compose
+- Python 3.9+
+- Git
 
-1. Clonez le dépôt :
-   ```bash
-   git clone https://github.com/votre-utilisateur/inlearning.git
-   ```
-2. Installez les dépendances :
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Lancez l'application :
-   ```bash
-   python app.py
-   ```
+### Installation complète
+```bash
+# 1. Cloner le dépôt
+git clone <repository-url>
+cd InLearning
+
+# 2. Configurer l'environnement
+cp env.example .env
+# Éditer .env avec vos configurations
+
+# 3. Lancer tous les services
+export AIRFLOW_UID=$(id -u)
+docker-compose up -d --build
+
+# 4. Vérifier les services
+docker ps
+```
+
+### Services disponibles
+- **Django Admin**: http://localhost:8000
+- **Airflow UI**: http://localhost:8082 (admin/admin)
+- **Elasticsearch**: http://localhost:9200
+- **PgAdmin**: http://localhost:8081
+
+## 📋 Livrables
+
+- ✅ **Plateforme web Django** avec interface d'administration
+- ✅ **Pipeline ML complet** de classification et traitement des cours
+- ✅ **Moteur de recherche Elasticsearch** avec recommandations
+- ✅ **Orchestration Airflow** pour l'automatisation ETL
+- ✅ **Consumer temps réel** pour le traitement de fichiers
+- ✅ **Tests automatisés** et validation de l'intégrité
+- ✅ **Documentation complète** d'installation et d'utilisation
+
+## 📚 Documentation
+
+Consultez le dossier [`documentation/`](./documentation/) pour :
+- Guides d'installation détaillés
+- Architecture et design patterns
+- Rapports de succès et configurations
+
+## 🧪 Tests
+
+Le dossier [`tests/`](./tests/) contient :
+- Tests de connectivité des services
+- Tests d'intégration du pipeline
+- Validation des DAGs Airflow
+- Tests de l'API et du consumer
 
 ## Contribution
 

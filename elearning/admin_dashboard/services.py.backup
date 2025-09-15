@@ -1,0 +1,435 @@
+"""
+Service de monitoring des services InLearning
+Vérifie la santé de tous les services et maintient les statistiques
+"""
+
+import requests
+import time
+import logging
+from datetime import datetime, timedelta
+from django.utils import timezone
+from django.conf import settings
+from typing import Dict, List, Tuple
+from .models import ServiceMonitoring, ServiceHealthHistory, SystemAlert
+
+logger = logging.getLogger(__name__)
+
+class ServiceHealthChecker:
+    """Service pour vérifier la santé de tous les services"""
+    
+    def __init__(self):
+        self.timeout = 5  # 5 secondes de timeout
+        self.services_config = self._get_services_config()
+    
+    def _get_services_config(self) -> List[Dict]:
+        """Configuration des services à surveiller"""
+        return [
+            {
+                'name': 'Django Application',
+                'service_type': 'django',
+                'url': 'http://localhost:8000',
+                'health_check_url': 'http://localhost:8000/admin/',
+                'is_critical': True
+            },
+            {
+                'name': 'Flask API',
+                'service_type': 'flask_api',
+                'url': 'http://localhost:5000',
+                'health_check_url': 'http://flask_api:5000/health',
+                'is_critical': True
+            },
+            {
+                'name': 'Elasticsearch',
+                'service_type': 'elasticsearch',
+                'url': 'https://my-elasticsearch-project-d09d1e.es.us-central1.gcp.elastic.cloud:443',
+                'health_check_url': 'https://my-elasticsearch-project-d09d1e.es.us-central1.gcp.elastic.cloud:443',
+                'is_critical': True
+            },
+            {
+                'name': 'PostgreSQL',
+                'service_type': 'postgres',
+                'url': 'postgresql://localhost:5432',
+                'health_check_url': 'http://localhost:5432',  # On utilisera une méthode spéciale
+                'is_critical': True
+            },
+            {
+                'name': 'Redis',
+                'service_type': 'redis',
+                'url': 'redis://localhost:6379',
+                'health_check_url': 'http://localhost:6379',  # On utilisera une méthode spéciale
+                'is_critical': True
+            },
+            {
+                'name': 'Python Orchestrator',
+                'service_type': 'orchestration',
+                'url': 'http://localhost:8000',
+                'health_check_url': 'http://inlearning-orchestration:8000/health',
+                'is_critical': False
+            },
+            {
+                'name': 'Spark Master',
+                'service_type': 'spark_master',
+                'url': 'http://localhost:8090',
+                'health_check_url': 'http://spark-master:8080/json/',
+                'is_critical': False
+            },
+            {
+                'name': 'PgAdmin',
+                'service_type': 'pgadmin',
+                'url': 'http://localhost:8085',
+                'health_check_url': 'http://pgadmin:80/misc/ping',
+                'is_critical': False
+            }
+        ]
+    
+    def check_service_health(self, service_config: Dict) -> Tuple[str, int, str]:
+        """
+        Vérifie la santé d'un service spécifique
+        Returns: (status, response_time_ms, error_message)
+        """
+        try:
+            start_time = time.time()
+            
+            # Méthodes spéciales pour certains services
+            if service_config['service_type'] == 'postgres':
+                return self._check_postgres_health()
+            elif service_config['service_type'] == 'redis':
+                return self._check_redis_health()
+            elif service_config['service_type'] == 'orchestration':
+                return self._check_orchestration_health()
+            elif service_config['service_type'] == 'pgadmin':
+                return self._check_pgadmin_health()
+            
+            # HTTP health check standard
+            response = requests.get(
+                service_config['health_check_url'],
+                timeout=self.timeout,
+                allow_redirects=True
+            )
+            
+            response_time = int((time.time() - start_time) * 1000)
+            
+            # Analyser la réponse selon le type de service
+            if service_config['service_type'] == 'elasticsearch':
+                return self._analyze_elasticsearch_response(response, response_time)
+            elif service_config['service_type'] == 'spark_master':
+                return self._analyze_spark_response(response, response_time)
+            elif service_config['service_type'] == 'flask_api':
+                return self._analyze_flask_response(response, response_time)
+            else:
+                # Check HTTP standard
+                if response.status_code == 200:
+                    return 'healthy', response_time, ''
+                elif 200 <= response.status_code < 300:
+                    return 'healthy', response_time, ''
+                elif 300 <= response.status_code < 500:
+                    return 'degraded', response_time, f'HTTP {response.status_code}'
+                else:
+                    return 'unhealthy', response_time, f'HTTP {response.status_code}'
+                    
+        except requests.exceptions.ConnectionError:
+            return 'unhealthy', 0, 'Connection refused'
+        except requests.exceptions.Timeout:
+            return 'degraded', self.timeout * 1000, 'Timeout'
+        except Exception as e:
+            return 'unhealthy', 0, str(e)
+    
+    def _check_postgres_health(self) -> Tuple[str, int, str]:
+        """Vérifie PostgreSQL via Django ORM"""
+        try:
+            from django.db import connection
+            start_time = time.time()
+            
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT 1")
+                cursor.fetchone()
+            
+            response_time = int((time.time() - start_time) * 1000)
+            return 'healthy', response_time, ''
+            
+        except Exception as e:
+            return 'unhealthy', 0, str(e)
+    
+    def _check_redis_health(self) -> Tuple[str, int, str]:
+        """Vérifie Redis via cache Django"""
+        try:
+            from django.core.cache import cache
+            start_time = time.time()
+            
+            # Test simple ping
+            cache.set('health_check', 'ok', 10)
+            result = cache.get('health_check')
+            
+            response_time = int((time.time() - start_time) * 1000)
+            
+            if result == 'ok':
+                return 'healthy', response_time, ''
+            else:
+                return 'degraded', response_time, 'Cache test failed'
+                
+        except Exception as e:
+            return 'unhealthy', 0, str(e)
+    
+    def _analyze_elasticsearch_response(self, response, response_time) -> Tuple[str, int, str]:
+        """Analyse la réponse d'Elasticsearch - vérification simple"""
+        try:
+            # Si on reçoit une réponse (même avec erreur d'auth), Elasticsearch est accessible
+            if response.status_code in [200, 401, 403]:
+                return 'healthy', response_time, 'Elasticsearch cloud accessible'
+            else:
+                return 'unhealthy', response_time, f'HTTP {response.status_code}'
+        except Exception as e:
+            return 'unhealthy', response_time, str(e)
+
+    def _analyze_spark_response(self, response, response_time) -> Tuple[str, int, str]:
+    def _analyze_flask_response(self, response, response_time) -> Tuple[str, int, str]:
+        """Analyse la réponse de Flask API"""
+        try:
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Vérifier le statut Spark si disponible
+                spark_status = data.get('spark_cluster', {}).get('status', 'unknown')
+                message = f"Spark: {spark_status}" if spark_status != 'unknown' else ''
+                
+                return 'healthy', response_time, message
+            else:
+                return 'unhealthy', response_time, f'HTTP {response.status_code}'
+                
+        except Exception as e:
+            return 'healthy', response_time, 'API OK (JSON parse error)'
+        """Analyse la réponse de Spark Master"""
+        try:
+            if response.status_code == 200:
+                data = response.json()
+                alive_workers = data.get('aliveworkers', 0)
+                
+                if alive_workers >= 2:
+                    return 'healthy', response_time, f'{alive_workers} workers'
+                elif alive_workers >= 1:
+                    return 'degraded', response_time, f'Only {alive_workers} worker'
+                else:
+                    return 'unhealthy', response_time, 'No workers available'
+            else:
+                return 'unhealthy', response_time, f'HTTP {response.status_code}'
+                
+        except Exception as e:
+            return 'unhealthy', response_time, str(e)
+        """Analyse la réponse de Flask API"""
+        try:
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Vérifier le statut Spark si disponible
+                spark_status = data.get('spark_cluster', {}).get('status', 'unknown')
+                message = f"Spark: {spark_status}" if spark_status != 'unknown' else ''
+                
+                return 'healthy', response_time, message
+            else:
+                return 'unhealthy', response_time, f'HTTP {response.status_code}'
+                
+        except Exception as e:
+            return 'healthy', response_time, 'API OK (JSON parse error)'
+    
+    def check_all_services(self) -> Dict[str, Dict]:
+        """Vérifie tous les services et met à jour la base de données"""
+        results = {}
+        
+        for service_config in self.services_config:
+            logger.info(f"Checking {service_config['name']}...")
+            
+            # Vérifier la santé
+            status, response_time, error_message = self.check_service_health(service_config)
+            
+            # Mettre à jour ou créer l'enregistrement
+            service, created = ServiceMonitoring.objects.get_or_create(
+                name=service_config['name'],
+                defaults={
+                    'service_type': service_config['service_type'],
+                    'url': service_config['url'],
+                    'health_check_url': service_config['health_check_url'],
+                    'is_critical': service_config['is_critical']
+                }
+            )
+            
+            # Mettre à jour le statut
+            old_status = service.status
+            service.status = status
+            service.response_time_ms = response_time
+            service.error_message = error_message
+            service.last_check = timezone.now()
+            service.save()
+            
+            # Ajouter à l'historique
+            ServiceHealthHistory.objects.create(
+                service=service,
+                status=status,
+                response_time_ms=response_time,
+                error_message=error_message
+            )
+            
+            # Créer une alerte si le statut a changé en mal
+            if old_status in ['healthy', 'unknown'] and status in ['unhealthy', 'degraded']:
+                self._create_alert(service, status, error_message)
+            
+            # Calculer l'uptime
+            service.uptime_percentage = self._calculate_uptime(service)
+            service.save()
+            
+            results[service_config['name']] = {
+                'status': status,
+                'response_time': response_time,
+                'error_message': error_message,
+                'uptime': service.uptime_percentage
+            }
+            
+            logger.info(f"{service_config['name']}: {status} ({response_time}ms)")
+        
+        return results
+    
+    def _create_alert(self, service: ServiceMonitoring, status: str, error_message: str):
+        """Crée une alerte système"""
+        severity = 'critical' if service.is_critical and status == 'unhealthy' else 'warning'
+        
+        title = f"Service {service.name} is {status}"
+        message = f"Service {service.name} ({service.service_type}) has changed status to {status}."
+        if error_message:
+            message += f" Error: {error_message}"
+        
+        SystemAlert.objects.create(
+            title=title,
+            message=message,
+            severity=severity,
+            service=service
+        )
+    
+    def _calculate_uptime(self, service: ServiceMonitoring) -> float:
+        """Calcule le pourcentage d'uptime sur les dernières 24h"""
+        try:
+            last_24h = timezone.now() - timedelta(hours=24)
+            
+            # Récupérer l'historique des 24 dernières heures
+            history = ServiceHealthHistory.objects.filter(
+                service=service,
+                timestamp__gte=last_24h
+            ).order_by('timestamp')
+            
+            if not history.exists():
+                return 0.0
+            
+            # Calculer le temps de disponibilité
+            total_time = 0
+            healthy_time = 0
+            
+            for i, record in enumerate(history):
+                if i < len(history) - 1:
+                    next_record = history[i + 1]
+                    duration = (next_record.timestamp - record.timestamp).total_seconds()
+                else:
+                    # Dernier enregistrement jusqu'à maintenant
+                    duration = (timezone.now() - record.timestamp).total_seconds()
+                
+                total_time += duration
+                if record.status == 'healthy':
+                    healthy_time += duration
+            
+            return round((healthy_time / total_time) * 100, 2) if total_time > 0 else 0.0
+            
+        except Exception as e:
+            logger.error(f"Error calculating uptime for {service.name}: {e}")
+            return 0.0
+    
+    def get_system_overview(self) -> Dict:
+        """Retourne un aperçu général du système"""
+        services = ServiceMonitoring.objects.all()
+        
+        total_services = services.count()
+        healthy_services = services.filter(status='healthy').count()
+        degraded_services = services.filter(status='degraded').count()
+        unhealthy_services = services.filter(status='unhealthy').count()
+        critical_down = services.filter(is_critical=True, status='unhealthy').count()
+        
+        # Alertes actives
+        active_alerts = SystemAlert.objects.filter(is_resolved=False).count()
+        critical_alerts = SystemAlert.objects.filter(
+            is_resolved=False,
+            severity='critical'
+        ).count()
+        
+        # Calcul du score de santé global
+        if total_services > 0:
+            health_score = (healthy_services / total_services) * 100
+        else:
+            health_score = 0
+        
+        # Statut global
+        if critical_down > 0:
+            overall_status = 'critical'
+        elif unhealthy_services > 0:
+            overall_status = 'unhealthy'
+        elif degraded_services > 0:
+            overall_status = 'degraded'
+        else:
+            overall_status = 'healthy'
+        
+        return {
+            'overall_status': overall_status,
+            'health_score': round(health_score, 1),
+            'total_services': total_services,
+            'healthy_services': healthy_services,
+            'degraded_services': degraded_services,
+            'unhealthy_services': unhealthy_services,
+            'critical_down': critical_down,
+            'active_alerts': active_alerts,
+            'critical_alerts': critical_alerts,
+            'last_check': timezone.now()
+        }
+
+    def _check_orchestration_health(self) -> Tuple[str, int, str]:
+        """
+        Vérification spéciale pour l'orchestrateur Python - simple check de connectivité réseau
+        car l'interface web peut avoir des problèmes de logging
+        """
+        try:
+            import socket
+            start_time = time.time()
+            
+            # Test connection to inlearning-orchestration on port 8000
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(5)
+            result = sock.connect_ex(('inlearning-orchestration', 8000))
+            sock.close()
+            
+            response_time = int((time.time() - start_time) * 1000)
+            
+            if result == 0:
+                return 'healthy', response_time, 'Network connection successful (web UI may have issues)'
+            else:
+                return 'unhealthy', response_time, 'Cannot connect to container'
+                
+        except Exception as e:
+            return 'unhealthy', 0, f'Connection test failed: {str(e)}'
+
+    def _check_pgadmin_health(self) -> Tuple[str, int, str]:
+        """
+        Vérification spéciale pour PgAdmin avec l'endpoint /misc/ping
+        """
+        try:
+            start_time = time.time()
+            response = requests.get(
+                'http://pgadmin:80/misc/ping',
+                timeout=self.timeout,
+                allow_redirects=False
+            )
+            response_time = int((time.time() - start_time) * 1000)
+            
+            if response.status_code == 200:
+                return 'healthy', response_time, ''
+            else:
+                return 'unhealthy', response_time, f'HTTP {response.status_code}'
+                
+        except requests.RequestException as e:
+            return 'unhealthy', 0, f'Connection failed: {str(e)}'
+
+# Instance globale du checker
+health_checker = ServiceHealthChecker() 

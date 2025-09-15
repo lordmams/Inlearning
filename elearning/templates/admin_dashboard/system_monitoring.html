@@ -1,0 +1,448 @@
+{% extends "admin_dashboard/base_admin.html" %}
+{% load static %}
+
+{% block title %}System Monitoring - InLearning Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .monitoring-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin-bottom: 20px;
+        transition: transform 0.2s ease;
+    }
+    
+    .monitoring-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+    }
+    
+    .status-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 8px;
+        animation: pulse 2s infinite;
+    }
+    
+    .status-healthy { background-color: #10B981; }
+    .status-degraded { background-color: #F59E0B; }
+    .status-unhealthy { background-color: #EF4444; }
+    .status-unknown { background-color: #6B7280; }
+    
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+    
+    .service-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin: 20px 0;
+    }
+    
+    .service-card {
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #E5E7EB;
+        padding: 16px;
+        transition: all 0.3s ease;
+    }
+    
+    .service-card:hover {
+        border-color: #3B82F6;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    }
+    
+    .service-header {
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+    
+    .service-name {
+        font-weight: 600;
+        font-size: 14px;
+        color: #111827;
+    }
+    
+    .service-type {
+        background: #F3F4F6;
+        color: #6B7280;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+    }
+    
+    .service-metrics {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 8px;
+        font-size: 12px;
+        color: #6B7280;
+    }
+    
+    .alert-badge {
+        background: #FEE2E2;
+        color: #DC2626;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    
+    .critical-alert {
+        background: #EF4444;
+        color: white;
+        animation: blink 1s infinite;
+    }
+    
+    @keyframes blink {
+        0%, 50% { opacity: 1; }
+        51%, 100% { opacity: 0.5; }
+    }
+    
+    .refresh-button {
+        background: #3B82F6;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+    
+    .refresh-button:hover {
+        background: #2563EB;
+    }
+    
+    .refresh-button:disabled {
+        background: #9CA3AF;
+        cursor: not-allowed;
+    }
+    
+    .quick-links {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin: 20px 0;
+    }
+    
+    .quick-link {
+        background: #F8FAFC;
+        border: 1px solid #E2E8F0;
+        color: #475569;
+        padding: 8px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+    
+    .quick-link:hover {
+        background: #3B82F6;
+        color: white;
+        text-decoration: none;
+    }
+    
+    .overview-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        border-left: 4px solid #3B82F6;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-number {
+        font-size: 24px;
+        font-weight: bold;
+        color: #111827;
+    }
+    
+    .stat-label {
+        color: #6B7280;
+        font-size: 14px;
+        margin-top: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-server"></i> System Monitoring</h2>
+        <div class="d-flex gap-2">
+            <button id="refreshServices" class="refresh-button">
+                <i class="fas fa-sync-alt"></i> Refresh All
+            </button>
+            <span id="lastUpdate" class="text-muted small"></span>
+        </div>
+    </div>
+
+    <!-- Vue d'ensemble du système -->
+    <div class="overview-stats">
+        <div class="stat-card">
+            <div class="stat-number text-success">{{ system_overview.health_score }}%</div>
+            <div class="stat-label">Health Score</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ system_overview.healthy_services }}/{{ system_overview.total_services }}</div>
+            <div class="stat-label">Services Online</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number {% if system_overview.critical_alerts > 0 %}text-danger{% else %}text-success{% endif %}">
+                {{ system_overview.critical_alerts }}
+            </div>
+            <div class="stat-label">Critical Alerts</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ recent_incidents }}</div>
+            <div class="stat-label">Incidents (24h)</div>
+        </div>
+    </div>
+
+    <!-- Liens rapides vers les services -->
+    <div class="monitoring-card">
+        <h4><i class="fas fa-external-link-alt"></i> Quick Access</h4>
+        <div class="quick-links">
+            <a href="http://localhost:8000" target="_blank" class="quick-link">
+                <i class="fab fa-python"></i> Django Admin
+            </a>
+            <a href="http://localhost:5000" target="_blank" class="quick-link">
+                <i class="fas fa-flask"></i> Flask API
+            </a>
+            <a href="http://localhost:8090" target="_blank" class="quick-link">
+                <i class="fas fa-fire"></i> Spark Master
+            </a>
+            <a href="http://localhost:8082" target="_blank" class="quick-link">
+                <i class="fas fa-wind"></i> Orchestrator UI
+            </a>
+            <a href="http://localhost:9200" target="_blank" class="quick-link">
+                <i class="fas fa-search"></i> Elasticsearch
+            </a>
+                                <a href="http://localhost:8085" target="_blank" class="quick-link">
+                <i class="fas fa-database"></i> PgAdmin
+            </a>
+        </div>
+    </div>
+
+    <!-- Alertes actives -->
+    {% if active_alerts %}
+    <div class="monitoring-card">
+        <h4><i class="fas fa-exclamation-triangle"></i> Active Alerts</h4>
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Severity</th>
+                        <th>Service</th>
+                        <th>Message</th>
+                        <th>Time</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for alert in active_alerts %}
+                    <tr>
+                        <td>
+                            <span class="alert-badge {% if alert.severity == 'critical' %}critical-alert{% endif %}">
+                                {{ alert.get_severity_display }}
+                            </span>
+                        </td>
+                        <td>{{ alert.service.name|default:"System" }}</td>
+                        <td>{{ alert.message|truncatechars:80 }}</td>
+                        <td>{{ alert.created_at|timesince }} ago</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-success" onclick="resolveAlert({{ alert.id }})">
+                                <i class="fas fa-check"></i> Resolve
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Grille des services -->
+    <div class="monitoring-card">
+        <h4><i class="fas fa-list"></i> Services Status</h4>
+        <div class="service-grid" id="servicesGrid">
+            {% for service in services %}
+            <div class="service-card" data-service-id="{{ service.name }}">
+                <div class="service-header">
+                    <div>
+                        <div class="service-name">
+                            <span class="status-indicator status-{{ service.status }}"></span>
+                            {{ service.name }}
+                        </div>
+                        <div class="service-type">{{ service.service_type|title }}</div>
+                    </div>
+                    {% if service.is_critical %}
+                    <span class="badge badge-warning">Critical</span>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-2">
+                    <strong>Status:</strong> 
+                    <span class="text-{% if service.status == 'healthy' %}success{% elif service.status == 'degraded' %}warning{% else %}danger{% endif %}">
+                        {{ service.status|title }}
+                    </span>
+                </div>
+                
+                {% if service.error_message %}
+                <div class="mb-2 text-danger small">
+                    <strong>Error:</strong> {{ service.error_message|truncatechars:50 }}
+                </div>
+                {% endif %}
+                
+                <div class="service-metrics">
+                    <span><strong>Uptime:</strong> {{ service.uptime_percentage }}%</span>
+                    <span><strong>Response:</strong> {{ service.response_time_ms|default:"--" }}ms</span>
+                    <span><strong>Last Check:</strong> {{ service.time_since_last_check }}</span>
+                </div>
+                
+                <div class="mt-2">
+                    {% if service.url and 'container://' not in service.url and service.url != 'container://' %}
+                    <a href="{{ service.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-external-link-alt"></i> Open
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const refreshButton = document.getElementById('refreshServices');
+    const lastUpdateSpan = document.getElementById('lastUpdate');
+    
+    // Auto-refresh toutes les 30 secondes
+    setInterval(checkServicesHealth, 30000);
+    
+    // Refresh manuel
+    refreshButton.addEventListener('click', function() {
+        checkServicesHealth();
+    });
+    
+    function checkServicesHealth() {
+        refreshButton.disabled = true;
+        refreshButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+        
+        fetch('{% url "admin_dashboard:check_services_health" %}', {
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                updateServicesDisplay(data);
+                showNotification('Services status updated', 'success');
+            } else {
+                showNotification('Error updating services: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Connection error', 'error');
+        })
+        .finally(() => {
+            refreshButton.disabled = false;
+            refreshButton.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh All';
+            lastUpdateSpan.textContent = 'Last update: ' + new Date().toLocaleTimeString();
+        });
+    }
+    
+    function updateServicesDisplay(data) {
+        // Mettre à jour les indicateurs de statut
+        Object.entries(data.service_results).forEach(([serviceName, result]) => {
+            const serviceCard = document.querySelector(`[data-service-id]`);
+            if (serviceCard) {
+                const statusIndicator = serviceCard.querySelector('.status-indicator');
+                if (statusIndicator) {
+                    statusIndicator.className = `status-indicator status-${result.status}`;
+                }
+            }
+        });
+        
+        // Recharger la page après 5 secondes pour afficher les nouvelles données
+        setTimeout(() => {
+            window.location.reload();
+        }, 2000);
+    }
+    
+    function showNotification(message, type) {
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        const alertHtml = `
+            <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="close" data-dismiss="alert">
+                    <span>&times;</span>
+                </button>
+            </div>
+        `;
+        
+        const container = document.querySelector('.container-fluid');
+        container.insertAdjacentHTML('afterbegin', alertHtml);
+        
+        // Auto-dismiss après 3 secondes
+        setTimeout(() => {
+            const alert = container.querySelector('.alert');
+            if (alert) {
+                alert.remove();
+            }
+        }, 3000);
+    }
+    
+    // Définir la fonction globalement pour les boutons
+    window.resolveAlert = function(alertId) {
+        fetch(`{% url 'admin_dashboard:resolve_alert' 0 %}`.replace('0', alertId), {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showNotification('Alert resolved', 'success');
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                showNotification('Error resolving alert: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Connection error', 'error');
+        });
+    };
+    
+    // Mettre à jour le timestamp initial
+    lastUpdateSpan.textContent = 'Last update: {{ system_overview.last_check|date:"H:i:s" }}';
+});
+</script>
+{% endblock %} 

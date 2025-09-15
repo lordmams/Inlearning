@@ -1,0 +1,403 @@
+{% extends 'admin_dashboard/base_admin.html' %}
+{% load static %}
+
+{% block title %}Logs des Services{% endblock %}
+
+{% block extra_css %}
+<style>
+.log-container {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    padding: 15px;
+    border-radius: 5px;
+    max-height: 500px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.log-line {
+    margin-bottom: 2px;
+    padding: 2px 0;
+}
+
+.log-timestamp {
+    color: #569cd6;
+    font-weight: bold;
+}
+
+.log-error {
+    color: #f44747;
+}
+
+.log-warning {
+    color: #ffcc02;
+}
+
+.log-info {
+    color: #4ec9b0;
+}
+
+.log-debug {
+    color: #9cdcfe;
+}
+
+.service-selector {
+    margin-bottom: 20px;
+}
+
+.log-controls {
+    margin-bottom: 15px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.log-controls select, .log-controls input, .log-controls button {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.log-controls button {
+    background: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.log-controls button:hover {
+    background: #0056b3;
+}
+
+.log-controls button:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+}
+
+.log-stats {
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+
+.loading {
+    text-align: center;
+    padding: 20px;
+    color: #6c757d;
+}
+
+.error-message {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+.log-line:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-file-alt"></i> Logs des Services</h2>
+                <div>
+                    <a href="{% url 'admin_dashboard:system_monitoring' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-terminal"></i> Guide Docker
+                </a>
+                        <i class="fas fa-arrow-left"></i> Retour au Monitoring
+                    </a>
+                </div>
+            </div>
+
+            <!-- Contrôles des logs -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="log-controls">
+                        <div class="service-selector">
+                            <label for="serviceSelect"><strong>Service:</strong></label>
+                            <select id="serviceSelect" class="form-select">
+                                <option value="">Tous les services</option>
+                                {% for service in services %}
+                                <option value="{{ service.name }}">{{ service.display_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="linesSelect"><strong>Lignes:</strong></label>
+                            <select id="linesSelect" class="form-select">
+                                <option value="50">50</option>
+                                <option value="100" selected>100</option>
+                                <option value="200">200</option>
+                                <option value="500">500</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="sinceSelect"><strong>Depuis:</strong></label>
+                            <select id="sinceSelect" class="form-select">
+                                <option value="">Toutes</option>
+                                <option value="5">5 minutes</option>
+                                <option value="15">15 minutes</option>
+                                <option value="30" selected>30 minutes</option>
+                                <option value="60">1 heure</option>
+                            </select>
+                        </div>
+
+                        <button id="refreshLogs" class="btn btn-primary">
+                            <i class="fas fa-sync-alt"></i> Actualiser
+                        </button>
+
+                        <button id="downloadLogs" class="btn btn-success" disabled>
+                            <i class="fas fa-download"></i> Télécharger
+                        </button>
+                    </div>
+
+                    <div class="log-stats" id="logStats" style="display: none;">
+                        <strong>Statistiques:</strong> <span id="statsContent"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conteneur des logs -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-terminal"></i> 
+                        <span id="logTitle">Logs des Services</span>
+                        <span id="logCount" class="badge bg-secondary ms-2"></span>
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div id="logContainer" class="log-container">
+                        <div class="loading">
+                            <i class="fas fa-spinner fa-spin"></i> Chargement des logs...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const serviceSelect = document.getElementById('serviceSelect');
+    const linesSelect = document.getElementById('linesSelect');
+    const sinceSelect = document.getElementById('sinceSelect');
+    const refreshBtn = document.getElementById('refreshLogs');
+    const downloadBtn = document.getElementById('downloadLogs');
+    const logContainer = document.getElementById('logContainer');
+    const logTitle = document.getElementById('logTitle');
+    const logCount = document.getElementById('logCount');
+    const logStats = document.getElementById('logStats');
+    const statsContent = document.getElementById('statsContent');
+
+    let currentLogs = [];
+
+    // Chargement initial
+    loadLogs();
+
+    // Event listeners
+    refreshBtn.addEventListener('click', loadLogs);
+    serviceSelect.addEventListener('change', loadLogs);
+    linesSelect.addEventListener('change', loadLogs);
+    sinceSelect.addEventListener('change', loadLogs);
+
+    downloadBtn.addEventListener('click', downloadLogs);
+
+    function loadLogs() {
+        const service = serviceSelect.value;
+        const lines = linesSelect.value;
+        const since = sinceSelect.value;
+
+        refreshBtn.disabled = true;
+        refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Chargement...';
+        
+        logContainer.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Chargement des logs...</div>';
+
+        let url = '/admin-dashboard/logs/';
+        if (service) {
+            if (since) {
+                url = `/admin-dashboard/logs/${service}/since/?minutes=${since}`;
+            } else {
+                url = `/admin-dashboard/logs/${service}/?lines=${lines}`;
+            }
+        } else {
+            url = `/admin-dashboard/logs/?lines=${lines}`;
+        }
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+
+                currentLogs = data;
+                displayLogs(data);
+                updateStats(data);
+                downloadBtn.disabled = false;
+            })
+            .catch(error => {
+                showError('Erreur lors du chargement des logs: ' + error.message);
+            })
+            .finally(() => {
+                refreshBtn.disabled = false;
+                refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Actualiser';
+            });
+    }
+
+    function displayLogs(data) {
+        if (data.services) {
+            // Logs de tous les services
+            let html = '';
+            let totalLines = 0;
+            
+            for (const [serviceName, serviceData] of Object.entries(data.services)) {
+                if (serviceData.logs && serviceData.logs.length > 0) {
+                    html += `<div class="service-section"><h6 style="color: #4ec9b0; margin: 10px 0 5px 0;">=== ${getServiceDisplayName(serviceName)} ===</h6>`;
+                    
+                    serviceData.logs.forEach(log => {
+                        html += formatLogLine(log);
+                    });
+                    
+                    html += '</div>';
+                    totalLines += serviceData.logs.length;
+                }
+            }
+            
+            logTitle.textContent = 'Logs de Tous les Services';
+            logCount.textContent = totalLines;
+            logContainer.innerHTML = html || '<div class="text-muted">Aucun log trouvé</div>';
+        } else {
+            // Logs d'un service spécifique
+            if (data.logs && data.logs.length > 0) {
+                let html = '';
+                data.logs.forEach(log => {
+                    html += formatLogLine(log);
+                });
+                
+                logTitle.textContent = `Logs - ${getServiceDisplayName(data.service)}`;
+                logCount.textContent = data.logs.length;
+                logContainer.innerHTML = html;
+            } else {
+                logTitle.textContent = `Logs - ${getServiceDisplayName(data.service)}`;
+                logCount.textContent = '0';
+                logContainer.innerHTML = '<div class="text-muted">Aucun log trouvé</div>';
+            }
+        }
+    }
+
+    function formatLogLine(log) {
+        const timestamp = log.timestamp ? `<span class="log-timestamp">[${log.timestamp}]</span> ` : '';
+        const message = log.message || log.raw || '';
+        
+        let className = 'log-line';
+        if (message.toLowerCase().includes('error')) className += ' log-error';
+        else if (message.toLowerCase().includes('warning')) className += ' log-warning';
+        else if (message.toLowerCase().includes('info')) className += ' log-info';
+        else if (message.toLowerCase().includes('debug')) className += ' log-debug';
+        
+        return `<div class="${className}">${timestamp}${escapeHtml(message)}</div>`;
+    }
+
+    function updateStats(data) {
+        if (data.services) {
+            let stats = [];
+            for (const [serviceName, serviceData] of Object.entries(data.services)) {
+                if (serviceData.logs) {
+                    stats.push(`${getServiceDisplayName(serviceName)}: ${serviceData.logs.length} lignes`);
+                }
+            }
+            statsContent.textContent = stats.join(' | ');
+            logStats.style.display = 'block';
+        } else {
+            logStats.style.display = 'none';
+        }
+    }
+
+    function getServiceDisplayName(serviceName) {
+        const names = {
+            'django': 'Django Application',
+            'flask_api': 'Flask API',
+            'orchestration': 'Python Orchestrator',
+            'spark_master': 'Spark Master',
+            'postgres': 'PostgreSQL',
+            'redis': 'Redis',
+            'pgadmin': 'PgAdmin',
+            'consumer': 'File Consumer'
+        };
+        return names[serviceName] || serviceName;
+    }
+
+    function showError(message) {
+        logContainer.innerHTML = `<div class="error-message">${escapeHtml(message)}</div>`;
+        logTitle.textContent = 'Erreur';
+        logCount.textContent = '';
+        logStats.style.display = 'none';
+        downloadBtn.disabled = true;
+    }
+
+    function downloadLogs() {
+        if (!currentLogs) return;
+
+        let content = '';
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        
+        if (currentLogs.services) {
+            for (const [serviceName, serviceData] of Object.entries(currentLogs.services)) {
+                if (serviceData.logs && serviceData.logs.length > 0) {
+                    content += `=== ${getServiceDisplayName(serviceName)} ===\n`;
+                    serviceData.logs.forEach(log => {
+                        content += `[${log.timestamp || 'N/A'}] ${log.message || log.raw || ''}\n`;
+                    });
+                    content += '\n';
+                }
+            }
+        } else {
+            content += `=== ${getServiceDisplayName(currentLogs.service)} ===\n`;
+            if (currentLogs.logs) {
+                currentLogs.logs.forEach(log => {
+                    content += `[${log.timestamp || 'N/A'}] ${log.message || log.raw || ''}\n`;
+                });
+            }
+        }
+
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `logs-${timestamp}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Auto-refresh toutes les 30 secondes
+    setInterval(loadLogs, 30000);
+});
+</script>
+{% endblock %}

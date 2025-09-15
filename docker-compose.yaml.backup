@@ -1,0 +1,287 @@
+version: '3.8'
+
+x-airflow-common:
+  &airflow-common
+  image: apache/airflow:2.3.4-python3.9
+  environment:
+    &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
+    AIRFLOW__CORE__FERNET_KEY: 'UKMzEm3yIuFYEq1y5siPHPjpO7yI-wV1hjaKRyb3S8c='
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
+    AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
+    # Configuration réutilisée du système principal
+    ELASTICSEARCH_HOST: ${ELASTICSEARCH_HOST}
+    ELASTICSEARCH_INDEX: ${ELASTICSEARCH_INDEX:-inlearning-storage}
+    POSTGRES_HOST: db
+    POSTGRES_DB: ${POSTGRES_DB:-elearning_db}
+    POSTGRES_USER: ${POSTGRES_USER:-elearning_user}
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-elearning_password}
+    LEARNING_PLATFORM_URL: http://flask_api:5000
+  volumes:
+    - ./orchestration/airflow/dags:/opt/airflow/dags
+    - ./orchestration/airflow/logs:/opt/airflow/logs
+    - ./orchestration/airflow/config:/opt/airflow/config
+    - ./orchestration/airflow/plugins:/opt/airflow/plugins
+    - ./ETL_users:/opt/airflow/data/ETL_users
+    - ./ingest:/opt/airflow/data/ingest
+  user: "${AIRFLOW_UID:-50000}:0"
+  depends_on:
+    &airflow-common-depends-on
+    airflow-postgres:
+      condition: service_healthy
+
+services:
+  # PostgreSQL principal
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL pour Airflow (séparé)
+  airflow-postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - airflow-postgres-db-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+    restart: always
+    ports:
+      - "5433:5432"
+
+  # Redis principal
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Redis pour Airflow (séparé)
+  airflow-redis:
+    image: redis:latest
+    expose:
+      - 6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 30s
+      retries: 50
+      start_period: 30s
+    restart: always
+
+  # Django App
+  app:
+    build: ./elearning
+    volumes:
+      - ./elearning:/app
+      - ./ingest:/app/ingest
+      - static_volume:/app/staticfiles
+    ports:
+      - "8080:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - DEBUG=1
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://redis:6379/0
+      - ELASTICSEARCH_HOST=${ELASTICSEARCH_HOST}
+      - ELASTICSEARCH_INDEX=${ELASTICSEARCH_INDEX}
+      - ELASTICSEARCH_API_KEY=${ELASTICSEARCH_API_KEY}
+      - LEARNING_PLATFORM_URL=http://flask_api:5000
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             python manage.py runserver 0.0.0.0:8000"
+
+  # Flask API (Learning Platform)
+  flask_api:
+    build: ./learning_platform
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./learning_platform:/app
+      - ./ingest:/app/ingest
+    environment:
+      - FLASK_ENV=development
+      - ELASTICSEARCH_HOST=${ELASTICSEARCH_HOST}
+      - ELASTICSEARCH_INDEX=${ELASTICSEARCH_INDEX}
+      - ELASTICSEARCH_API_KEY=${ELASTICSEARCH_API_KEY}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    depends_on:
+      - db
+    command: python app.py
+
+  # Consumer
+  consumer:
+    build: ./learning_platform
+    volumes:
+      - ./learning_platform:/app
+      - ./ingest:/app/ingest
+    environment:
+      - LEARNING_PLATFORM_URL=http://flask_api:5000
+      - ELASTICSEARCH_HOST=${ELASTICSEARCH_HOST}
+      - ELASTICSEARCH_INDEX=${ELASTICSEARCH_INDEX}
+      - ELASTICSEARCH_API_KEY=${ELASTICSEARCH_API_KEY}
+    depends_on:
+      - flask_api
+    command: python start_consumer.py
+
+  # PgAdmin
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "8085:80"
+    depends_on:
+      - db
+      - airflow-postgres
+
+  # Apache Spark Master
+  spark-master:
+    image: bitnami/spark:3.5
+    container_name: spark-master
+    environment:
+      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - SPARK_USER=spark
+    ports:
+      - "8090:8080"  # Spark Master Web UI (changed port to avoid conflict)
+      - "7077:7077"  # Spark Master port
+    volumes:
+      - ./learning_platform/spark:/opt/bitnami/spark/jobs
+      - ./learning_platform/data:/opt/bitnami/spark/data
+      - ./ingest:/opt/bitnami/spark/ingest
+    restart: unless-stopped
+
+  # Spark Worker 1
+  spark-worker-1:
+    image: bitnami/spark:3.5
+    container_name: spark-worker-1
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=2g
+      - SPARK_WORKER_CORES=2
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - SPARK_USER=spark
+    volumes:
+      - ./learning_platform/spark:/opt/bitnami/spark/jobs
+      - ./learning_platform/data:/opt/bitnami/spark/data
+      - ./ingest:/opt/bitnami/spark/ingest
+    depends_on:
+      - spark-master
+    restart: unless-stopped
+
+  # Spark Worker 2
+  spark-worker-2:
+    image: bitnami/spark:3.5
+    container_name: spark-worker-2
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=2g
+      - SPARK_WORKER_CORES=2
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - SPARK_USER=spark
+    volumes:
+      - ./learning_platform/spark:/opt/bitnami/spark/jobs
+      - ./learning_platform/data:/opt/bitnami/spark/data
+      - ./ingest:/opt/bitnami/spark/ingest
+    depends_on:
+      - spark-master
+    restart: unless-stopped
+
+
+
+  orchestration:
+    build: ./orchestration/simple
+    container_name: inlearning-orchestration
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=elearning_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - ELASTICSEARCH_HOST=https://my-elasticsearch-project-d09d1e.es.us-central1.gcp.elastic.cloud:443
+      - ELASTICSEARCH_INDEX=inlearning-storage
+      - ELASTICSEARCH_API_KEY=T2FIYU5Ka0J5U1pfX01EQTN5QzY6XzJoOVZRTHp4Wk9EZ0V1T0dNV0ZGQQ==
+    volumes:
+      - ./orchestration/simple/logs:/app/logs
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+    depends_on:
+      - db
+      - redis
+    networks:
+      - default
+
+  orchestration:
+    build: ./orchestration/simple
+    container_name: inlearning-orchestration
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=elearning_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - ELASTICSEARCH_HOST=https://my-elasticsearch-project-d09d1e.es.us-central1.gcp.elastic.cloud:443
+      - ELASTICSEARCH_INDEX=inlearning-storage
+      - ELASTICSEARCH_API_KEY=T2FIYU5Ka0J5U1pfX01EQTN5QzY6XzJoOVZRTHp4Wk9EZ0V1T0dNV0ZGQQ==
+    volumes:
+      - ./orchestration/simple/logs:/app/logs
+      - ./ETL_users:/app/ETL_users
+      - ./ingest:/app/ingest
+      - ./elearning/services:/app/elearning/services
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+    depends_on:
+      - db
+      - redis
+    networks:
+      - default
+
+volumes:
+  postgres_data:
+  static_volume:
+  airflow-postgres-db-volume:
+  airflow-data:

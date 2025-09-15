@@ -4,10 +4,11 @@ from .filtering import filter_courses
 from .sequencing import order_courses
 from .preprocessing import preprocess_courses
 
+
 def recommend_courses(profile, raw_courses, top_k=5):
     courses = preprocess_courses(raw_courses)
     filtered = filter_courses(profile, raw_courses)
-    
+
     if not filtered:
         return []
 

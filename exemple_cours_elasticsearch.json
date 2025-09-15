@@ -1,0 +1,210 @@
+{
+  "id": "cours_python_001",
+  "title": "Python pour les Débutants - Fondamentaux de la Programmation",
+  "description": "Un cours complet pour apprendre Python depuis zéro. Découvrez les bases de la programmation, les structures de données, les fonctions et créez vos premiers projets.",
+  "instructor": "Dr. Sophie Martin",
+  "instructor_bio": "Docteure en informatique avec 10 ans d'expérience en développement Python et enseignement universitaire",
+  "category": "Programmation",
+  "subcategory": "Python",
+  "difficulty": "débutant",
+  "duration_hours": 25,
+  "language": "français",
+  "learning_mode": "video",
+  "is_free": true,
+  "price": 0,
+  "rating": 4.7,
+  "students_count": 1250,
+  "created_at": "2024-01-15T10:00:00Z",
+  "updated_at": "2024-09-01T14:30:00Z",
+  "tags": [
+    "python",
+    "programmation",
+    "débutant",
+    "bases",
+    "algorithmes",
+    "développement",
+    "informatique"
+  ],
+  "prerequisites": [
+    "Aucune expérience en programmation requise",
+    "Ordinateur avec accès internet",
+    "Motivation d'apprendre"
+  ],
+  "learning_objectives": [
+    "Comprendre les concepts fondamentaux de Python",
+    "Maîtriser les variables, boucles et conditions",
+    "Utiliser les listes, dictionnaires et tuples",
+    "Créer et utiliser des fonctions",
+    "Gérer les erreurs et exceptions",
+    "Développer des petits projets pratiques"
+  ],
+  "skills_acquired": [
+    "Syntaxe Python",
+    "Structures de données",
+    "Programmation orientée objet basique",
+    "Gestion des fichiers",
+    "Debugging",
+    "Bonnes pratiques de code"
+  ],
+  "target_audience": [
+    "Étudiants en informatique",
+    "Professionnels en reconversion",
+    "Autodidactes curieux",
+    "Analystes de données débutants"
+  ],
+  "lessons": [
+    {
+      "id": 1,
+      "title": "Introduction à Python et Installation",
+      "description": "Découverte de Python, installation et premier programme",
+      "duration_minutes": 45,
+      "video_url": "https://example.com/videos/python-intro.mp4",
+      "content": "Dans cette première leçon, nous découvrirons ce qu'est Python, pourquoi l'utiliser, et comment l'installer sur votre ordinateur.",
+      "order": 1,
+      "is_free_preview": true
+    },
+    {
+      "id": 2,
+      "title": "Variables et Types de Données",
+      "description": "Comprendre les variables, nombres, chaînes de caractères",
+      "duration_minutes": 60,
+      "video_url": "https://example.com/videos/python-variables.mp4",
+      "content": "Apprenez à créer et manipuler des variables, découvrez les différents types de données en Python.",
+      "order": 2,
+      "is_free_preview": false
+    },
+    {
+      "id": 3,
+      "title": "Structures de Contrôle",
+      "description": "Conditions if/else, boucles for et while",
+      "duration_minutes": 75,
+      "video_url": "https://example.com/videos/python-control.mp4",
+      "content": "Maîtrisez les structures de contrôle pour créer des programmes dynamiques et interactifs.",
+      "order": 3,
+      "is_free_preview": false
+    },
+    {
+      "id": 4,
+      "title": "Listes et Dictionnaires",
+      "description": "Manipulation des structures de données complexes",
+      "duration_minutes": 90,
+      "video_url": "https://example.com/videos/python-data-structures.mp4",
+      "content": "Découvrez les listes, dictionnaires et tuples pour organiser vos données efficacement.",
+      "order": 4,
+      "is_free_preview": false
+    },
+    {
+      "id": 5,
+      "title": "Fonctions et Modules",
+      "description": "Créer du code réutilisable avec les fonctions",
+      "duration_minutes": 80,
+      "video_url": "https://example.com/videos/python-functions.mp4",
+      "content": "Apprenez à créer vos propres fonctions et à utiliser les modules Python.",
+      "order": 5,
+      "is_free_preview": false
+    },
+    {
+      "id": 6,
+      "title": "Projet Final : Calculatrice Interactive",
+      "description": "Mettez en pratique vos connaissances",
+      "duration_minutes": 120,
+      "video_url": "https://example.com/videos/python-project.mp4",
+      "content": "Créez une calculatrice interactive en appliquant tous les concepts appris.",
+      "order": 6,
+      "is_free_preview": false
+    }
+  ],
+  "resources": [
+    {
+      "title": "Guide d'installation Python",
+      "type": "pdf",
+      "url": "https://example.com/resources/python-install-guide.pdf",
+      "description": "Guide détaillé pour installer Python sur Windows, Mac et Linux"
+    },
+    {
+      "title": "Aide-mémoire Python",
+      "type": "pdf",
+      "url": "https://example.com/resources/python-cheatsheet.pdf",
+      "description": "Résumé des principales commandes et syntaxes Python"
+    },
+    {
+      "title": "Exercices supplémentaires",
+      "type": "zip",
+      "url": "https://example.com/resources/python-exercises.zip",
+      "description": "Collection d'exercices pratiques avec solutions"
+    }
+  ],
+  "quiz": {
+    "total_questions": 25,
+    "passing_score": 70,
+    "questions": [
+      {
+        "id": 1,
+        "question": "Quelle est la syntaxe correcte pour créer une variable en Python ?",
+        "type": "multiple_choice",
+        "options": [
+          "var x = 5",
+          "x = 5",
+          "int x = 5",
+          "x := 5"
+        ],
+        "correct_answer": 1,
+        "explanation": "En Python, on assigne une valeur à une variable avec le signe =, sans déclaration de type explicite."
+      },
+      {
+        "id": 2,
+        "question": "Que fait la fonction print() en Python ?",
+        "type": "multiple_choice",
+        "options": [
+          "Imprime sur papier",
+          "Affiche du texte à l'écran",
+          "Sauvegarde un fichier",
+          "Crée une variable"
+        ],
+        "correct_answer": 1,
+        "explanation": "La fonction print() affiche du texte ou des valeurs dans la console/terminal."
+      }
+    ]
+  },
+  "certificate": {
+    "available": true,
+    "requirements": [
+      "Compléter toutes les leçons",
+      "Réussir le quiz final avec 70% minimum",
+      "Soumettre le projet final"
+    ],
+    "template_url": "https://example.com/certificates/python-basics-template.pdf"
+  },
+  "reviews": [
+    {
+      "user_id": "user_123",
+      "username": "Marie L.",
+      "rating": 5,
+      "comment": "Excellent cours pour débuter ! Les explications sont claires et les exercices bien pensés.",
+      "date": "2024-08-15T09:30:00Z"
+    },
+    {
+      "user_id": "user_456",
+      "username": "Thomas R.",
+      "rating": 4,
+      "comment": "Très bon contenu, j'aurais aimé plus d'exercices pratiques mais la progression est excellente.",
+      "date": "2024-08-20T16:45:00Z"
+    }
+  ],
+  "analytics": {
+    "completion_rate": 78,
+    "average_time_to_complete": 18,
+    "most_difficult_lesson": 4,
+    "student_satisfaction": 4.7
+  },
+  "metadata": {
+    "content_type": "course",
+    "status": "published",
+    "visibility": "public",
+    "featured": true,
+    "searchable": true,
+    "content_warning": false,
+    "age_restriction": false,
+    "last_indexed": "2024-09-11T10:30:00Z"
+  }
+} 

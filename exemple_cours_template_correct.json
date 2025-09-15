@@ -1,0 +1,168 @@
+[
+  {
+    "url": "https://www.example.com/python-avance",
+    "cours": {
+      "id": "cours_python_avance_001",
+      "titre": "Python Avancé - Programmation Orientée Objet",
+      "description": "Maîtrisez les concepts avancés de Python : classes, héritage, polymorphisme, décorateurs et métaclasses. Développez des applications robustes avec les bonnes pratiques.",
+      "lien": "https://www.example.com/python-avance",
+      "contenus": {
+        "paragraphs": [
+          "La programmation orientée objet (POO) est un paradigme de programmation fondamental en Python.",
+          "Ce cours vous apprendra à créer des classes, gérer l'héritage et implémenter le polymorphisme.",
+          "Vous découvrirez les décorateurs, les context managers et les métaclasses.",
+          "Apprenez à structurer votre code avec les design patterns les plus utilisés.",
+          "Gérez les exceptions de manière professionnelle et créez vos propres exceptions.",
+          "Utilisez les modules unittest et pytest pour tester votre code.",
+          "Implémentez des interfaces avec les classes abstraites.",
+          "Maîtrisez la gestion de la mémoire et les weak references."
+        ],
+        "lists": [
+          [
+            "Classes et objets",
+            "Méthodes et attributs",
+            "Constructeurs et destructeurs",
+            "Héritage simple et multiple",
+            "Polymorphisme et surcharge"
+          ],
+          [
+            "Décorateurs de fonction",
+            "Décorateurs de classe",
+            "Property et setter",
+            "Méthodes statiques et de classe"
+          ],
+          [
+            "Context managers",
+            "Générateurs et itérateurs",
+            "Métaclasses",
+            "Descripteurs"
+          ]
+        ],
+        "examples": [
+          "class Vehicle:\n    def __init__(self, brand, model):\n        self.brand = brand\n        self.model = model\n    \n    def start_engine(self):\n        return f'{self.brand} {self.model} engine started'",
+          "class Car(Vehicle):\n    def __init__(self, brand, model, doors):\n        super().__init__(brand, model)\n        self.doors = doors\n    \n    def open_doors(self):\n        return f'Opening {self.doors} doors'",
+          "@property\ndef temperature(self):\n    return self._temperature\n\n@temperature.setter\ndef temperature(self, value):\n    if value < -273.15:\n        raise ValueError('Temperature cannot be below absolute zero')\n    self._temperature = value",
+          "def retry(max_attempts=3):\n    def decorator(func):\n        def wrapper(*args, **kwargs):\n            for attempt in range(max_attempts):\n                try:\n                    return func(*args, **kwargs)\n                except Exception as e:\n                    if attempt == max_attempts - 1:\n                        raise e\n        return wrapper\n    return decorator"
+        ],
+        "texte": "Ce cours couvre tous les aspects avancés de Python nécessaires pour devenir un développeur Python professionnel. Vous apprendrez la programmation orientée objet, les décorateurs, la gestion des exceptions et les bonnes pratiques de développement.",
+        "lienVideo": "https://www.example.com/videos/python-avance-playlist"
+      },
+      "categories": ["Programmation", "Python", "Orienté Objet", "Développement"],
+      "niveau": "Intermédiaire",
+      "duree": "6 à 8 semaines",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "url": "https://www.example.com/javascript-moderne",
+    "cours": {
+      "id": "cours_js_moderne_002",
+      "titre": "JavaScript Moderne - ES6+ et Asynchrone",
+      "description": "Découvrez JavaScript moderne avec ES6+, les modules, async/await, les Promises et les nouvelles fonctionnalités du langage. Créez des applications web performantes.",
+      "lien": "https://www.example.com/javascript-moderne",
+      "contenus": {
+        "paragraphs": [
+          "JavaScript ES6+ a révolutionné le développement web moderne.",
+          "Les fonctions fléchées offrent une syntaxe plus concise et un comportement de 'this' prévisible.",
+          "La destructuration simplifie l'extraction de données des objets et tableaux.",
+          "Les template literals permettent une interpolation de chaînes élégante.",
+          "Les modules ES6 organisent votre code de manière modulaire.",
+          "Les Promises et async/await gèrent l'asynchrone de façon lisible.",
+          "Les classes ES6 apportent la syntaxe de POO familière.",
+          "Les nouveaux types de données comme Map, Set et Symbol enrichissent le langage."
+        ],
+        "lists": [
+          [
+            "Let et const vs var",
+            "Fonctions fléchées",
+            "Destructuration d'objets et tableaux",
+            "Template literals",
+            "Spread operator et rest parameters"
+          ],
+          [
+            "Promises et chaînage",
+            "Async/await",
+            "Fetch API",
+            "Gestion d'erreurs asynchrones",
+            "Promise.all et Promise.race"
+          ],
+          [
+            "Modules import/export",
+            "Classes ES6",
+            "Héritage avec extends",
+            "Getters et setters",
+            "Méthodes statiques"
+          ]
+        ],
+        "examples": [
+          "// Fonction fléchée\nconst add = (a, b) => a + b;\n\n// Destructuration\nconst {name, age} = person;\nconst [first, second] = array;",
+          "// Template literals\nconst message = `Hello ${name}, you are ${age} years old`;\n\n// Spread operator\nconst newArray = [...oldArray, newItem];",
+          "// Async/await\nasync function fetchData() {\n  try {\n    const response = await fetch('/api/data');\n    const data = await response.json();\n    return data;\n  } catch (error) {\n    console.error('Error:', error);\n  }\n}",
+          "// Classes ES6\nclass Rectangle {\n  constructor(width, height) {\n    this.width = width;\n    this.height = height;\n  }\n  \n  get area() {\n    return this.width * this.height;\n  }\n  \n  static create(size) {\n    return new Rectangle(size, size);\n  }\n}"
+        ],
+        "texte": "Maîtrisez JavaScript moderne avec toutes les fonctionnalités ES6+ essentielles pour le développement web contemporain. De la syntaxe moderne à la programmation asynchrone avancée.",
+        "lienVideo": "https://www.example.com/videos/javascript-moderne"
+      },
+      "categories": ["Développement Web", "JavaScript", "Frontend", "ES6"],
+      "niveau": "Intermédiaire",
+      "duree": "4 à 6 semaines", 
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "url": "https://www.example.com/react-hooks",
+    "cours": {
+      "id": "cours_react_hooks_003",
+      "titre": "React Hooks - Développement Moderne",
+      "description": "Apprenez React Hooks pour créer des composants fonctionnels puissants. useState, useEffect, useContext, hooks personnalisés et bonnes pratiques.",
+      "lien": "https://www.example.com/react-hooks",
+      "contenus": {
+        "paragraphs": [
+          "Les React Hooks ont révolutionné la façon de développer avec React.",
+          "useState permet de gérer l'état local dans les composants fonctionnels.",
+          "useEffect remplace les méthodes de cycle de vie des composants de classe.",
+          "useContext simplifie la consommation du Context API.",
+          "Les hooks personnalisés favorisent la réutilisabilité du code.",
+          "useReducer gère des états complexes de manière prévisible.",
+          "useMemo et useCallback optimisent les performances.",
+          "Les règles des hooks garantissent un comportement cohérent."
+        ],
+        "lists": [
+          [
+            "useState pour l'état local",
+            "useEffect pour les effets de bord",
+            "useContext pour le contexte",
+            "useReducer pour état complexe",
+            "useRef pour les références"
+          ],
+          [
+            "useMemo pour la mémorisation",
+            "useCallback pour les fonctions",
+            "useLayoutEffect pour le DOM",
+            "useImperativeHandle pour l'exposition",
+            "useDebugValue pour le debug"
+          ],
+          [
+            "Hooks personnalisés",
+            "Logique réutilisable",
+            "Composition de hooks",
+            "Tests de hooks",
+            "Bonnes pratiques"
+          ]
+        ],
+        "examples": [
+          "// useState hook\nconst [count, setCount] = useState(0);\nconst [user, setUser] = useState(null);\n\n// Mise à jour d'état\nsetCount(prevCount => prevCount + 1);",
+          "// useEffect hook\nuseEffect(() => {\n  // Effect\n  document.title = `Count: ${count}`;\n  \n  // Cleanup\n  return () => {\n    document.title = 'React App';\n  };\n}, [count]); // Dependencies",
+          "// Hook personnalisé\nfunction useCounter(initialValue = 0) {\n  const [count, setCount] = useState(initialValue);\n  \n  const increment = () => setCount(c => c + 1);\n  const decrement = () => setCount(c => c - 1);\n  const reset = () => setCount(initialValue);\n  \n  return { count, increment, decrement, reset };\n}",
+          "// useReducer pour état complexe\nconst [state, dispatch] = useReducer(reducer, initialState);\n\nfunction reducer(state, action) {\n  switch (action.type) {\n    case 'increment':\n      return { count: state.count + 1 };\n    case 'decrement':\n      return { count: state.count - 1 };\n    default:\n      return state;\n  }\n}"
+        ],
+        "texte": "Maîtrisez les React Hooks pour créer des applications React modernes et performantes. Apprenez tous les hooks intégrés et créez vos propres hooks réutilisables.",
+        "lienVideo": "https://www.example.com/videos/react-hooks-complete"
+      },
+      "categories": ["React", "Frontend", "Hooks", "Développement Web"],
+      "niveau": "Intermédiaire", 
+      "duree": "3 à 4 semaines",
+      "vecteur_embedding": []
+    }
+  }
+] 

@@ -1,5 +1,6 @@
 import pandas as pd
 
+
 def extract_data(filepath: str) -> pd.DataFrame:
     """
     Fonction pour extraire les données depuis un fichier Excel.
@@ -9,7 +10,7 @@ def extract_data(filepath: str) -> pd.DataFrame:
     df = None  # Initialisation par défaut
     try:
         # Lire le fichier Excel
-        df = pd.read_excel(filepath, engine='openpyxl')
+        df = pd.read_excel(filepath, engine="openpyxl")
         print(f"Données extraites avec succès. Nombre de lignes : {len(df)}")
     except FileNotFoundError as e:
         print(f"Erreur : Fichier non trouvé - {e}")
@@ -17,5 +18,5 @@ def extract_data(filepath: str) -> pd.DataFrame:
         print(f"Erreur de parsing des données : {e}")
     except Exception as e:
         print(f"Erreur inattendue lors de l'extraction des données : {e}")
-    
+
     return df

@@ -1,1 +1,1 @@
-# Module Spark pour calculs distribués - InLearning Platform 
+# Module Spark pour calculs distribués - InLearning Platform

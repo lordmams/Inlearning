@@ -1,8 +1,9 @@
 import json
 
+
 def get_recommendations(data):
     # Charger les cours
-    with open('app/data/courses.json', 'r') as f:
+    with open("app/data/courses.json", "r") as f:
         courses = json.load(f)
 
     user_interests = set(data.get("interests", []))

@@ -14,6 +14,7 @@ client = MongoClient(MONGO_URI)
 db = client["searchengine"]
 collection = db["documents"]
 
+
 # ✅ Attente que MongoDB soit prêt
 def wait_for_mongo():
     print("⏳ Attente de MongoDB...")
@@ -30,7 +31,9 @@ def wait_for_mongo():
     print("❌ Échec de connexion à MongoDB")
     exit(1)
 
+
 wait_for_mongo()
+
 
 # ✅ Initialisation de la base de données et entraînement du modèle Word2Vec
 def initialize_db():
@@ -43,8 +46,12 @@ def initialize_db():
     print("📥 Insertion des documents...")
 
     # Chemin du fichier JSON
-    json_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data", "workplace-documents.json"))
-    
+    json_path = os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__), "..", "data", "workplace-documents.json"
+        )
+    )
+
     if not os.path.exists(json_path):
         print(f"❌ Le fichier JSON {json_path} n'existe pas.")
         exit(1)
@@ -53,7 +60,9 @@ def initialize_db():
         documents = json.load(file)
 
     # 🔥 RECONSTRUCTION DES DOCUMENTS SANS _id
-    clean_documents = [{"content": doc["content"]} for doc in documents if "content" in doc]
+    clean_documents = [
+        {"content": doc["content"]} for doc in documents if "content" in doc
+    ]
 
     collection.insert_many(clean_documents)
     print("✅ Données insérées.")
@@ -79,14 +88,17 @@ def initialize_db():
                 vector = np.mean(vectors, axis=0)
                 doc["vector"] = vector.tolist()
                 collection.insert_one(doc)
-    
+
     print("✅ Base de données initialisée avec succès !")
 
+
 initialize_db()
+
 
 @app.route("/")
 def home():
     return render_template("index.html")
+
 
 @app.route("/search", methods=["POST"])
 def search():
@@ -95,6 +107,7 @@ def search():
 
     response = [{"content": doc["content"]} for doc in results]
     return jsonify(response)
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

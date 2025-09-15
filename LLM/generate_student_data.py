@@ -6,23 +6,23 @@ import time
 
 # Configuration de l'API pour Claude
 client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+
+
 # Fonction pour appeler l'API Claude
 def call_claude(prompt, max_tokens=8192):
     message = client.messages.create(
         model="claude-3-5-sonnet-20241022",
         max_tokens=max_tokens,
         temperature=0.7,
-        messages=[
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ]
+        messages=[{"role": "user", "content": prompt}],
     )
     return message.content[0].text
 
+
 # Fonction pour générer des données avec Claude
-def generate_student_data(prompt_template, n_samples=1000, profiles=None, batch_size=10):
+def generate_student_data(
+    prompt_template, n_samples=1000, profiles=None, batch_size=10
+):
     if profiles is None:
         profiles = ["étudiant", "reconversion", "professionnel en poste"]
 
@@ -31,7 +31,7 @@ def generate_student_data(prompt_template, n_samples=1000, profiles=None, batch_
 
     for batch_num in range(num_batches):
         current_batch_size = min(batch_size, n_samples - len(all_data))
-        
+
         # Construire le prompt pour le batch actuel
         prompt = f"Générez exactement {current_batch_size} exemples de personnes selon le format suivant. "
         prompt += f"Assurez-vous d'avoir de la variété dans les profils ({', '.join(profiles)}) "
@@ -40,20 +40,24 @@ def generate_student_data(prompt_template, n_samples=1000, profiles=None, batch_
         prompt += prompt_template
 
         try:
-            print(f"\nGénération du batch {batch_num + 1}/{num_batches} "
-                  f"({current_batch_size} exemples)...")
-            
+            print(
+                f"\nGénération du batch {batch_num + 1}/{num_batches} "
+                f"({current_batch_size} exemples)..."
+            )
+
             response_text = call_claude(prompt)
             batch_data = json.loads(response_text)
-            
+
             if isinstance(batch_data, list):
                 all_data.extend(batch_data)
-                print(f"Batch {batch_num + 1} complété : "
-                      f"{len(batch_data)} exemples générés. "
-                      f"Total : {len(all_data)}/{n_samples}")
+                print(
+                    f"Batch {batch_num + 1} complété : "
+                    f"{len(batch_data)} exemples générés. "
+                    f"Total : {len(all_data)}/{n_samples}"
+                )
             else:
                 print(f"Erreur : La réponse n'est pas un tableau JSON valide")
-            
+
             # Petite pause entre les batchs pour éviter les limitations d'API
             if batch_num < num_batches - 1:
                 time.sleep(2)
@@ -63,6 +67,7 @@ def generate_student_data(prompt_template, n_samples=1000, profiles=None, batch_
             continue
 
     return all_data
+
 
 # Exemple de prompt template (reste inchangé)
 prompt_template = """
@@ -120,7 +125,7 @@ Instructions supplémentaires:
 data = generate_student_data(prompt_template, n_samples=100, batch_size=20)
 
 # Sauvegarder les données générées dans un fichier JSON
-with open("generated_student_data.json", "w", encoding='utf-8') as f:
+with open("generated_student_data.json", "w", encoding="utf-8") as f:
     json.dump(data, f, indent=2, ensure_ascii=False)
 
 print("\nDonnées générées et sauvegardées dans 'generated_student_data.json'")

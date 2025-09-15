@@ -8,4 +8,6 @@ for student in students:
     reco = recommend_courses(student, courses, top_k=3)
     print(f"\n🎓 Recommandations pour {student['person']['name']}:")
     for course in reco:
-        print(f" - {course['cours']['titre']} ({course['cours'].get('duree', 'durée inconnue')})")
+        print(
+            f" - {course['cours']['titre']} ({course['cours'].get('duree', 'durée inconnue')})"
+        )

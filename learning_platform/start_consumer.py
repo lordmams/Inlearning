@@ -16,14 +16,14 @@ from services.course_consumer import main
 if __name__ == "__main__":
     print("🚀 Démarrage du consumer de cours (Learning Platform)...")
     print(f"📁 Répertoire de travail: {project_root}")
-    
+
     # Configuration des variables d'environnement
-    os.environ.setdefault('DJANGO_API_URL', 'http://app:8000')
-    
+    os.environ.setdefault("DJANGO_API_URL", "http://app:8000")
+
     try:
         main()
     except KeyboardInterrupt:
         print("\n⏹️ Arrêt du consumer demandé")
     except Exception as e:
         print(f"❌ Erreur fatale: {e}")
-        sys.exit(1) 
+        sys.exit(1)

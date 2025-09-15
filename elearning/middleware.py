@@ -5,6 +5,7 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
+
 class URLDebugMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response

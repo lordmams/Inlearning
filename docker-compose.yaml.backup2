@@ -1,0 +1,242 @@
+version: '3.8'
+
+services:
+  # PostgreSQL principal
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis principal
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Django App
+  app:
+    build: ./elearning
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./elearning:/app
+      - ./ingest:/app/ingest
+      - static_volume:/app/staticfiles
+    ports:
+      - "8080:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - DEBUG=1
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://redis:6379/0
+      - ELASTICSEARCH_HOST=${ELASTICSEARCH_HOST}
+      - ELASTICSEARCH_INDEX=${ELASTICSEARCH_INDEX}
+      - ELASTICSEARCH_API_KEY=${ELASTICSEARCH_API_KEY}
+      - LEARNING_PLATFORM_URL=http://flask_api:5000
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             python manage.py runserver 0.0.0.0:8000"
+
+  # Flask API (Learning Platform)
+  flask_api:
+    build: ./learning_platform
+    ports:
+      - "5000:5000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./learning_platform:/app
+      - ./ingest:/app/ingest
+    environment:
+      - FLASK_ENV=development
+      - ELASTICSEARCH_HOST=${ELASTICSEARCH_HOST}
+      - ELASTICSEARCH_INDEX=${ELASTICSEARCH_INDEX}
+      - ELASTICSEARCH_API_KEY=${ELASTICSEARCH_API_KEY}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    depends_on:
+      - db
+    command: python app.py
+
+  # Consumer
+  consumer:
+    build: ./learning_platform
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./learning_platform:/app
+      - ./ingest:/app/ingest
+    environment:
+      - LEARNING_PLATFORM_URL=http://flask_api:5000
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - ELASTICSEARCH_HOST=${ELASTICSEARCH_HOST}
+      - ELASTICSEARCH_INDEX=${ELASTICSEARCH_INDEX}
+      - ELASTICSEARCH_API_KEY=${ELASTICSEARCH_API_KEY}
+    depends_on:
+      - flask_api
+    command: python start_consumer.py
+
+  # PgAdmin
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "8085:80"
+    depends_on:
+      - db
+
+  # Apache Spark Master
+  spark-master:
+    image: bitnami/spark:3.5
+    container_name: spark-master
+    environment:
+      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - SPARK_USER=spark
+    ports:
+      - "8090:8080"  # Spark Master Web UI (changed port to avoid conflict)
+      - "7077:7077"  # Spark Master port
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./learning_platform/spark:/opt/bitnami/spark/jobs
+      - ./learning_platform/data:/opt/bitnami/spark/data
+      - ./ingest:/opt/bitnami/spark/ingest
+    restart: unless-stopped
+
+  # Spark Worker 1
+  spark-worker-1:
+    image: bitnami/spark:3.5
+    container_name: spark-worker-1
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=2g
+      - SPARK_WORKER_CORES=2
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - SPARK_USER=spark
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./learning_platform/spark:/opt/bitnami/spark/jobs
+      - ./learning_platform/data:/opt/bitnami/spark/data
+      - ./ingest:/opt/bitnami/spark/ingest
+    depends_on:
+      - spark-master
+    restart: unless-stopped
+
+  # Spark Worker 2
+  spark-worker-2:
+    image: bitnami/spark:3.5
+    container_name: spark-worker-2
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=2g
+      - SPARK_WORKER_CORES=2
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - SPARK_USER=spark
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./learning_platform/spark:/opt/bitnami/spark/jobs
+      - ./learning_platform/data:/opt/bitnami/spark/data
+      - ./ingest:/opt/bitnami/spark/ingest
+    depends_on:
+      - spark-master
+    restart: unless-stopped
+
+
+
+  orchestration:
+    build: ./orchestration/simple
+    container_name: inlearning-orchestration
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=elearning_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - ELASTICSEARCH_HOST=https://my-elasticsearch-project-d09d1e.es.us-central1.gcp.elastic.cloud:443
+      - ELASTICSEARCH_INDEX=inlearning-storage
+      - ELASTICSEARCH_API_KEY=T2FIYU5Ka0J5U1pfX01EQTN5QzY6XzJoOVZRTHp4Wk9EZ0V1T0dNV0ZGQQ==
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./orchestration/simple/logs:/app/logs
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+    depends_on:
+      - db
+      - redis
+    networks:
+      - default
+
+  orchestration:
+    build: ./orchestration/simple
+    container_name: inlearning-orchestration
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=elearning_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - ELASTICSEARCH_HOST=https://my-elasticsearch-project-d09d1e.es.us-central1.gcp.elastic.cloud:443
+      - ELASTICSEARCH_INDEX=inlearning-storage
+      - ELASTICSEARCH_API_KEY=T2FIYU5Ka0J5U1pfX01EQTN5QzY6XzJoOVZRTHp4Wk9EZ0V1T0dNV0ZGQQ==
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./orchestration/simple/logs:/app/logs
+      - ./ETL_users:/app/ETL_users
+      - ./ingest:/app/ingest
+      - ./elearning/services:/app/elearning/services
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+    depends_on:
+      - db
+      - redis
+    networks:
+      - default
+
+volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock
+  postgres_data:
+  static_volume:

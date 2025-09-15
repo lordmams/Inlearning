@@ -4,13 +4,13 @@ from src.filtering import filter_courses
 from src.sequencing import order_courses
 from src.preprocessing import preprocess_courses
 
+
 def recommend_courses(profile, raw_courses, top_k=5):
     courses = preprocess_courses(raw_courses)
     filtered = filter_courses(profile, raw_courses)
-    
+
     if not filtered:
         return []
-
 
     course_vectors = vectorize_courses(filtered)
     profile_vector = vectorize_profile(profile)

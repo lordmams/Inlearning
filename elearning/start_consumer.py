@@ -13,7 +13,7 @@ project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
 # Configuration Django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'elearning.settings')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "elearning.settings")
 django.setup()
 
 from services.consumer.consumer import main
@@ -21,11 +21,11 @@ from services.consumer.consumer import main
 if __name__ == "__main__":
     print("🚀 Démarrage du consumer de cours...")
     print(f"📁 Répertoire de travail: {project_root}")
-    
+
     try:
         main()
     except KeyboardInterrupt:
         print("\n⏹️  Arrêt du consumer demandé")
     except Exception as e:
         print(f"❌ Erreur fatale: {e}")
-        sys.exit(1) 
+        sys.exit(1)

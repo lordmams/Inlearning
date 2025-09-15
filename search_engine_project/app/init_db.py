@@ -10,7 +10,9 @@ db = client["searchengine"]
 collection = db["documents"]
 
 # Chemin absolu pour accéder au fichier JSON
-json_path = os.path.join(os.path.dirname(__file__), "..", "data", "workplace-documents.json")
+json_path = os.path.join(
+    os.path.dirname(__file__), "..", "data", "workplace-documents.json"
+)
 
 # Charger le corpus de documents
 with open(json_path, "r", encoding="utf-8") as file:

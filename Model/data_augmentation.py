@@ -7,6 +7,7 @@ from time import sleep
 # Initialiser le client Anthropic
 client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
+
 def generate_advanced_course(level):
     """
     Génère un nouveau cours de niveau avancé en utilisant Claude
@@ -62,25 +63,26 @@ def generate_advanced_course(level):
             model="claude-3-7-sonnet-20250219",
             max_tokens=1000,
             temperature=0.7,
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
         )
-        
+
         # Extraire et parser le JSON
         course_json = json.loads(response.content[0].text)
-        
+
         # Ajouter un ID unique et le niveau
         course_json["id"] = str(uuid.uuid4())
         course_json["niveau"] = level
         course_json["duree"] = "120 minutes"  # Durée par défaut pour cours avancés
-        
+
         return course_json
-    
+
     except Exception as e:
         print(f"Erreur lors de la génération du cours: {e}")
         return None
 
+
 # Charger le JSON existant
-with open('merged_courses.json', 'r', encoding='utf-8') as f:
+with open("merged_courses.json", "r", encoding="utf-8") as f:
     courses = json.load(f)
 
 # Générer de nouveaux cours
@@ -89,19 +91,19 @@ num_courses_to_generate = 100  # Nombre de cours à générer pour chaque niveau
 
 for level in [4, 5]:
     print(f"\nGénération de {num_courses_to_generate} cours de niveau {level}...")
-    
+
     for i in range(num_courses_to_generate):
         print(f"Génération du cours {i+1}/{num_courses_to_generate}")
-        
+
         new_course = generate_advanced_course(level)
         if new_course:
             # Adapter au format existant
             formatted_course = {
                 "url": "https://generated-course.com",
-                "cours": new_course
+                "cours": new_course,
             }
             new_courses.append(formatted_course)
-        
+
         # Pause pour respecter les limites d'API
         sleep(2)
 
@@ -109,9 +111,10 @@ for level in [4, 5]:
 courses.extend(new_courses)
 
 # Sauvegarder le dataset enrichi
-output_file = 'augmented_merged_courses.json'
-with open(output_file, 'w', encoding='utf-8') as f:
+output_file = "augmented_merged_courses.json"
+with open(output_file, "w", encoding="utf-8") as f:
     json.dump(courses, f, ensure_ascii=False, indent=2)
+
 
 # Afficher les statistiques
 def print_level_stats(courses_list):
@@ -119,10 +122,11 @@ def print_level_stats(courses_list):
     for course in courses_list:
         level = course["cours"]["niveau"]
         levels[level] = levels.get(level, 0) + 1
-    
+
     print("\nDistribution des niveaux:")
     for level in sorted(levels.keys()):
         print(f"Niveau {level}: {levels[level]} cours")
+
 
 print("\nStatistiques finales:")
 print_level_stats(courses)

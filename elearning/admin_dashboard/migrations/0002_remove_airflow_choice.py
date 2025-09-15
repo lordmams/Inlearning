@@ -6,13 +6,27 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('admin_dashboard', '0001_initial'),
+        ("admin_dashboard", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='servicemonitoring',
-            name='service_type',
-            field=models.CharField(choices=[('django', 'Django Application'), ('flask_api', 'Flask API'), ('elasticsearch', 'Elasticsearch'), ('postgres', 'PostgreSQL'), ('redis', 'Redis'), ('orchestration', 'Python Orchestrator'), ('spark_master', 'Spark Master'), ('spark_worker', 'Spark Worker'), ('pgadmin', 'PgAdmin'), ('consumer', 'File Consumer')], max_length=20),
+            model_name="servicemonitoring",
+            name="service_type",
+            field=models.CharField(
+                choices=[
+                    ("django", "Django Application"),
+                    ("flask_api", "Flask API"),
+                    ("elasticsearch", "Elasticsearch"),
+                    ("postgres", "PostgreSQL"),
+                    ("redis", "Redis"),
+                    ("orchestration", "Python Orchestrator"),
+                    ("spark_master", "Spark Master"),
+                    ("spark_worker", "Spark Worker"),
+                    ("pgadmin", "PgAdmin"),
+                    ("consumer", "File Consumer"),
+                ],
+                max_length=20,
+            ),
         ),
     ]

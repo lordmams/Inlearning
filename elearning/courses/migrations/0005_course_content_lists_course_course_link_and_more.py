@@ -6,58 +6,70 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('courses', '0004_importlog'),
+        ("courses", "0004_importlog"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='course',
-            name='content_lists',
-            field=models.JSONField(blank=True, default=list, verbose_name='Listes de contenu'),
+            model_name="course",
+            name="content_lists",
+            field=models.JSONField(
+                blank=True, default=list, verbose_name="Listes de contenu"
+            ),
         ),
         migrations.AddField(
-            model_name='course',
-            name='course_link',
-            field=models.URLField(blank=True, verbose_name='Lien vers le cours'),
+            model_name="course",
+            name="course_link",
+            field=models.URLField(blank=True, verbose_name="Lien vers le cours"),
         ),
         migrations.AddField(
-            model_name='course',
-            name='duration_text',
-            field=models.CharField(blank=True, max_length=100, verbose_name='Durée (format texte)'),
+            model_name="course",
+            name="duration_text",
+            field=models.CharField(
+                blank=True, max_length=100, verbose_name="Durée (format texte)"
+            ),
         ),
         migrations.AddField(
-            model_name='course',
-            name='embedding_vector',
-            field=models.JSONField(blank=True, default=list, verbose_name="Vecteur d'embedding"),
+            model_name="course",
+            name="embedding_vector",
+            field=models.JSONField(
+                blank=True, default=list, verbose_name="Vecteur d'embedding"
+            ),
         ),
         migrations.AddField(
-            model_name='course',
-            name='examples',
-            field=models.JSONField(blank=True, default=list, verbose_name='Exemples de code'),
+            model_name="course",
+            name="examples",
+            field=models.JSONField(
+                blank=True, default=list, verbose_name="Exemples de code"
+            ),
         ),
         migrations.AddField(
-            model_name='course',
-            name='json_categories',
-            field=models.JSONField(blank=True, default=list, verbose_name='Catégories JSON'),
+            model_name="course",
+            name="json_categories",
+            field=models.JSONField(
+                blank=True, default=list, verbose_name="Catégories JSON"
+            ),
         ),
         migrations.AddField(
-            model_name='course',
-            name='main_text',
-            field=models.TextField(blank=True, verbose_name='Texte principal'),
+            model_name="course",
+            name="main_text",
+            field=models.TextField(blank=True, verbose_name="Texte principal"),
         ),
         migrations.AddField(
-            model_name='course',
-            name='paragraphs',
-            field=models.JSONField(blank=True, default=list, verbose_name='Paragraphes de contenu'),
+            model_name="course",
+            name="paragraphs",
+            field=models.JSONField(
+                blank=True, default=list, verbose_name="Paragraphes de contenu"
+            ),
         ),
         migrations.AddField(
-            model_name='course',
-            name='source_url',
-            field=models.URLField(blank=True, verbose_name='URL source du cours'),
+            model_name="course",
+            name="source_url",
+            field=models.URLField(blank=True, verbose_name="URL source du cours"),
         ),
         migrations.AddField(
-            model_name='course',
-            name='video_link',
-            field=models.URLField(blank=True, verbose_name='Lien vidéo principal'),
+            model_name="course",
+            name="video_link",
+            field=models.URLField(blank=True, verbose_name="Lien vidéo principal"),
         ),
     ]

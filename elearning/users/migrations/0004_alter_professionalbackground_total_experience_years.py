@@ -6,13 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('users', '0003_auto_20250520_0731'),
+        ("users", "0003_auto_20250520_0731"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='professionalbackground',
-            name='total_experience_years',
-            field=models.IntegerField(blank=True, null=True, verbose_name="Années d'expérience totale"),
+            model_name="professionalbackground",
+            name="total_experience_years",
+            field=models.IntegerField(
+                blank=True, null=True, verbose_name="Années d'expérience totale"
+            ),
         ),
     ]

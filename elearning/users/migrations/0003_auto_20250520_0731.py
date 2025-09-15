@@ -7,18 +7,20 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('users', '0002_person_predicted_level'),
+        ("users", "0002_person_predicted_level"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='professionalbackground',
-            name='person',
-            field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='users.person'),
+            model_name="professionalbackground",
+            name="person",
+            field=models.OneToOneField(
+                on_delete=django.db.models.deletion.CASCADE, to="users.person"
+            ),
         ),
         migrations.AlterField(
-            model_name='professionalbackground',
-            name='total_experience_years',
+            model_name="professionalbackground",
+            name="total_experience_years",
             field=models.IntegerField(verbose_name="Années d'expérience totale"),
         ),
     ]

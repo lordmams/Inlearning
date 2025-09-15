@@ -9,25 +9,46 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('courses', '0001_initial'),
+        ("courses", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='LearningPath',
+            name="LearningPath",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('language', models.CharField(max_length=50, verbose_name='Langage')),
-                ('level', models.IntegerField(verbose_name='Niveau')),
-                ('interests', models.JSONField(verbose_name="Centres d'intérêt")),
-                ('modules', models.JSONField(verbose_name='Modules')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Date de création')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='learning_paths', to=settings.AUTH_USER_MODEL, verbose_name='Utilisateur')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("language", models.CharField(max_length=50, verbose_name="Langage")),
+                ("level", models.IntegerField(verbose_name="Niveau")),
+                ("interests", models.JSONField(verbose_name="Centres d'intérêt")),
+                ("modules", models.JSONField(verbose_name="Modules")),
+                (
+                    "created_at",
+                    models.DateTimeField(
+                        auto_now_add=True, verbose_name="Date de création"
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="learning_paths",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="Utilisateur",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': "Parcours d'apprentissage",
-                'verbose_name_plural': "Parcours d'apprentissage",
-                'ordering': ['-created_at'],
+                "verbose_name": "Parcours d'apprentissage",
+                "verbose_name_plural": "Parcours d'apprentissage",
+                "ordering": ["-created_at"],
             },
         ),
     ]

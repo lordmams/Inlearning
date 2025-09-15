@@ -232,31 +232,7 @@ services:
       - spark-master
     restart: unless-stopped
 
-
-
-  orchestration:
-    build: ./orchestration/simple
-    container_name: inlearning-orchestration
-    environment:
-      - POSTGRES_HOST=db
-      - POSTGRES_PORT=5432
-      - POSTGRES_DB=elearning_db
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
-      - ELASTICSEARCH_HOST=https://my-elasticsearch-project-d09d1e.es.us-central1.gcp.elastic.cloud:443
-      - ELASTICSEARCH_INDEX=inlearning-storage
-      - ELASTICSEARCH_API_KEY=T2FIYU5Ka0J5U1pfX01EQTN5QzY6XzJoOVZRTHp4Wk9EZ0V1T0dNV0ZGQQ==
-    volumes:
-      - ./orchestration/simple/logs:/app/logs
-    restart: unless-stopped
-    ports:
-      - "8001:8000"
-    depends_on:
-      - db
-      - redis
-    networks:
-      - default
-
+  # Orchestration Service (fixed: only one definition)
   orchestration:
     build: ./orchestration/simple
     container_name: inlearning-orchestration

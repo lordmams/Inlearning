@@ -99,7 +99,21 @@ jobs:
         ssh -o StrictHostKeyChecking=no ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_HOST }} << 'EOF'
           cd /opt/inlearning-staging
           git pull origin develop
-          cp env.staging .env
+          
+          # Setup environment only if .env doesn't exist
+          if [ ! -f ".env" ]; then
+            if [ -f "env.staging" ]; then
+              cp env.staging .env
+              echo "Created .env from env.staging template"
+            elif [ -f "env.staging.template" ]; then
+              cp env.staging.template .env
+              echo "Created .env from env.staging.template"
+            else
+              echo "Warning: No staging environment template found"
+            fi
+          else
+            echo "Using existing .env file (not overwriting)"
+          fi
           
           # Utiliser le compose simplifié basé sur votre architecture
           docker-compose -f docker-compose.staging-simple.yml pull
@@ -171,15 +185,19 @@ jobs:
             git pull origin main || echo "Git pull failed, continuing..."
           fi
           
-          # Setup environment
-          if [ -f "env.production.template" ]; then
-            cp env.production.template .env
-            echo "Environment template configured"
-          elif [ -f "env.example" ]; then
-            cp env.example .env
-            echo "Using example environment file"
+          # Setup environment only if .env doesn't exist
+          if [ ! -f ".env" ]; then
+            if [ -f "env.production.template" ]; then
+              cp env.production.template .env
+              echo "Created .env from env.production.template"
+            elif [ -f "env.example" ]; then
+              cp env.example .env
+              echo "Created .env from env.example"
+            else
+              echo "Warning: No environment template found"
+            fi
           else
-            echo "No environment template found"
+            echo "Using existing .env file (not overwriting)"
           fi
           
           # Deploy with docker-compose

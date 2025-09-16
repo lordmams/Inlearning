@@ -185,7 +185,13 @@ jobs:
           # Deploy with docker-compose
           if command -v docker-compose &> /dev/null; then
             echo "Starting services with Docker Compose..."
+            echo "🔄 Stopping existing services..."
+            docker-compose -f docker-compose.yaml down || echo "Stop failed, continuing..."
+            echo "🔄 Pulling latest images..."
             docker-compose -f docker-compose.yaml pull || echo "Pull failed, continuing..."
+            echo "🔄 Building services with latest code..."
+            docker-compose -f docker-compose.yaml build --no-cache || echo "Build failed, continuing..."
+            echo "🚀 Starting services..."
             docker-compose -f docker-compose.yaml up -d || echo "Startup failed, continuing..."
             echo "Services started"
           else

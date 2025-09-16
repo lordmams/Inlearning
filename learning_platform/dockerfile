@@ -2,6 +2,9 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
+# Créer le répertoire logs
+RUN mkdir -p /app/logs
+
 # Installer les dépendances système nécessaires
 RUN apt-get update && apt-get install -y \
     build-essential \

@@ -12,6 +12,9 @@ import requests
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
+# Créer le répertoire logs s'il n'existe pas
+os.makedirs("/app/logs", exist_ok=True)
+
 # Configuration du logging
 logging.basicConfig(
     level=logging.INFO,

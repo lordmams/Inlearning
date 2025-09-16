@@ -409,6 +409,42 @@ def update_service_status():
         logger.info("🔄 Démarrage de la mise à jour manuelle des services...")
         
         # Check all services
+        health_checker.check_all_services()
+        
+        logger.info("✅ Mise à jour des services terminée avec succès")
+        return True
+        
+    except Exception as e:
+        logger.error(f"❌ Erreur lors de la mise à jour des services: {e}")
+        return False
+
+
+def get_system_health_summary():
+    """
+    Get a summary of system health
+    """
+    try:
+        healthy_count = ServiceMonitoring.objects.filter(status='healthy').count()
+        total_count = ServiceMonitoring.objects.count()
+        
+        return {
+            'healthy': healthy_count,
+            'total': total_count,
+            'health_score': (healthy_count / total_count * 100) if total_count > 0 else 0
+        }
+    except Exception as e:
+        logger.error(f"Error getting system health summary: {e}")
+        return {'healthy': 0, 'total': 0, 'health_score': 0}
+
+
+def update_service_status():
+    """
+    Function to manually trigger service status update
+    """
+    try:
+        logger.info("🔄 Démarrage de la mise à jour manuelle des services...")
+        
+        # Check all services
         update_and_save_services()
         
         logger.info("✅ Mise à jour des services terminée avec succès")
@@ -447,7 +483,7 @@ def update_and_save_services():
         logger.info("🔄 Mise à jour et sauvegarde des services...")
         
         # Obtenir les résultats des checks
-        results = update_and_save_services()
+        results = health_checker.check_all_services()
         
         for result in results:
             # Créer ou mettre à jour le service

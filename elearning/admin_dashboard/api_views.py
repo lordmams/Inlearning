@@ -227,3 +227,65 @@ def consumer_health_check(request):
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+
+@require_http_methods(["POST"])
+@staff_member_required
+def update_monitoring(request):
+    """API pour mettre à jour manuellement le monitoring"""
+    try:
+        from .services import update_service_status
+        
+        success = update_service_status()
+        
+        if success:
+            return JsonResponse({
+                'success': True,
+                'message': 'Monitoring mis à jour avec succès'
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'message': 'Erreur lors de la mise à jour'
+            }, status=500)
+            
+    except Exception as e:
+        logger.error(f"Erreur API update_monitoring: {e}")
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=500)
+
+
+@require_http_methods(["GET"])
+@staff_member_required
+def get_system_health(request):
+    """API pour récupérer le statut du système"""
+    try:
+        from .services import health_checker, get_system_health_summary
+        
+        # Déclencher une mise à jour
+        health_checker.check_all_services()
+        
+        # Récupérer le résumé
+        summary = get_system_health_summary()
+        system_overview = health_checker.get_system_overview()
+        
+        return JsonResponse({
+            'success': True,
+            'data': {
+                'health_score': summary.get('health_score', 0),
+                'healthy_services': summary.get('healthy', 0),
+                'total_services': summary.get('total', 0),
+                'overall_status': system_overview.get('overall_status', 'unknown'),
+                'unhealthy_services': system_overview.get('unhealthy_services', 0),
+                'critical_alerts': system_overview.get('critical_unhealthy', 0)
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Erreur API get_system_health: {e}")
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=500)

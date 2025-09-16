@@ -960,9 +960,53 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Charger l'état initial
     setTimeout(checkAllServicesHealth, 1000);
+    // Charger les métriques initiales
+    setTimeout(updateSystemMetrics, 500);
     
+
+    // Fonction pour mettre à jour les métriques du système
+    function updateSystemMetrics() {
+        fetch("/admin-dashboard/api/system/health/")
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const healthData = data.data;
+                    
+                    // Mettre à jour Health Score
+                    const healthScore = Math.round(healthData.health_score);
+                    document.getElementById("healthScore").textContent = healthScore + "%";
+                    
+                    // Mettre à jour Services Online
+                    const servicesOnline = healthData.healthy_services + "/" + healthData.total_services;
+                    const servicesElement = document.querySelector(".health-value.text-success");
+                    if (servicesElement) {
+                        servicesElement.textContent = servicesOnline;
+                    }
+                    
+                    // Mettre à jour Critical Alerts
+                    document.getElementById("activeAlerts").textContent = healthData.critical_alerts;
+                    
+                    // Mettre à jour Last Check
+                    const now = new Date();
+                    document.getElementById("lastCheck").textContent = now.toLocaleTimeString();
+                    
+                    // Mettre à jour la barre de progression
+                    const progressBar = document.getElementById("healthProgressBar");
+                    if (progressBar) {
+                        progressBar.style.width = healthScore + "%";
+                        // Changer la couleur selon le score
+                        progressBar.className = "progress-bar " + (healthScore >= 80 ? "bg-success" : healthScore >= 60 ? "bg-warning" : "bg-danger");
+                    }
+                }
+            })
+            .catch(error => {
+                console.error("Erreur lors de la mise à jour des métriques:", error);
+            });
+    }
     // Auto-refresh toutes les 2 minutes
     setInterval(checkAllServicesHealth, 120000);
+    // Auto-refresh des métriques toutes les 30 secondes
+    setInterval(updateSystemMetrics, 30000);
 });
 </script>
 {% endblock %} 

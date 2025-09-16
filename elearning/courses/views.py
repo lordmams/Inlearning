@@ -805,7 +805,7 @@ def improve_learning_path(request):
             )
 
         # Appeler l'API Flask pour obtenir les améliorations
-        flask_api_url = os.environ.get("FLASK_API_URL", "http://localhost:5000")
+        flask_api_url = os.environ.get("FLASK_API_URL", "http://flask_api:5000")
         response = requests.post(
             f"{flask_api_url}/api/improve-learning-path",
             json={"learning_path": learning_path},
@@ -931,7 +931,7 @@ def generate_quiz(request):
         }
 
         # Appeler l'API Flask
-        flask_api_url = os.environ.get("FLASK_API_URL", "http://localhost:5000")
+        flask_api_url = os.environ.get("FLASK_API_URL", "http://flask_api:5000")
         response = requests.post(f"{flask_api_url}/api/generate-quiz", json=api_data)
 
         if response.status_code == 200:

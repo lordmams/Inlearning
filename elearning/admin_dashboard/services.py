@@ -73,7 +73,7 @@ class ServiceHealthChecker:
                 "name": "Spark Master",
                 "service_type": "spark_master",
                 "url": f"http://{os.environ.get('SERVER_IP', 'localhost')}:8090",
-                "health_check_url": f"http://{os.environ.get('SERVER_IP', 'localhost')}:8080/json/",
+                "health_check_url": "http://spark-master:8080/json/",
                 "is_critical": False,
             },
             {
@@ -185,7 +185,7 @@ class ServiceHealthChecker:
 
         for service_config in self.services_config:
             try:
-                status, response_time, error_message = self.check_service_health(
+                status, response_time, error_message = self._check_service_health_internal(
                     service_config
                 )
 
@@ -399,3 +399,93 @@ class ServiceHealthChecker:
 
 # Instance globale du checker
 health_checker = ServiceHealthChecker()
+
+
+def update_service_status():
+    """
+    Function to manually trigger service status update
+    """
+    try:
+        logger.info("🔄 Démarrage de la mise à jour manuelle des services...")
+        
+        # Check all services
+        update_and_save_services()
+        
+        logger.info("✅ Mise à jour des services terminée avec succès")
+        return True
+        
+    except Exception as e:
+        logger.error(f"❌ Erreur lors de la mise à jour des services: {e}")
+        return False
+
+
+def get_system_health_summary():
+    """
+    Get a summary of system health
+    """
+    try:
+        healthy_count = ServiceMonitoring.objects.filter(status="healthy").count()
+        total_count = ServiceMonitoring.objects.count()
+        
+        return {
+            "healthy": healthy_count,
+            "total": total_count,
+            "health_score": (healthy_count / total_count * 100) if total_count > 0 else 0
+        }
+    except Exception as e:
+        logger.error(f"Error getting system health summary: {e}")
+        return {"healthy": 0, "total": 0, "health_score": 0}
+
+
+def update_and_save_services():
+    """
+    Met à jour et sauvegarde tous les services en base de données
+    """
+    try:
+        from .models import ServiceMonitoring, ServiceHealthHistory
+        
+        logger.info("🔄 Mise à jour et sauvegarde des services...")
+        
+        # Obtenir les résultats des checks
+        results = update_and_save_services()
+        
+        for result in results:
+            # Créer ou mettre à jour le service
+            service, created = ServiceMonitoring.objects.get_or_create(
+                name=result["name"],
+                defaults={
+                    'service_type': result["service_type"],
+                    'url': result["url"],
+                    'health_check_url': result["url"],  # Utiliser l'URL par défaut
+                    'is_critical': result["is_critical"],
+                    'status': result["status"],
+                    'response_time_ms': result["response_time"],
+                    'error_message': result["error_message"],
+                    'last_check': result["last_check"]
+                }
+            )
+            
+            if not created:
+                # Mettre à jour le service existant
+                service.status = result["status"]
+                service.response_time_ms = result["response_time"]
+                service.error_message = result["error_message"]
+                service.last_check = result["last_check"]
+                service.save()
+            
+            # Ajouter à l'historique
+            ServiceHealthHistory.objects.create(
+                service=service,
+                status=result["status"],
+                response_time_ms=result["response_time"],
+                error_message=result["error_message"]
+            )
+            
+            logger.info(f"💾 {service.name}: {service.status} sauvegardé")
+        
+        logger.info("✅ Sauvegarde terminée avec succès")
+        return True
+        
+    except Exception as e:
+        logger.error(f"❌ Erreur lors de la sauvegarde: {e}")
+        return False

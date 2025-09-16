@@ -1305,7 +1305,7 @@ def generate_quiz():
 
         # Appeler Claude
         response = client.messages.create(
-            model="claude-3-sonnet-20240229",
+            model="claude-3-haiku-20240307",
             max_tokens=4000,
             temperature=0.7,
             system="Tu es un expert en pédagogie qui crée des quiz d'évaluation. Réponds UNIQUEMENT en format JSON valide.",

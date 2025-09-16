@@ -75,6 +75,9 @@ urlpatterns = [
         views.service_logs_since,
         name="service_logs_since",
     ),
+    # Monitoring APIs
+    path("api/monitoring/update/", api_views.update_monitoring, name="api_update_monitoring"),
+    path("api/system/health/", api_views.get_system_health, name="api_system_health"),
     # Export data
     path("export/", views.export_data, name="export_data"),
 ]

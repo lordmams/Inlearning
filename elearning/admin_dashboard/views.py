@@ -202,6 +202,8 @@ def analytics_api(request):
 
     # Récupérer les données de health check
     try:
+        # D'abord déclencher une mise à jour des services
+        health_checker.check_all_services()
         system_overview = health_checker.get_system_overview()
         health_score = system_overview.get("health_percentage", 85)
         active_alerts = system_overview.get("unhealthy_services", 0)

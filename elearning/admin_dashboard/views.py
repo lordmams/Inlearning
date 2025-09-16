@@ -531,7 +531,7 @@ def logs_page(request):
     """Page de consultation des logs"""
     try:
         # Récupérer les logs Django
-        django_logs = log_service.get_django_logs()
+        django_logs = log_service.get_service_logs("django", lines=100)
 
         context = {
             "django_logs": django_logs,
@@ -579,7 +579,7 @@ def get_logs_since(request, service_name):
 def get_logs_stats(request):
     """API pour récupérer les statistiques des logs"""
     try:
-        stats = log_service.get_logs_stats()
+        stats = log_service.get_log_statistics()
 
         return JsonResponse(stats)
 
@@ -755,7 +755,7 @@ def log_statistics(request):
     """Vue pour afficher les statistiques des logs"""
     try:
         # Récupérer les statistiques
-        stats = log_service.get_logs_stats()
+        stats = log_service.get_log_statistics()
 
         return JsonResponse(stats)
 
@@ -786,11 +786,99 @@ def system_health(request):
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
+
 @staff_member_required
 def course_import(request):
     """Page d'importation de cours"""
-    return render(request, "admin_dashboard/course_import.html")
-
+    from .forms import CourseImportForm
+    from services.course_importer import CourseImporter
+    from courses.models import ImportLog
+    
+    if request.method == 'POST':
+        form = CourseImportForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                # Récupérer les données du formulaire
+                file = form.cleaned_data['file']
+                format_type = form.cleaned_data['format_type']
+                update_existing = form.cleaned_data['update_existing']
+                dry_run = form.cleaned_data['dry_run']
+                
+                # Créer un log d'importation
+                import_log = ImportLog.objects.create(
+                    filename=file.name,
+                    status="processing",
+                    started_at=timezone.now(),
+                    file_path=f"web_upload_{file.name}",
+                    
+                )
+                
+                # Traiter l'importation
+                importer = CourseImporter()
+                result = importer.import_from_file(
+                    file=file,
+                    format_type=format_type,
+                    update_existing=update_existing,
+                    dry_run=dry_run,
+                )
+                
+                # Mettre à jour le log
+                import_log.status = "completed" if result.get('success', True) else "error"
+                import_log.completed_at = timezone.now()
+                import_log.imported_count = result.get('imported_count', 0)
+                import_log.updated_count = result.get('updated_count', 0)
+                import_log.error_count = len(result.get('errors', []))
+                import_log.result_data = result
+                if result.get('errors'):
+                    import_log.error_message = '; '.join(result['errors'][:3])
+                import_log.save()
+                
+                logger.info(f"Import web: {file.name} - {result.get('imported_count', 0)} cours importés")
+                
+                # Message de succès
+                if result.get('success', True) and result.get('imported_count', 0) > 0:
+                    messages.success(
+                        request, 
+                        f"✅ Import réussi ! {result.get('imported_count', 0)} cours importés, "
+                        f"{result.get('updated_count', 0)} mis à jour."
+                    )
+                elif dry_run:
+                    messages.info(
+                        request,
+                        f"🔍 Test d'import réussi ! {result.get('imported_count', 0)} cours seraient importés."
+                    )
+                else:
+                    messages.warning(request, "⚠️ Aucun cours n'a été importé.")
+                
+                # Rediriger vers la page de résultat
+                return redirect('admin_dashboard:course_import_result')
+                
+            except Exception as e:
+                logger.error(f"Erreur lors de l'import web: {e}")
+                messages.error(request, f"❌ Erreur lors de l'import: {str(e)}")
+                
+                # Mettre à jour le log en cas d'erreur
+                if 'import_log' in locals():
+                    import_log.status = "error"
+                    import_log.error_message = str(e)
+                    import_log.completed_at = timezone.now()
+                    import_log.save()
+    else:
+        form = CourseImportForm()
+    
+    # Récupérer les imports récents pour affichage
+    recent_imports = ImportLog.objects.order_by('-started_at')[:10]
+    
+    # Formats supportés pour affichage
+    supported_formats = ['JSON', 'CSV', 'Excel']
+    
+    context = {
+        'form': form,
+        'recent_imports': recent_imports,
+        'supported_formats': supported_formats,
+    }
+    
+    return render(request, "admin_dashboard/course_import.html", context)
 
 @staff_member_required
 def course_import_result(request):
@@ -802,11 +890,19 @@ def course_import_result(request):
 def import_logs(request):
     """Vue pour afficher les logs d'importation"""
     try:
-        logs = log_service.get_import_logs()
-        return JsonResponse({"logs": logs})
+        logs = log_service.get_pipeline_logs(lines=100)
+        
+        context = {
+            "logs": logs,
+            "page_title": "Logs d'importation",
+            "service_name": "import"
+        }
+        
+        return render(request, "admin_dashboard/logs.html", context)
     except Exception as e:
         logger.error(f"Error getting import logs: {e}")
-        return JsonResponse({"error": str(e)}, status=500)
+        messages.error(request, f"Erreur lors du chargement des logs d'importation: {str(e)}")
+        return redirect("admin_dashboard:dashboard")
 
 
 @staff_member_required
@@ -894,23 +990,28 @@ def reindex_courses(request):
 @staff_member_required
 def elasticsearch_import(request):
     """Vue pour importer des données dans Elasticsearch"""
-    try:
-        result = elasticsearch_service.import_data()
-        # Defensive: If result is a tuple, convert to error dict
-        if isinstance(result, tuple):
-            logger.error(
-                f"elasticsearch_service.import_data returned a tuple: {result}"
-            )
-            return JsonResponse(
-                {
-                    "error": f"Check failed: elasticsearch_service.import_data returned tuple: {result}"
-                },
-                status=500,
-            )
-        return JsonResponse(result)
-    except Exception as e:
-        logger.error(f"Error importing to Elasticsearch: {e}")
-        return JsonResponse({"error": str(e)}, status=500)
+    if request.method == "GET":
+        # Afficher la page d'import
+        return render(request, "admin_dashboard/elasticsearch_import.html")
+    elif request.method == "POST":
+        # Faire l'import
+        try:
+            result = elasticsearch_service.import_data()
+            # Defensive: If result is a tuple, convert to error dict
+            if isinstance(result, tuple):
+                logger.error(
+                    f"elasticsearch_service.import_data returned a tuple: {result}"
+                )
+                return JsonResponse(
+                    {
+                        "error": f"Check failed: elasticsearch_service.import_data returned tuple: {result}"
+                    },
+                    status=500,
+                )
+            return JsonResponse(result)
+        except Exception as e:
+            logger.error(f"Error importing to Elasticsearch: {e}")
+            return JsonResponse({"error": str(e)}, status=500)
 
 
 @staff_member_required
@@ -958,4 +1059,25 @@ def export_data(request):
         )
     except Exception as e:
         logger.error(f"Error in export data: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@staff_member_required
+def get_logs_api(request):
+    """API pour récupérer les logs en JSON"""
+    try:
+        service_name = request.GET.get('service', 'django')
+        lines = int(request.GET.get('lines', 100))
+        since = request.GET.get("since", None)
+        
+        if service_name == 'all':
+            # Récupérer tous les logs
+            logs_data = log_service.get_all_services_logs(lines=min(lines, 20))  # Limite à 20 lignes par service
+        else:
+            # Récupérer les logs d'un service spécifique
+            logs_data = log_service.get_service_logs(service_name, lines=lines)
+        
+        return JsonResponse(logs_data)
+    except Exception as e:
+        logger.error(f"Error in get_logs_api: {e}")
         return JsonResponse({"error": str(e)}, status=500)

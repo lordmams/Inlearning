@@ -437,23 +437,6 @@ def get_system_health_summary():
         return {'healthy': 0, 'total': 0, 'health_score': 0}
 
 
-def update_service_status():
-    """
-    Function to manually trigger service status update
-    """
-    try:
-        logger.info("🔄 Démarrage de la mise à jour manuelle des services...")
-        
-        # Check all services
-        update_and_save_services()
-        
-        logger.info("✅ Mise à jour des services terminée avec succès")
-        return True
-        
-    except Exception as e:
-        logger.error(f"❌ Erreur lors de la mise à jour des services: {e}")
-        return False
-
 
 def get_system_health_summary():
     """

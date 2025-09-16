@@ -33,7 +33,7 @@ urlpatterns = [
         "elasticsearch/import/", views.elasticsearch_import, name="elasticsearch_import"
     ),
     path(
-        "download/template/", views.download_course_template, name="download_template"
+        "download/template/", views.download_course_template, name="download_course_template"
     ),
     # API endpoints pour le consumer
     path("api/course-import/", api_views.course_import_api, name="api_course_import"),
@@ -78,6 +78,7 @@ urlpatterns = [
     # Monitoring APIs
     path("api/monitoring/update/", api_views.update_monitoring, name="api_update_monitoring"),
     path("api/system/health/", api_views.get_system_health, name="api_system_health"),
+    path("api/logs/", views.get_logs_api, name="api_logs"),
     # Export data
     path("export/", views.export_data, name="export_data"),
 ]

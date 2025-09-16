@@ -230,15 +230,15 @@ document.addEventListener('DOMContentLoaded', function() {
         
         logContainer.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Chargement des logs...</div>';
 
-        let url = '/admin-dashboard/logs/';
+        let url = '/admin-dashboard/api/logs/?service=django&lines=' + lines;
         if (service) {
             if (since) {
-                url = `/admin-dashboard/logs/${service}/since/?minutes=${since}`;
+                url = `/admin-dashboard/api/logs/?service=${service}&since=${since}`;
             } else {
-                url = `/admin-dashboard/logs/${service}/?lines=${lines}`;
+                url = `/admin-dashboard/api/logs/?service=${service}&lines=${lines}`;
             }
         } else {
-            url = `/admin-dashboard/logs/?lines=${lines}`;
+            url = `/admin-dashboard/api/logs/?service=django&lines=${lines}`;
         }
 
         fetch(url)

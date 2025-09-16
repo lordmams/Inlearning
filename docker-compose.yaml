@@ -117,6 +117,7 @@ services:
       - ELASTICSEARCH_API_KEY=${ELASTICSEARCH_API_KEY}
       - LEARNING_PLATFORM_URL=http://flask_api:5000
       - FLASK_API_URL=http://flask_api:5000
+      - SERVER_IP=${SERVER_IP}
       - DOCKER_HOST=unix:///var/run/docker.sock
     command: >
       sh -c "python manage.py migrate &&
@@ -151,6 +152,7 @@ services:
     environment:
       - LEARNING_PLATFORM_URL=http://flask_api:5000
       - FLASK_API_URL=http://flask_api:5000
+      - SERVER_IP=${SERVER_IP}
       - DOCKER_HOST=unix:///var/run/docker.sock
       - ELASTICSEARCH_HOST=${ELASTICSEARCH_HOST}
       - ELASTICSEARCH_INDEX=${ELASTICSEARCH_INDEX}

@@ -7,7 +7,7 @@ import logging
 import time
 from datetime import datetime, timedelta
 from typing import Dict, List, Tuple
-
+import os
 import requests
 from django.conf import settings
 from django.utils import timezone
@@ -30,14 +30,14 @@ class ServiceHealthChecker:
             {
                 "name": "Django Application",
                 "service_type": "django",
-                "url": "http://localhost:8000",
-                "health_check_url": "http://localhost:8000/admin/",
+                "url": f"http://{os.environ.get('SERVER_IP', 'localhost')}:8000",
+                "health_check_url": f"http://{os.environ.get('SERVER_IP', 'localhost')}:8000/admin/",
                 "is_critical": True,
             },
             {
                 "name": "Flask API",
                 "service_type": "flask_api",
-                "url": "http://localhost:5000",
+                "url": f"http://{os.environ.get('SERVER_IP', 'localhost')}:5000",
                 "health_check_url": "http://flask_api:5000/health",
                 "is_critical": True,
             },
@@ -51,36 +51,36 @@ class ServiceHealthChecker:
             {
                 "name": "PostgreSQL",
                 "service_type": "postgres",
-                "url": "http://localhost:5432",
-                "health_check_url": "http://localhost:5432",
+                "url": f"http://{os.environ.get('SERVER_IP', 'localhost')}:5432",
+                "health_check_url": f"http://{os.environ.get('SERVER_IP', 'localhost')}:5432",
                 "is_critical": True,
             },
             {
                 "name": "Redis",
                 "service_type": "redis",
-                "url": "http://localhost:6379",
-                "health_check_url": "http://localhost:6379",
+                "url": f"http://{os.environ.get('SERVER_IP', 'localhost')}:6379",
+                "health_check_url": f"http://{os.environ.get('SERVER_IP', 'localhost')}:6379",
                 "is_critical": True,
             },
             {
                 "name": "Python Orchestrator",
                 "service_type": "orchestration",
-                "url": "http://localhost:8001",
-                "health_check_url": "http://inlearning-orchestration:8000/health",
+                "url": f"http://{os.environ.get('SERVER_IP', 'localhost')}:8001",
+                "health_check_url": f"http://{os.environ.get('SERVER_IP', 'localhost')}:8000/health",
                 "is_critical": False,
             },
             {
                 "name": "Spark Master",
                 "service_type": "spark_master",
-                "url": "http://localhost:8090",
-                "health_check_url": "http://spark-master:8080/json/",
+                "url": f"http://{os.environ.get('SERVER_IP', 'localhost')}:8090",
+                "health_check_url": f"http://{os.environ.get('SERVER_IP', 'localhost')}:8080/json/",
                 "is_critical": False,
             },
             {
                 "name": "PgAdmin",
                 "service_type": "pgadmin",
-                "url": "http://localhost:8085",
-                "health_check_url": "http://pgadmin:80/misc/ping",
+                "url": f"http://{os.environ.get('SERVER_IP', 'localhost')}:8085",
+                "health_check_url": f"http://{os.environ.get('SERVER_IP', 'localhost')}:80/misc/ping",
                 "is_critical": False,
             },
         ]

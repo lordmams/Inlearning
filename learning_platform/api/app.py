@@ -1083,10 +1083,20 @@ Rappel: Ta réponse doit être UNIQUEMENT le JSON ci-dessus, sans aucun texte su
 
         # Parser la réponse de Claude
         try:
-            claude_response = json.loads(response.content[0].text)
+            claude_text = response.content[0].text
+            logger.info(f"Claude response (first 500 chars): {claude_text[:500]}")
+            
+            # Nettoyer la réponse si nécessaire
+            claude_text = claude_text.strip()
+            if claude_text.startswith('```json'):
+                # Retirer les marqueurs de code markdown
+                claude_text = claude_text.replace('```json', '').replace('```', '').strip()
+            
+            claude_response = json.loads(claude_text)
             modules = claude_response.get("modules", [])
-        except json.JSONDecodeError:
-            logger.error("Erreur lors du parsing de la réponse de Claude")
+        except json.JSONDecodeError as e:
+            logger.error(f"Erreur lors du parsing de la réponse de Claude: {e}")
+            logger.error(f"Raw Claude response: {response.content[0].text}")
             return (
                 jsonify(
                     {"success": False, "error": "Erreur lors de l'analyse des cours"}

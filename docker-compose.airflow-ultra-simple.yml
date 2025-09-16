@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  # Airflow Ultra Simple
+  airflow-simple:
+    image: apache/airflow:2.2.5-python3.9
+    container_name: airflow-simple
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db
+      - AIRFLOW__CORE__FERNET_KEY=UKMzEm3yIuFYEq1y5siPHPjpO7yI-wV1hjaKRyb3S8c=
+      - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=true
+      - AIRFLOW__CORE__LOAD_EXAMPLES=false
+      - AIRFLOW__WEBSERVER__EXPOSE_CONFIG=true
+      - AIRFLOW__WEBSERVER__RBAC=false
+    volumes:
+      - ./orchestration/airflow/dags:/opt/airflow/dags
+      - ./orchestration/airflow/logs:/opt/airflow/logs
+      - airflow-simple-data:/opt/airflow
+    ports:
+      - "8082:8080"
+    command: >
+      bash -c "
+        airflow db init &&
+        airflow users create --username admin --firstname Admin --lastname User --role Admin --email admin@airflow.com --password admin --password admin &&
+        airflow webserver --port 8080 --hostname 0.0.0.0 --daemon &&
+        airflow scheduler
+      "
+    restart: unless-stopped
+    networks:
+      - default
+
+volumes:
+  airflow-simple-data:
+
+networks:
+  default:
+    external: true
+    name: inlearning_default

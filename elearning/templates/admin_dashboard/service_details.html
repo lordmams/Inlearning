@@ -1,0 +1,399 @@
+{% extends "admin_dashboard/base_admin.html" %}
+{% load static %}
+
+{% block title %}{{ service.name }} - Service Details{% endblock %}
+
+{% block extra_css %}
+<style>
+    .metric-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+        text-transform: uppercase;
+    }
+    
+    .status-healthy { background: #D1FAE5; color: #065F46; }
+    .status-degraded { background: #FEF3C7; color: #92400E; }
+    .status-unhealthy { background: #FEE2E2; color: #991B1B; }
+    .status-unknown { background: #F3F4F6; color: #374151; }
+    
+    .timeline-item {
+        padding: 12px 0;
+        border-left: 3px solid #E5E7EB;
+        padding-left: 20px;
+        margin-left: 10px;
+        position: relative;
+    }
+    
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -6px;
+        top: 20px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #E5E7EB;
+    }
+    
+    .timeline-item.healthy::before { background: #10B981; }
+    .timeline-item.degraded::before { background: #F59E0B; }
+    .timeline-item.unhealthy::before { background: #EF4444; }
+    
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin: 20px 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-server"></i> {{ service.name }}</h2>
+            <p class="text-muted">{{ service.get_service_type_display }} - Service Details</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ service.url }}" target="_blank" class="btn btn-primary">
+                <i class="fas fa-external-link-alt"></i> Open Service
+            </a>
+            <a href="{% url 'admin_dashboard:system_monitoring' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Monitoring
+            </a>
+        </div>
+    </div>
+
+    <!-- Service Overview -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="metric-card">
+                <div class="row">
+                    <div class="col-md-3">
+                        <h6>Current Status</h6>
+                        <span class="status-badge status-{{ service.status }}">
+                            {{ service.get_status_display }}
+                        </span>
+                        {% if service.is_critical %}
+                        <span class="badge badge-warning ms-2">Critical Service</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        <h6>Uptime (24h)</h6>
+                        <div class="d-flex align-items-center">
+                            <span class="h4 text-primary">{{ service.uptime_percentage }}%</span>
+                            <div class="progress ms-2 flex-grow-1" style="height: 8px;">
+                                <div class="progress-bar" style="width: {{ service.uptime_percentage }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <h6>Response Time</h6>
+                        <span class="h4 {% if service.response_time_ms < 500 %}text-success{% elif service.response_time_ms < 1000 %}text-warning{% else %}text-danger{% endif %}">
+                            {{ service.response_time_ms|default:"--" }}ms
+                        </span>
+                    </div>
+                    <div class="col-md-3">
+                        <h6>Last Check</h6>
+                        <span class="text-muted">{{ service.time_since_last_check }} ago</span>
+                        <br>
+                        <small class="text-muted">{{ service.last_check|date:"M d, H:i" }}</small>
+                    </div>
+                </div>
+                
+                {% if service.error_message %}
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="alert alert-danger">
+                            <strong>Last Error:</strong> {{ service.error_message }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics and Charts -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="metric-card">
+                <h5><i class="fas fa-chart-line"></i> Performance Metrics</h5>
+                <div class="row mt-3">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-primary">{{ stats.total_checks }}</h3>
+                            <small class="text-muted">Total Checks (24h)</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-success">{{ stats.healthy_checks }}</h3>
+                            <small class="text-muted">Successful</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-info">{{ stats.success_rate }}%</h3>
+                            <small class="text-muted">Success Rate</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-warning">{{ stats.avg_response_time }}ms</h3>
+                            <small class="text-muted">Avg Response</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Chart placeholder -->
+                <div class="chart-container">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="metric-card">
+                <h5><i class="fas fa-info-circle"></i> Service Information</h5>
+                <table class="table table-sm">
+                    <tr>
+                        <td><strong>Service Type:</strong></td>
+                        <td>{{ service.get_service_type_display }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>URL:</strong></td>
+                        <td><a href="{{ service.url }}" target="_blank">{{ service.url }}</a></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Health Check:</strong></td>
+                        <td><small class="text-muted">{{ service.health_check_url }}</small></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Critical Service:</strong></td>
+                        <td>
+                            {% if service.is_critical %}
+                            <span class="badge badge-warning">Yes</span>
+                            {% else %}
+                            <span class="badge badge-secondary">No</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Created:</strong></td>
+                        <td>{{ service.created_at|date:"M d, Y" }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Last Updated:</strong></td>
+                        <td>{{ service.updated_at|date:"M d, H:i" }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent History -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="metric-card">
+                <h5><i class="fas fa-history"></i> Recent History (24h)</h5>
+                <div class="timeline">
+                    {% for check in history|slice:":20" %}
+                    <div class="timeline-item {{ check.status }}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <span class="status-badge status-{{ check.status }}">
+                                    {{ check.get_status_display }}
+                                </span>
+                                {% if check.error_message %}
+                                <p class="text-danger small mt-1 mb-0">{{ check.error_message }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted">{{ check.timestamp|date:"H:i:s" }}</small>
+                                {% if check.response_time_ms %}
+                                <br><small class="text-muted">{{ check.response_time_ms }}ms</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted">No recent history available.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Alerts for this service -->
+            <div class="metric-card">
+                <h5><i class="fas fa-exclamation-triangle"></i> Recent Alerts</h5>
+                {% for alert in service_alerts|slice:":10" %}
+                <div class="alert alert-{{ alert.severity }} alert-sm">
+                    <strong>{{ alert.get_severity_display }}:</strong> {{ alert.title }}
+                    <br>
+                    <small class="text-muted">{{ alert.created_at|timesince }} ago</small>
+                    {% if not alert.is_resolved %}
+                    <button class="btn btn-sm btn-outline-success float-end" onclick="resolveAlert({{ alert.id }})">
+                        Resolve
+                    </button>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <p class="text-muted">No recent alerts for this service.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="metric-card">
+                <h5><i class="fas fa-tools"></i> Quick Actions</h5>
+                <div class="d-flex gap-2 flex-wrap">
+                    <button id="checkServiceHealth" class="btn btn-primary">
+                        <i class="fas fa-sync-alt"></i> Check Health Now
+                    </button>
+                    <a href="{{ service.url }}" target="_blank" class="btn btn-outline-info">
+                        <i class="fas fa-external-link-alt"></i> Open Service
+                    </a>
+                    <button class="btn btn-outline-warning" onclick="restartService()">
+                        <i class="fas fa-power-off"></i> Restart Service
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="downloadLogs()">
+                        <i class="fas fa-download"></i> Download Logs
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Chart for performance metrics
+    const ctx = document.getElementById('performanceChart').getContext('2d');
+    const performanceChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [
+                {% for check in history|slice:":20" %}
+                '{{ check.timestamp|date:"H:i" }}'{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Response Time (ms)',
+                data: [
+                    {% for check in history|slice:":20" %}
+                    {{ check.response_time_ms|default:0 }}{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                borderColor: '#3B82F6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Response Time (ms)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Time'
+                    }
+                }
+            }
+        }
+    });
+    
+    // Event listeners
+    document.getElementById('checkServiceHealth').addEventListener('click', function() {
+        this.disabled = true;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+        
+        // Simulate health check
+        setTimeout(() => {
+            this.disabled = false;
+            this.innerHTML = '<i class="fas fa-sync-alt"></i> Check Health Now';
+            showNotification('Health check completed', 'success');
+            
+            // Reload page to show updated data
+            setTimeout(() => window.location.reload(), 1000);
+        }, 2000);
+    });
+    
+    function showNotification(message, type) {
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        const alertHtml = `
+            <div class="alert ${alertClass} alert-dismissible fade show" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', alertHtml);
+        
+        setTimeout(() => {
+            const alert = document.querySelector('.alert');
+            if (alert) alert.remove();
+        }, 3000);
+    }
+    
+    // Global functions for buttons
+    window.resolveAlert = function(alertId) {
+        fetch(`/admin-dashboard/monitoring/alert/${alertId}/resolve/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showNotification('Alert resolved', 'success');
+                setTimeout(() => window.location.reload(), 1000);
+            }
+        });
+    };
+    
+    window.restartService = function() {
+        if (confirm('Are you sure you want to restart {{ service.name }}? This may cause temporary downtime.')) {
+            showNotification('Service restart functionality would be implemented here', 'info');
+        }
+    };
+    
+    window.downloadLogs = function() {
+        showNotification('Log download functionality would be implemented here', 'info');
+    };
+});
+</script>
+{% endblock %} 

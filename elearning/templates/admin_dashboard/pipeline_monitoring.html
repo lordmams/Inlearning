@@ -1,0 +1,396 @@
+{% extends 'admin_dashboard/base_admin.html' %}
+{% load static %}
+
+{% block title %}Monitoring Pipeline - Dashboard Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .status-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+        transition: transform 0.2s ease;
+    }
+    
+    .status-card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .status-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+    
+    .status-drop { color: #17a2b8; }
+    .status-processing { color: #ffc107; }
+    .status-processed { color: #28a745; }
+    .status-error { color: #dc3545; }
+    
+    .logs-container {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        max-height: 500px;
+        overflow-y: auto;
+    }
+    
+    .log-entry {
+        padding: 10px;
+        border-left: 4px solid #ddd;
+        margin-bottom: 10px;
+        background: #f8f9fa;
+        border-radius: 0 8px 8px 0;
+    }
+    
+    .log-entry.success {
+        border-left-color: #28a745;
+        background: #d4edda;
+    }
+    
+    .log-entry.error {
+        border-left-color: #dc3545;
+        background: #f8d7da;
+    }
+    
+    .log-entry.processing {
+        border-left-color: #ffc107;
+        background: #fff3cd;
+    }
+    
+    .refresh-btn {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        border-radius: 50px;
+        padding: 15px 25px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-cogs"></i> Monitoring du Pipeline</h2>
+                <div class="d-flex align-items-center">
+                    <div id="statusIndicator" class="me-3">
+                        <span class="badge badge-secondary">
+                            <i class="fas fa-spinner fa-spin"></i> Vérification...
+                        </span>
+                    </div>
+                    <button class="btn btn-primary" onclick="location.reload()">
+                        <i class="fas fa-sync-alt"></i> Actualiser
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques des répertoires -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-3"><i class="fas fa-folder-open"></i> État des Répertoires</h4>
+        </div>
+        <div class="col-md-3">
+            <div class="status-card text-center">
+                <i class="fas fa-inbox fa-2x status-drop"></i>
+                <div class="status-number status-drop">{{ ingest_stats.drop }}</div>
+                <h6>Fichiers en attente</h6>
+                <small class="text-muted">Répertoire: drop/</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="status-card text-center">
+                <i class="fas fa-spinner fa-spin fa-2x status-processing"></i>
+                <div class="status-number status-processing">{{ ingest_stats.processing }}</div>
+                <h6>En traitement</h6>
+                <small class="text-muted">Répertoire: processing/</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="status-card text-center">
+                <i class="fas fa-check-circle fa-2x status-processed"></i>
+                <div class="status-number status-processed">{{ ingest_stats.processed }}</div>
+                <h6>Traités avec succès</h6>
+                <small class="text-muted">Répertoire: processed/</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="status-card text-center">
+                <i class="fas fa-exclamation-triangle fa-2x status-error"></i>
+                <div class="status-number status-error">{{ ingest_stats.error }}</div>
+                <h6>Erreurs</h6>
+                <small class="text-muted">Répertoire: error/</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques d'importation -->
+    {% if import_stats %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-3"><i class="fas fa-chart-bar"></i> Statistiques 24h</h4>
+        </div>
+        <div class="col-md-3">
+            <div class="status-card text-center">
+                <i class="fas fa-list fa-2x text-info"></i>
+                <div class="status-number text-info">{{ import_stats.total_24h }}</div>
+                <h6>Imports totaux</h6>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="status-card text-center">
+                <i class="fas fa-check fa-2x text-success"></i>
+                <div class="status-number text-success">{{ import_stats.successful_24h }}</div>
+                <h6>Réussis</h6>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="status-card text-center">
+                <i class="fas fa-times fa-2x text-danger"></i>
+                <div class="status-number text-danger">{{ import_stats.failed_24h }}</div>
+                <h6>Échoués</h6>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="status-card text-center">
+                <i class="fas fa-clock fa-2x text-warning"></i>
+                <div class="status-number text-warning">{{ import_stats.processing }}</div>
+                <h6>En cours</h6>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Actions rapides -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="status-card">
+                <h5><i class="fas fa-tools"></i> Actions Rapides</h5>
+                <div class="row mt-3">
+                    <div class="col-md-3">
+                        <a href="{% url 'admin_dashboard:elasticsearch_import' %}" class="btn btn-outline-primary btn-block">
+                            <i class="fas fa-upload"></i> Importer des Cours
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-info btn-block" onclick="checkConsumerStatus()">
+                            <i class="fas fa-heartbeat"></i> Statut Consumer
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-warning btn-block" onclick="clearErrorFiles()">
+                            <i class="fas fa-trash"></i> Nettoyer Erreurs
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-success btn-block" onclick="checkElasticsearchStatus()">
+                            <i class="fas fa-search"></i> Statut Elasticsearch
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logs récents -->
+    <div class="row">
+        <div class="col-12">
+            <h4 class="mb-3"><i class="fas fa-file-alt"></i> Logs Récents</h4>
+            <div class="logs-container">
+                {% if recent_logs %}
+                    {% for log in recent_logs %}
+                    <div class="log-entry {% if log.status == 'completed' %}success{% elif log.status == 'error' %}error{% elif log.status == 'processing' %}processing{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>{{ log.file_name|default:"Import" }}</strong>
+                                {% if log.status == 'completed' %}
+                                    <span class="badge badge-success ms-2">Succès</span>
+                                {% elif log.status == 'error' %}
+                                    <span class="badge badge-danger ms-2">Erreur</span>
+                                {% elif log.status == 'processing' %}
+                                    <span class="badge badge-warning ms-2">En cours</span>
+                                {% endif %}
+                            </div>
+                            <small class="text-muted">{{ log.started_at|date:"d/m/Y H:i" }}</small>
+                        </div>
+                        {% if log.courses_imported %}
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-book"></i> {{ log.courses_imported }} cours importés
+                                </small>
+                            </div>
+                        {% endif %}
+                        {% if log.error_message %}
+                            <div class="mt-2">
+                                <small class="text-danger">
+                                    <i class="fas fa-exclamation-circle"></i> {{ log.error_message }}
+                                </small>
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-inbox fa-3x mb-3"></i>
+                        <p>Aucun log disponible</p>
+                        <small>Les logs d'importation s'afficheront ici</small>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bouton d'actualisation automatique -->
+<button class="btn btn-primary refresh-btn" onclick="toggleAutoRefresh()" id="autoRefreshBtn">
+    <i class="fas fa-play"></i> Auto-refresh
+</button>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let autoRefreshInterval = null;
+let isAutoRefresh = false;
+
+function toggleAutoRefresh() {
+    const btn = document.getElementById('autoRefreshBtn');
+    
+    if (isAutoRefresh) {
+        clearInterval(autoRefreshInterval);
+        isAutoRefresh = false;
+        btn.innerHTML = '<i class="fas fa-play"></i> Auto-refresh';
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-primary');
+    } else {
+        autoRefreshInterval = setInterval(() => {
+            location.reload();
+        }, 10000); // Refresh toutes les 10 secondes
+        isAutoRefresh = true;
+        btn.innerHTML = '<i class="fas fa-stop"></i> Stop refresh';
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-success');
+    }
+}
+
+function checkConsumerStatus() {
+    fetch('{% url "admin_dashboard:consumer_status" %}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'ok') {
+                let message = `🔄 Statut du Consumer\n\n`;
+                message += `Santé globale: ${getHealthIcon(data.health)} ${data.health.toUpperCase()}\n\n`;
+                
+                if (data.components) {
+                    message += `📡 API Flask: ${data.components.flask_api.status ? '✅' : '❌'} ${data.components.flask_api.message}\n`;
+                    message += `🔍 Elasticsearch: ${data.components.elasticsearch.status ? '✅' : '❌'} ${data.components.elasticsearch.message}\n\n`;
+                    
+                    message += `📁 Répertoires:\n`;
+                    Object.entries(data.components.directories).forEach(([dir, info]) => {
+                        message += `  • ${dir}/: ${info.exists ? '✅' : '❌'} (${info.file_count} fichiers)\n`;
+                    });
+                }
+                
+                alert(message);
+            } else {
+                alert(`❌ Erreur Consumer\nMessage: ${data.message || 'Erreur inconnue'}`);
+            }
+        })
+        .catch(error => {
+            alert(`❌ Erreur de connexion: ${error.message}`);
+        });
+}
+
+function getHealthIcon(health) {
+    switch(health) {
+        case 'healthy': return '🟢';
+        case 'warning': return '🟡';
+        case 'error': return '🔴';
+        default: return '⚪';
+    }
+}
+
+function clearErrorFiles() {
+    if (confirm('Êtes-vous sûr de vouloir nettoyer tous les fichiers d\'erreur ?')) {
+        // Simulation - dans un vrai système, on ferait un appel AJAX
+        alert('Fonctionnalité en développement: Nettoyage des fichiers d\'erreur');
+    }
+}
+
+function checkElasticsearchStatus() {
+    fetch('{% url "admin_dashboard:elasticsearch_status" %}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'ok') {
+                alert(`✅ Elasticsearch OK\nNombre de cours: ${data.course_count || 'N/A'}\nStatut: ${data.cluster_status || 'N/A'}`);
+            } else {
+                alert(`❌ Elasticsearch Error\nMessage: ${data.message || 'Erreur inconnue'}`);
+            }
+        })
+        .catch(error => {
+            alert(`❌ Erreur de connexion: ${error.message}`);
+        });
+}
+
+// Auto-scroll pour les logs si nouveaux
+document.addEventListener('DOMContentLoaded', function() {
+    const logsContainer = document.querySelector('.logs-container');
+    if (logsContainer && logsContainer.scrollHeight > logsContainer.clientHeight) {
+        logsContainer.scrollTop = 0; // Scroll vers le haut pour voir les logs récents
+    }
+    
+    // Vérifier le statut au chargement de la page
+    updateStatusIndicator();
+    
+    // Mettre à jour le statut toutes les 30 secondes
+    setInterval(updateStatusIndicator, 30000);
+});
+
+function updateStatusIndicator() {
+    fetch('{% url "admin_dashboard:consumer_status" %}')
+        .then(response => response.json())
+        .then(data => {
+            const indicator = document.getElementById('statusIndicator');
+            if (data.status === 'ok') {
+                let badgeClass, icon, text;
+                
+                switch(data.health) {
+                    case 'healthy':
+                        badgeClass = 'badge-success';
+                        icon = 'fas fa-check-circle';
+                        text = 'Système OK';
+                        break;
+                    case 'warning':
+                        badgeClass = 'badge-warning';
+                        icon = 'fas fa-exclamation-triangle';
+                        text = 'Avertissement';
+                        break;
+                    case 'error':
+                        badgeClass = 'badge-danger';
+                        icon = 'fas fa-times-circle';
+                        text = 'Erreur système';
+                        break;
+                    default:
+                        badgeClass = 'badge-secondary';
+                        icon = 'fas fa-question-circle';
+                        text = 'Statut inconnu';
+                }
+                
+                indicator.innerHTML = `<span class="badge ${badgeClass}"><i class="${icon}"></i> ${text}</span>`;
+            } else {
+                indicator.innerHTML = '<span class="badge badge-danger"><i class="fas fa-times-circle"></i> Erreur</span>';
+            }
+        })
+        .catch(error => {
+            const indicator = document.getElementById('statusIndicator');
+            indicator.innerHTML = '<span class="badge badge-danger"><i class="fas fa-wifi"></i> Connexion perdue</span>';
+        });
+}
+</script>
+{% endblock %} 

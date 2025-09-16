@@ -1,0 +1,431 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ course.title|default:"Détails du cours" }} - E-Learning Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .course-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 60px 0;
+        margin-top: -20px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .course-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="rgba(255,255,255,0.1)"><polygon points="1000,100 1000,0 0,100"/></svg>');
+        background-size: 100% 100%;
+    }
+
+    .course-content-section {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+
+    .course-meta-item {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        border: 1px solid #e9ecef;
+        transition: transform 0.3s ease;
+    }
+
+    .course-meta-item:hover {
+        transform: translateY(-2px);
+    }
+
+    .course-meta-item i {
+        font-size: 2rem;
+        color: #667eea;
+        margin-bottom: 10px;
+    }
+
+    .course-meta-item h6 {
+        color: #6c757d;
+        margin-bottom: 5px;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .course-meta-item p {
+        color: #2c3e50;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .content-paragraph {
+        background: #f8f9fa;
+        border-left: 4px solid #667eea;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 0 10px 10px 0;
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
+
+    .category-badge {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 25px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: inline-block;
+        margin-right: 10px;
+    }
+
+    .level-badge {
+        background: #28a745;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 25px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .btn-enroll-large {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        padding: 15px 40px;
+        border-radius: 30px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 1.1rem;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .btn-enroll-large:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-enrolled-large {
+        background: #28a745;
+        border: none;
+        padding: 15px 40px;
+        border-radius: 30px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 1.1rem;
+        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    }
+
+    .breadcrumb {
+        background: transparent;
+        padding: 15px 0;
+    }
+
+    .breadcrumb-item a {
+        color: #667eea;
+        text-decoration: none;
+    }
+
+    .breadcrumb-item.active {
+        color: #6c757d;
+    }
+
+    .course-icon {
+        width: 100px;
+        height: 100px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 3rem;
+    }
+
+    .no-content {
+        text-align: center;
+        padding: 40px 20px;
+        color: #6c757d;
+    }
+
+    .back-button {
+        background: rgba(255,255,255,0.1);
+        border: 2px solid rgba(255,255,255,0.3);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 25px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.3s ease;
+    }
+
+    .back-button:hover {
+        background: rgba(255,255,255,0.2);
+        color: white;
+        text-decoration: none;
+    }
+
+    .content-section-title {
+        color: #2c3e50;
+        font-weight: 600;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .content-section-title i {
+        color: #667eea;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- En-tête du cours -->
+<div class="course-header">
+    <div class="container position-relative">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <!-- Breadcrumb -->
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'courses_dashboard' %}">Accueil</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'course_list' %}">Cours</a></li>
+                        <li class="breadcrumb-item active">{{ course.title|default:"Détails" }}</li>
+                    </ol>
+                </nav>
+
+                <!-- Informations principales -->
+                <div class="mb-3">
+                    <span class="category-badge">{{ course.category_name|default:"Général" }}</span>
+                    <span class="level-badge">{{ course.level|default:"Débutant" }}</span>
+                </div>
+                
+                <h1 class="display-4 mb-3">{{ course.title|default:"Cours sans titre" }}</h1>
+                <p class="lead mb-4">{{ course.description|default:"Description non disponible"|truncatewords:30 }}</p>
+                
+                <a href="{% url 'course_list' %}" class="back-button">
+                    <i class="fas fa-arrow-left"></i> Retour au catalogue
+                </a>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="course-icon">
+                    <i class="fas fa-book-open"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mt-5">
+    <!-- Métadonnées du cours -->
+    <div class="row mb-5">
+        <div class="col-md-3 mb-3">
+            <div class="course-meta-item">
+                <i class="fas fa-signal"></i>
+                <h6>Niveau</h6>
+                <p>{{ course.level|default:"Débutant" }}</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="course-meta-item">
+                <i class="fas fa-clock"></i>
+                <h6>Durée</h6>
+                <p>{{ course.duration|default:"Variable" }}</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="course-meta-item">
+                <i class="fas fa-user-tie"></i>
+                <h6>Instructeur</h6>
+                <p>{{ course.instructor|default:"Instructeur IA" }}</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="course-meta-item">
+                <i class="fas fa-tag"></i>
+                <h6>Prix</h6>
+                <p>{% if course.is_free %}Gratuit{% else %}Payant{% endif %}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Contenu principal -->
+        <div class="col-lg-8">
+            <!-- Description complète -->
+            <div class="course-content-section">
+                <h3 class="content-section-title">
+                    <i class="fas fa-info-circle"></i>
+                    À propos de ce cours
+                </h3>
+                <p>{{ course.description|default:"Ce cours vous permettra d'acquérir de nouvelles compétences grâce à notre plateforme d'apprentissage alimentée par l'intelligence artificielle." }}</p>
+                
+                {% if course.categories %}
+                <div class="mt-4">
+                    <h5>Catégories:</h5>
+                    {% for category in course.categories %}
+                        <span class="badge bg-secondary me-2">{{ category }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Contenu du cours -->
+            {% if course.content and course.content|length > 0 %}
+            <div class="course-content-section">
+                <h3 class="content-section-title">
+                    <i class="fas fa-book"></i>
+                    Contenu du cours
+                </h3>
+                {% for paragraph in course.content %}
+                    <div class="content-paragraph">
+                        {{ paragraph }}
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Leçons (pour les cours Django) -->
+            {% if lessons and lessons|length > 0 %}
+            <div class="course-content-section">
+                <h3 class="content-section-title">
+                    <i class="fas fa-list"></i>
+                    Leçons du cours
+                </h3>
+                <div class="list-group">
+                    {% for lesson in lessons %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">{{ lesson.title }}</h6>
+                            <p class="mb-1 text-muted">{{ lesson.description|truncatewords:15 }}</p>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">{{ lesson.order }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Message si pas de contenu -->
+            {% if not course.content and not lessons %}
+            <div class="course-content-section">
+                <div class="no-content">
+                    <i class="fas fa-book-open mb-3" style="font-size: 3rem; color: #dee2e6;"></i>
+                    <h4>Contenu en cours de préparation</h4>
+                    <p>Le contenu détaillé de ce cours sera bientôt disponible.</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Actions -->
+            <div class="course-content-section text-center">
+                {% if is_enrolled %}
+                    <button class="btn btn-success btn-enrolled-large w-100 mb-3" disabled>
+                        <i class="fas fa-check-circle"></i> Déjà inscrit
+                    </button>
+                    <p class="text-muted">Vous êtes inscrit à ce cours</p>
+                {% else %}
+                    <form method="POST" action="{% url 'enroll_course' course.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary btn-enroll-large w-100 mb-3">
+                            <i class="fas fa-plus-circle"></i> S'inscrire au cours
+                        </button>
+                    </form>
+                    <p class="text-muted">Inscription gratuite et instantanée</p>
+                {% endif %}
+                
+                {% if course.url and course.url != "#" %}
+                <a href="{{ course.url }}" target="_blank" class="btn btn-outline-primary w-100 mb-3">
+                    <i class="fas fa-external-link-alt"></i> Accéder au cours original
+                </a>
+                {% endif %}
+            </div>
+
+            <!-- Informations supplémentaires -->
+            <div class="course-content-section">
+                <h5 class="content-section-title">
+                    <i class="fas fa-lightbulb"></i>
+                    Ce que vous apprendrez
+                </h5>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Concepts fondamentaux</li>
+                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Exercices pratiques</li>
+                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Projets concrets</li>
+                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Certification à la fin</li>
+                </ul>
+            </div>
+
+            <!-- Prérequis -->
+            <div class="course-content-section">
+                <h5 class="content-section-title">
+                    <i class="fas fa-clipboard-list"></i>
+                    Prérequis
+                </h5>
+                <p class="text-muted">
+                    {% if course.level == "Débutant" or course.level == "debutant" %}
+                        Aucun prérequis particulier. Ce cours est accessible aux débutants.
+                    {% elif course.level == "Intermédiaire" or course.level == "intermediaire" %}
+                        Connaissances de base recommandées dans le domaine.
+                    {% else %}
+                        Expérience préalable requise dans le domaine concerné.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Animation au scroll
+const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -50px 0px'
+};
+
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add('animate__fadeInUp');
+        }
+    });
+}, observerOptions);
+
+// Observer les sections de contenu
+document.querySelectorAll('.course-content-section').forEach(section => {
+    observer.observe(section);
+});
+
+// Smooth scroll pour les liens d'ancrage
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    });
+});
+</script>
+{% endblock %} 

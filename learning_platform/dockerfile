@@ -1,0 +1,33 @@
+FROM python:3.9-slim
+
+WORKDIR /app
+
+# Créer le répertoire logs
+RUN mkdir -p /app/logs
+
+# Installer les dépendances système nécessaires
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copier les fichiers de dépendances
+COPY requirements.txt .
+
+# Installer les dépendances Python avec des options pour améliorer la fiabilité
+RUN pip install --no-cache-dir --timeout 1000 --retries 3 -r requirements.txt
+
+# Copier le reste des fichiers
+COPY . .
+
+# Copier et rendre exécutable le script d'entrée
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Exposer le port
+EXPOSE 5000
+
+# Utiliser le script d'entrée
+ENTRYPOINT ["/entrypoint.sh"]
+
+# Commande par défaut pour démarrer l'API
+CMD ["python", "api/app.py"]

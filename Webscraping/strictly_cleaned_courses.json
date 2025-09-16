@@ -1,0 +1,914 @@
+[
+  {
+    "cours": {
+      "id": "0",
+      "titre": "Google Cybersécurité",
+      "description": "Compétences que vous acquerrez: Contrôles de sécurité, Débogage, Projet ouvert de sécurité des applications web (OWASP), Gestion des risques, Réponse aux incidents, Gestion des incidents, Sécurité réseau, Gestion des informations et des événements de sécurité (SIEM), Éthique des données, Commandes Linux, Gestion des incidents de sécurité informatique, Durcissement, Détection des menaces, TCP/IP, Détection et prévention des intrusions, Interface de ligne de commande, Bash (langage de script), Surveillance des événements, Sensibilisation à la sécurité, Cybersécurité",
+      "lien": "https://www.coursera.org/professional-certificates/google-cybersecurity",
+      "contenus": {
+        "texte": "Compétences que vous acquerrez: Contrôles de sécurité, Débogage, Projet ouvert de sécurité des applications web (OWASP), Gestion des risques, Réponse aux incidents, Gestion des incidents, Sécurité réseau, Gestion des informations et des événements de sécurité (SIEM), Éthique des données, Commandes Linux, Gestion des incidents de sécurité informatique, Durcissement, Détection des menaces, TCP/IP, Détection et prévention des intrusions, Interface de ligne de commande, Bash (langage de script), Surveillance des événements, Sensibilisation à la sécurité, Cybersécurité",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "3 à 6 mois",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "1",
+      "titre": "Google UX Design",
+      "description": "Compétences que vous acquerrez: Conception centrée sur l'utilisateur, Recherche UI/UX, L'idée, Maquettes, Design Thinking, Conception de sites web réactifs, Tests d'utilisabilité, Conception de l'expérience utilisateur, Persona (Expérience utilisateur), Architecture de l'information, Storyboard, Présentations, Wireframing, Figma (Logiciel de conception), Recherche utilisateur, conception web, Témoignage de l'utilisateur, Recherche en design, Utilisabilité, Revues de conception",
+      "lien": "https://www.coursera.org/professional-certificates/google-ux-design",
+      "contenus": {
+        "texte": "Compétences que vous acquerrez: Conception centrée sur l'utilisateur, Recherche UI/UX, L'idée, Maquettes, Design Thinking, Conception de sites web réactifs, Tests d'utilisabilité, Conception de l'expérience utilisateur, Persona (Expérience utilisateur), Architecture de l'information, Storyboard, Présentations, Wireframing, Figma (Logiciel de conception), Recherche utilisateur, conception web, Témoignage de l'utilisateur, Recherche en design, Utilisabilité, Revues de conception",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "3 à 6 mois",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "2",
+      "titre": "Développeur IA IBM",
+      "description": "Compétences que vous acquerrez: Conception de logiciels, Automatisation, Environnement de développement, Compétences en matière d'entretien, IA générative, Intelligence artificielle, Principes de programmation, Applications Web, Réseautage professionnel, Éthique des données, Déploiement des applications, Tests unitaires, Jupyter, Modèle de langage unifié, Cycle de vie du développement logiciel, CI/CD, Architecture logicielle, ChatGPT, OpenAI, Génie logiciel",
+      "lien": "https://www.coursera.org/professional-certificates/applied-artifical-intelligence-ibm-watson-ai",
+      "contenus": {
+        "texte": "Compétences que vous acquerrez: Conception de logiciels, Automatisation, Environnement de développement, Compétences en matière d'entretien, IA générative, Intelligence artificielle, Principes de programmation, Applications Web, Réseautage professionnel, Éthique des données, Déploiement des applications, Tests unitaires, Jupyter, Modèle de langage unifié, Cycle de vie du développement logiciel, CI/CD, Architecture logicielle, ChatGPT, OpenAI, Génie logiciel",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "3 à 6 mois",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "3",
+      "titre": "IBM DevOps et ingénierie logicielle",
+      "description": "Compétences que vous acquerrez: Kubernetes, Git (Système de contrôle des versions), Projet ouvert de sécurité des applications web (OWASP), DevOps, Commandes Linux, Grafana, Déploiement des applications, Architecture de l'informatique en nuage, Tests unitaires, Jupyter, Gherkin (langage de script), Istio, Jenkins, Intégration continue, Cycle de vie du développement logiciel, CI/CD, Bash (langage de script), Services en nuage, Développement piloté par les tests (TDD), Développement agile de logiciels",
+      "lien": "https://www.coursera.org/professional-certificates/devops-and-software-engineering",
+      "contenus": {
+        "texte": "Compétences que vous acquerrez: Kubernetes, Git (Système de contrôle des versions), Projet ouvert de sécurité des applications web (OWASP), DevOps, Commandes Linux, Grafana, Déploiement des applications, Architecture de l'informatique en nuage, Tests unitaires, Jupyter, Gherkin (langage de script), Istio, Jenkins, Intégration continue, Cycle de vie du développement logiciel, CI/CD, Bash (langage de script), Services en nuage, Développement piloté par les tests (TDD), Développement agile de logiciels",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "3 à 6 mois",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "4",
+      "titre": "Développement du back-end IBM",
+      "description": "Compétences que vous acquerrez: Kubernetes, Informatique sans serveur, Git (Système de contrôle des versions), MongoDB, Script Shell, NoSQL, Commandes Linux, Grafana, Conteneurisation, Cartographie objet-relationnelle, GitHub, OpenShift, Déploiement des applications, Tests unitaires, Istio, Jupyter, Cycle de vie du développement logiciel, Applications en nuage, Bash (langage de script), Projet ouvert de sécurité des applications web (OWASP)",
+      "lien": "https://www.coursera.org/professional-certificates/ibm-backend-development",
+      "contenus": {
+        "texte": "Compétences que vous acquerrez: Kubernetes, Informatique sans serveur, Git (Système de contrôle des versions), MongoDB, Script Shell, NoSQL, Commandes Linux, Grafana, Conteneurisation, Cartographie objet-relationnelle, GitHub, OpenShift, Déploiement des applications, Tests unitaires, Istio, Jupyter, Cycle de vie du développement logiciel, Applications en nuage, Bash (langage de script), Projet ouvert de sécurité des applications web (OWASP)",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "3 à 6 mois",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "5",
+      "titre": "Principes fondamentaux du génie logiciel appliqué",
+      "description": "Compétences que vous acquerrez: Environnement de développement, Développement d'applications, Commandes Linux, Technologie Open source, Git (Système de contrôle des versions), Automatisation, Programmation en Python, Web scraping, GitHub, Déploiement des applications, Tests unitaires, Jupyter, Cycle de vie du développement logiciel, Gestion des fichiers, Bash (langage de script), Architecture logicielle, Script Shell, Contrôle des versions, Génie logiciel, Flask (Framework Web)",
+      "lien": "https://www.coursera.org/specializations/software-engineering-fundamentals",
+      "contenus": {
+        "texte": "Compétences que vous acquerrez: Environnement de développement, Développement d'applications, Commandes Linux, Technologie Open source, Git (Système de contrôle des versions), Automatisation, Programmation en Python, Web scraping, GitHub, Déploiement des applications, Tests unitaires, Jupyter, Cycle de vie du développement logiciel, Gestion des fichiers, Bash (langage de script), Architecture logicielle, Script Shell, Contrôle des versions, Génie logiciel, Flask (Framework Web)",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "3 à 6 mois",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "6",
+      "titre": "Fondements de la cybersécurité",
+      "description": "Compétences que vous acquerrez: SQL, Cybersécurité, Contrôles de sécurité, Gestion des informations et des événements de sécurité (SIEM), Normes et conduite éthiques, Politiques de cybersécurité, Cyber-attaques, Sensibilisation à la sécurité, Analyse du réseau",
+      "lien": "https://www.coursera.org/learn/foundations-of-cybersecurity",
+      "contenus": {
+        "texte": "Compétences que vous acquerrez: SQL, Cybersécurité, Contrôles de sécurité, Gestion des informations et des événements de sécurité (SIEM), Normes et conduite éthiques, Politiques de cybersécurité, Cyber-attaques, Sensibilisation à la sécurité, Analyse du réseau",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "1 à 4 semaines",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "7",
+      "titre": "Développeur front-end Meta",
+      "description": "Compétences que vous acquerrez: Recherche utilisateur, Feuilles de style en cascade (CSS), Design d'interaction, structures de données, Tests d'utilisabilité, Commandes Unix, Git (Système de contrôle des versions), Contrôle des versions, Algorithmes, Persona (Expérience utilisateur), Développement Mobile, Conception de l'expérience utilisateur, Outils de développement web, React.js, GitHub, Bootstrap (Framework Front-End), HTML et CSS, Développement Web Front-End, Jest (cadre de test JavaScript), Conception de sites web réactifs",
+      "lien": "https://www.coursera.org/professional-certificates/meta-front-end-developer",
+      "contenus": {
+        "texte": "Compétences que vous acquerrez: Recherche utilisateur, Feuilles de style en cascade (CSS), Design d'interaction, structures de données, Tests d'utilisabilité, Commandes Unix, Git (Système de contrôle des versions), Contrôle des versions, Algorithmes, Persona (Expérience utilisateur), Développement Mobile, Conception de l'expérience utilisateur, Outils de développement web, React.js, GitHub, Bootstrap (Framework Front-End), HTML et CSS, Développement Web Front-End, Jest (cadre de test JavaScript), Conception de sites web réactifs",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "3 à 6 mois",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "8",
+      "titre": "IBM Full-Stack JavaScript Developer",
+      "description": "Compétences que vous acquerrez: Istio, Node.JS, Software Development Life Cycle, Server Side, MongoDB, Application Deployment, CI/CD, Kubernetes, Cloud-Native Computing, React Redux, NoSQL, Restful API, OpenShift, Git (Version Control System), Cloud Applications, Containerization, GitHub, Serverless Computing, Ajax, Interviewing Skills",
+      "lien": "https://www.coursera.org/professional-certificates/ibm-full-stack-javascript-developer",
+      "contenus": {
+        "texte": "Compétences que vous acquerrez: Istio, Node.JS, Software Development Life Cycle, Server Side, MongoDB, Application Deployment, CI/CD, Kubernetes, Cloud-Native Computing, React Redux, NoSQL, Restful API, OpenShift, Git (Version Control System), Cloud Applications, Containerization, GitHub, Serverless Computing, Ajax, Interviewing Skills",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "3 à 6 mois",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "9",
+      "titre": "Python pour tous",
+      "description": "Compétences que vous acquerrez: SQL, Bases de données, JSON, Environnement de développement, Principes de programmation, Manipulation des données, Protocoles réseau, Bases de données relationnelles, Web scraping, Conception de la base de données, Restful API, structures de données, Programmation informatique, Collecte de données, Pensée informatique, Traitement des données, Storytelling de données, Programmation en Python, Nettoyage des données, Services web",
+      "lien": "https://www.coursera.org/specializations/python",
+      "contenus": {
+        "texte": "Compétences que vous acquerrez: SQL, Bases de données, JSON, Environnement de développement, Principes de programmation, Manipulation des données, Protocoles réseau, Bases de données relationnelles, Web scraping, Conception de la base de données, Restful API, structures de données, Programmation informatique, Collecte de données, Pensée informatique, Traitement des données, Storytelling de données, Programmation en Python, Nettoyage des données, Services web",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "3 à 6 mois",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "10",
+      "titre": "L’IA générative avec de grands modèles de langage",
+      "description": "Compétences que vous acquerrez: Apprentissage automatique, Traitement du langage naturel (NLP), Apprentissage automatique appliqué, Deep learning, IA générative, Optimisation des performances, Intelligence artificielle, Évolutivité, Tensorflow, Déploiement des applications, Apprentissage par renforcement, Gestion des performances des applications, Commentaires des utilisateurs, PyTorch (Bibliothèque d'Apprentissage automatique)",
+      "lien": "https://www.coursera.org/learn/generative-ai-with-llms",
+      "contenus": {
+        "texte": "Compétences que vous acquerrez: Apprentissage automatique, Traitement du langage naturel (NLP), Apprentissage automatique appliqué, Deep learning, IA générative, Optimisation des performances, Intelligence artificielle, Évolutivité, Tensorflow, Déploiement des applications, Apprentissage par renforcement, Gestion des performances des applications, Commentaires des utilisateurs, PyTorch (Bibliothèque d'Apprentissage automatique)",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Intermédiaire",
+      "duree": "1 à 4 semaines",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "11",
+      "titre": "IBM Back-end JavaScript Developer",
+      "description": "Compétences que vous acquerrez: Istio, Node.JS, Software Development Life Cycle, Containerization, Server Side, MongoDB, Application Deployment, Kubernetes, Cloud-Native Computing, Restful API, NoSQL, OpenShift, Git (Version Control System), Cloud Applications, GitHub, Development Environment, Ajax, Javascript, Interviewing Skills, Professional Networking",
+      "lien": "https://www.coursera.org/professional-certificates/backend-javascript-developer",
+      "contenus": {
+        "texte": "Compétences que vous acquerrez: Istio, Node.JS, Software Development Life Cycle, Containerization, Server Side, MongoDB, Application Deployment, Kubernetes, Cloud-Native Computing, Restful API, NoSQL, OpenShift, Git (Version Control System), Cloud Applications, GitHub, Development Environment, Ajax, Javascript, Interviewing Skills, Professional Networking",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "3 à 6 mois",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "0",
+      "titre": "Introduction and Overview",
+      "description": "An overview",
+      "lien": "",
+      "contenus": {
+        "texte": "An overview",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "",
+      "duree": "18 min",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "1",
+      "titre": "Python",
+      "description": "Intro to python",
+      "lien": "",
+      "contenus": {
+        "texte": "Intro to python",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "",
+      "duree": "1 h 31 min",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "2",
+      "titre": "Data Science",
+      "description": "Intro to datascience",
+      "lien": "",
+      "contenus": {
+        "texte": "Intro to datascience",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "",
+      "duree": "21 min",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "3",
+      "titre": "Data Parsing",
+      "description": "Introduction to Scrapy",
+      "lien": "",
+      "contenus": {
+        "texte": "Introduction to Scrapy",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "",
+      "duree": "1 h 52 min",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "6",
+      "titre": "Data Prepocessing",
+      "description": "Missing Values(1)",
+      "lien": "",
+      "contenus": {
+        "texte": "Missing Values(1)",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "",
+      "duree": "1 h 25 min",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "7",
+      "titre": "Data Science Project",
+      "description": "Data Science Project(1)",
+      "lien": "",
+      "contenus": {
+        "texte": "Data Science Project(1)",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "",
+      "duree": "45 min",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "8",
+      "titre": "Machine Learning",
+      "description": "Intro to ML(1)",
+      "lien": "",
+      "contenus": {
+        "texte": "Intro to ML(1)",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "",
+      "duree": "26 min",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "9",
+      "titre": "Linear Regression",
+      "description": "Linear regression(theory)",
+      "lien": "",
+      "contenus": {
+        "texte": "Linear regression(theory)",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "",
+      "duree": "1 h 16 min",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "15",
+      "titre": "Python pour la Data Science et le Machine Learning en 4h",
+      "description": "Maîtriser Python pour la Data Science, le Machine Learning et l'IA en partant de zéro en seulement 4 heures (2024).",
+      "lien": "https://www.udemy.com/course/formation-python-data-science/",
+      "contenus": {
+        "texte": "Maîtriser Python pour la Data Science, le Machine Learning et l'IA en partant de zéro en seulement 4 heures (2024).",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Tous les niveaux",
+      "duree": "Maîtriser Python pour la <strong>Data</strong> <strong>Science</strong>, le <strong>Machine</strong> <strong>Learning</strong> et l'IA en partant de zéro en seulement 4 heures (2024).",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "25",
+      "titre": "Python — Le Cours Ultime pour Débuter la Programmation",
+      "description": "Devenir pro en Python même si vous n'avez jamais programmé ! Avec 169+ exercices inclus et 34+ heures de cours vidéo !",
+      "lien": "https://www.udemy.com/course/python-le-cours-ultime/",
+      "contenus": {
+        "texte": "Devenir pro en Python même si vous n'avez jamais programmé ! Avec 169+ exercices inclus et 34+ heures de cours vidéo !",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "Devenir pro en Python même si vous n'avez jamais programmé ! Avec 169+ exercices inclus et 34+ heures de <strong>cours</strong> vidéo !",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "54",
+      "titre": "WORDPRESS Le Cours Complet 20 COURS EN 1 |version 2025 (46h)",
+      "description": "+46 heures de vidéos pour créer un site réussi ! BONUS: SEO, Photoshop, Mailchimp, Facebook, Instagram, Google, LinkedIn",
+      "lien": "https://www.udemy.com/course/guide-ultime-sur-les-medias-sociaux-pour-wordpress/",
+      "contenus": {
+        "texte": "+46 heures de vidéos pour créer un site réussi ! BONUS: SEO, Photoshop, Mailchimp, Facebook, Instagram, Google, LinkedIn",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "+46 heures de vidéos pour créer un site réussi ! BONUS: SEO, Photoshop, Mailchimp, Facebook, Instagram, Google, LinkedIn",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "172",
+      "titre": "Cours d'Italien niveau débutants A1/A2",
+      "description": "Apprendre l'italien en quelques semaines avec une formation courte et efficace",
+      "lien": "https://www.udemy.com/course/cours-ditalien-pour-debutants-a1/",
+      "contenus": {
+        "texte": "Apprendre l'italien en quelques semaines avec une formation courte et efficace",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "Apprendre l'italien en quelques semaines avec une formation courte et efficace",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "193",
+      "titre": "SQL Server : Le cours complet sur les INDEX (3 h de cours)",
+      "description": "Enfin un cours de 3 heures et en plus en français, qui est dédié exclusivement a la performance sur SQL Server :)",
+      "lien": "https://www.udemy.com/course/sql-server-ameliorez-vos-performances-grace-aux-index/",
+      "contenus": {
+        "texte": "Enfin un cours de 3 heures et en plus en français, qui est dédié exclusivement a la performance sur SQL Server :)",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Intermédiaire",
+      "duree": "Enfin un <strong>cours</strong> de 3 heures et en plus en français, qui est dédié exclusivement a la performance sur SQL Server :)",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "323",
+      "titre": "SKETCHBOOK sur IPAD: Le cours complet",
+      "description": "Apprenez à utiliser Sketchbook sur Ipad avec plus de 5 heures de vidéo",
+      "lien": "https://www.udemy.com/course/sketchbook-sur-ipad-le-cours-complet/",
+      "contenus": {
+        "texte": "Apprenez à utiliser Sketchbook sur Ipad avec plus de 5 heures de vidéo",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "Apprenez à utiliser Sketchbook sur Ipad avec plus de 5 heures de vidéo",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "366",
+      "titre": "Programmer avec SAS en 4h en partant de zéro + Projet (2025)",
+      "description": "Maîtriser SAS pour la Data Science, le Machine Learning et l'Intelligence Artificielle en partant de zéro en 4 heures.",
+      "lien": "https://www.udemy.com/course/formation-sas/",
+      "contenus": {
+        "texte": "Maîtriser SAS pour la Data Science, le Machine Learning et l'Intelligence Artificielle en partant de zéro en 4 heures.",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Tous les niveaux",
+      "duree": "Maîtriser SAS pour la <strong>Data</strong> <strong>Science</strong>, le <strong>Machine</strong> <strong>Learning</strong> et l'Intelligence Artificielle en partant de zéro en 4 heures.",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "368",
+      "titre": "24 Certifications en Développement Web : 100% PRATIQUE +100h",
+      "description": "100 Heures de cours Shopify, Java, Wordpress, Elementor, C#, HTML5, CSS3, JAVASCRIPT, DJANGO, PYTHON, DOCKER, PHP, MYSQL",
+      "lien": "https://www.udemy.com/course/certification-en-developpement-web-cours-pratiques/",
+      "contenus": {
+        "texte": "100 Heures de cours Shopify, Java, Wordpress, Elementor, C#, HTML5, CSS3, JAVASCRIPT, DJANGO, PYTHON, DOCKER, PHP, MYSQL",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "100 Heures de <strong>cours</strong> Shopify, Java, Wordpress, Elementor, C#, HTML5, CSS3, JAVASCRIPT, DJANGO, PYTHON, DOCKER, PHP, MYSQL",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "379",
+      "titre": "Certification LinkedIn Ads: De Débutant à Expert 2025 +11h",
+      "description": "+11 Heures de vidéos avec LinkedIn Ads: Le guide complet de la publicité sur Linked In - De la stratégie à la pratique",
+      "lien": "https://www.udemy.com/course/formation-linkedin-ads/",
+      "contenus": {
+        "texte": "+11 Heures de vidéos avec LinkedIn Ads: Le guide complet de la publicité sur Linked In - De la stratégie à la pratique",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "+11 Heures de vidéos avec LinkedIn Ads: Le guide complet de la publicité sur Linked In - De la stratégie à la pratique",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "395",
+      "titre": "Pack GOOGLE : Le Guide Complet (10 Cours en 1) +14 Heures",
+      "description": "Pack GOOGLE Digital +14 Heures de vidéos avec Google Ads, Google SEO, Google Analytics, Google TOOLS, GOOGLE MY BUSINESS",
+      "lien": "https://www.udemy.com/course/formation-digital-google/",
+      "contenus": {
+        "texte": "Pack GOOGLE Digital +14 Heures de vidéos avec Google Ads, Google SEO, Google Analytics, Google TOOLS, GOOGLE MY BUSINESS",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "Pack GOOGLE Digital +14 Heures de vidéos avec Google Ads, Google SEO, Google Analytics, Google TOOLS, GOOGLE MY BUSINESS",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "401",
+      "titre": "Python et SQL pour les (grands) débutants",
+      "description": "Apprenez dans ce cours de 10 heures, ces 2 langages incontournables dans l'informatique d'aujourd'hui !",
+      "lien": "https://www.udemy.com/course/python-et-sql-pour-les-grands-debutants-2021/",
+      "contenus": {
+        "texte": "Apprenez dans ce cours de 10 heures, ces 2 langages incontournables dans l'informatique d'aujourd'hui !",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "Apprenez dans ce <strong>cours</strong> de 10 heures, ces 2 langages incontournables dans l'informatique d'aujourd'hui !",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "407",
+      "titre": "Docker pour les débutants en DevOps",
+      "description": "Tout ce qu'il faut savoir sur DOCKER et en seulement 4 HEURES - les bases indispensables.",
+      "lien": "https://www.udemy.com/course/docker-pour-les-debutants-en-devops/",
+      "contenus": {
+        "texte": "Tout ce qu'il faut savoir sur DOCKER et en seulement 4 HEURES - les bases indispensables.",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "Tout ce qu'il faut savoir sur DOCKER et en seulement 4 HEURES - les bases indispensables.",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "415",
+      "titre": "ChatGPT : Le cours d'IA complet pour gagner temps & argent",
+      "description": "La formation française de référence pour maîtriser et connaître les secrets de ChatGPT (GPT3.5 & 4) en quelques heures !",
+      "lien": "https://www.udemy.com/course/cours-chatgpt/",
+      "contenus": {
+        "texte": "La formation française de référence pour maîtriser et connaître les secrets de ChatGPT (GPT3.5 & 4) en quelques heures !",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Tous les niveaux",
+      "duree": "La formation française de référence pour maîtriser et connaître les secrets de ChatGPT (GPT3.5 & 4) en quelques heures !",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "428",
+      "titre": "Le Cours de Stratégie Marketing ULTIME (8 heures)",
+      "description": "+8 heures de vidéos en Stratégie marketing : générez des prospects et convertissez-les en ventes",
+      "lien": "https://www.udemy.com/course/le-cours-de-strategie-marketing-ultime-pour-debutants/",
+      "contenus": {
+        "texte": "+8 heures de vidéos en Stratégie marketing : générez des prospects et convertissez-les en ventes",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "+8 heures de vidéos en Stratégie marketing : générez des prospects et convertissez-les en ventes",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "435",
+      "titre": "Devenir assistant virtuel en Freelance - Travail à domicile",
+      "description": "Formation de 26 Heures pour devenir Assistant Virtuel - Devenez un vrai e-collaborateur",
+      "lien": "https://www.udemy.com/course/devenir-assistant-virtuel-en-freelance-travail-a-domicile/",
+      "contenus": {
+        "texte": "Formation de 26 Heures pour devenir Assistant Virtuel - Devenez un vrai e-collaborateur",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "Formation de 26 Heures pour devenir Assistant Virtuel - Devenez un vrai e-collaborateur",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "459",
+      "titre": "Python, SQL et Powershell pour les (grands) débutants (2025)",
+      "description": "Apprenez dans ce cours de 13 heures, ces 3 langages incontournables dans l'informatique d'aujourd'hui !",
+      "lien": "https://www.udemy.com/course/python-sql-et-powershell-pour-les-grands-debutants-2021/",
+      "contenus": {
+        "texte": "Apprenez dans ce cours de 13 heures, ces 3 langages incontournables dans l'informatique d'aujourd'hui !",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "Apprenez dans ce <strong>cours</strong> de 13 heures, ces 3 langages incontournables dans l'informatique d'aujourd'hui !",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "469",
+      "titre": "Comment vendre avec WORDPRESS | Full eCommerce Atelier +17H",
+      "description": "+17 heures de vidéos pour vendre en ligne! BONUS: GOOGLE ADS, FACEBOOK ADS, YOUTUBE ADS, EMAILING...",
+      "lien": "https://www.udemy.com/course/comment-vendre-avec-wordpress/",
+      "contenus": {
+        "texte": "+17 heures de vidéos pour vendre en ligne! BONUS: GOOGLE ADS, FACEBOOK ADS, YOUTUBE ADS, EMAILING...",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "+17 heures de vidéos pour vendre en ligne! BONUS: GOOGLE ADS, FACEBOOK ADS, YOUTUBE ADS, EMAILING...",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "543",
+      "titre": "Certification HTML5 & CSS3 & JAVASCRIPT (Cours 3 EN 1)",
+      "description": "+6 heures de vidéos pour créez un Site Web responsive avec des ateliers pratiques avec HTML5 & CSS3 & JAVASCRIPT...",
+      "lien": "https://www.udemy.com/course/certificationtm-html5-css3-javascript-cours-3-en-1/",
+      "contenus": {
+        "texte": "+6 heures de vidéos pour créez un Site Web responsive avec des ateliers pratiques avec HTML5 & CSS3 & JAVASCRIPT...",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "+6 heures de vidéos pour créez un Site Web responsive avec des ateliers pratiques avec HTML5 & CSS3 & JAVASCRIPT...",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "553",
+      "titre": "Maîtrisez PHP et devenez autonome en programmation web",
+      "description": "9 heures de pratique de PHP avec PHP Data Objects (PDO), Bootstrap, MySQL, et la Programmation Orientée Objets (POO)",
+      "lien": "https://www.udemy.com/course/9-h2prog-php-pour-etre-autonome-en-programmation-web/",
+      "contenus": {
+        "texte": "9 heures de pratique de PHP avec PHP Data Objects (PDO), Bootstrap, MySQL, et la Programmation Orientée Objets (POO)",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "9 heures de pratique de PHP avec PHP <strong>Data</strong> Objects (PDO), Bootstrap, MySQL, et la Programmation Orientée Objets (POO)",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "560",
+      "titre": "DETRUISEZ 10 ANS DE GRAISSE en 6 mois FITNESS+PERTE de POIDS",
+      "description": "4 COURS en 1. Plan 6 mois DIETE, ENTRAINEMENTS, CARDIO, ABDOMINAUX. MAISON. Résultat REALISTE. FITNESS & PERTE DE POIDS",
+      "lien": "https://www.udemy.com/course/sante-fitness-nutrition-cardio-abdominaux-entrainement-transformation/",
+      "contenus": {
+        "texte": "4 COURS en 1. Plan 6 mois DIETE, ENTRAINEMENTS, CARDIO, ABDOMINAUX. MAISON. Résultat REALISTE. FITNESS & PERTE DE POIDS",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Tous les niveaux",
+      "duree": "4 <strong>COURS</strong> en 1. Plan 6 mois DIETE, ENTRAINEMENTS, CARDIO, ABDOMINAUX. MAISON. Résultat REALISTE. FITNESS & PERTE DE POIDS",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "607",
+      "titre": "Cours de peinture acrylique - Apprendre à peindre les vagues",
+      "description": "Apprends toutes les techniques que j’utilise pour peindre une vague pendant ce tutoriel de 3 heures.",
+      "lien": "https://www.udemy.com/course/cours-de-peinture-acrylique-apprendre-a-peindre-les-vagues/",
+      "contenus": {
+        "texte": "Apprends toutes les techniques que j’utilise pour peindre une vague pendant ce tutoriel de 3 heures.",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Tous les niveaux",
+      "duree": "Apprends toutes les techniques que j’utilise pour peindre une vague pendant ce tutoriel de 3 heures.",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "620",
+      "titre": "Certification TikTok Marketing : De Débutant à Expert",
+      "description": "En une heure, tu auras compris le fonctionnement de l’application et crée une vidéo efficace qui te permettra de gagner",
+      "lien": "https://www.udemy.com/course/certification-tiktok-marketing-de-debutant-a-expert/",
+      "contenus": {
+        "texte": "En une heure, tu auras compris le fonctionnement de l’application et crée une vidéo efficace qui te permettra de gagner",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "En une heure, tu auras compris le fonctionnement de l’application et crée une vidéo efficace qui te permettra de gagner",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "695",
+      "titre": "Formez vous au metier DBA SQL Server spécialisé performance",
+      "description": "Découvrez dans ce cours de 4 heures, l'indexing et les problèmes courants de performance que vous rencontrez sur SQL.",
+      "lien": "https://www.udemy.com/course/sql-server-le-cours-complet-sur-les-performances/",
+      "contenus": {
+        "texte": "Découvrez dans ce cours de 4 heures, l'indexing et les problèmes courants de performance que vous rencontrez sur SQL.",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Intermédiaire",
+      "duree": "Découvrez dans ce <strong>cours</strong> de 4 heures, l'indexing et les problèmes courants de performance que vous rencontrez sur SQL.",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "740",
+      "titre": "Pack ULTIME de ChatGPT: Optimisez votre flux de travail +10H",
+      "description": "+10 Heures de vidéos : Maîtrisez ChatGPT pour le SEO, l'automatisation du contenu et les posts sur les réseaux sociaux !",
+      "lien": "https://www.udemy.com/course/automatisation-sur-chatgpt-optimisez-votre-flux-de-travail/",
+      "contenus": {
+        "texte": "+10 Heures de vidéos : Maîtrisez ChatGPT pour le SEO, l'automatisation du contenu et les posts sur les réseaux sociaux !",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "+10 Heures de vidéos : Maîtrisez ChatGPT pour le SEO, l'automatisation du contenu et les posts sur les réseaux sociaux !",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "792",
+      "titre": "Pack ULTIME de Développement Web Front-End (+12 Heures)+12h de vidéos de Développement Web front-end (3 en 1) : Wordpress,  Responsive Design,  PythonNote : 5,0 sur 54 avis12 heures au total137 sessionsDébutantPrix actuel: 19,99 €",
+      "description": "+12h de vidéos de Développement Web front-end (3 en 1) : Wordpress,  Responsive Design,  Python",
+      "lien": "https://www.udemy.com/course/formation-developpement-web-front-end-office/",
+      "contenus": {
+        "texte": "+12h de vidéos de Développement Web front-end (3 en 1) : Wordpress,  Responsive Design,  Python",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "Pack ULTIME de Développement Web Front-End (+12 Heures)+12h de vidéos de Développement Web front-end (3 en 1) : Wordpress,  Responsive Design,  Python",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "854",
+      "titre": "Le guide complet de l'investissement immobilier rentable 10h",
+      "description": "+10 Heures de formation: une série de vidéos de très hautes qualités pour apprendre à investir dans l'immobilier",
+      "lien": "https://www.udemy.com/course/investissement-immobilier/",
+      "contenus": {
+        "texte": "+10 Heures de formation: une série de vidéos de très hautes qualités pour apprendre à investir dans l'immobilier",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "+10 Heures de formation: une série de vidéos de très hautes qualités pour apprendre à investir dans l'immobilier",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "898",
+      "titre": "Comment gagner de l'argent en automatique | Revenu Passif",
+      "description": "Je gagne 648€ par mois en revenu passif avec un blog qui me coûte 2€ par mois",
+      "lien": "https://www.udemy.com/course/comment-gagner-de-largent-en-automatique-revenu-passif/",
+      "contenus": {
+        "texte": "Je gagne 648€ par mois en revenu passif avec un blog qui me coûte 2€ par mois",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "Je gagne 648€ par mois en revenu passif avec un blog qui me coûte 2€ par mois",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "924",
+      "titre": "Python et Powershell pour les (grands) débutants (2023)",
+      "description": "Apprenez dans ce cours de 7 heures, ces 2 langages incontournables dans l'informatique d'aujourd'hui !",
+      "lien": "https://www.udemy.com/course/python-et-powershell-pour-les-grands-debutants/",
+      "contenus": {
+        "texte": "Apprenez dans ce cours de 7 heures, ces 2 langages incontournables dans l'informatique d'aujourd'hui !",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "Apprenez dans ce <strong>cours</strong> de 7 heures, ces 2 langages incontournables dans l'informatique d'aujourd'hui !",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "987",
+      "titre": "DIALux EVO 12.1 (2024) - Formation Pro en Français",
+      "description": "Cours de +10 heures de vidéos sur la nouvelle version du logiciel DIALux EVO 12.1 (2024).",
+      "lien": "https://www.udemy.com/course/dialux-evo-12-2024-francais/",
+      "contenus": {
+        "texte": "Cours de +10 heures de vidéos sur la nouvelle version du logiciel DIALux EVO 12.1 (2024).",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Tous les niveaux",
+      "duree": "<strong>Cours</strong> de +10 heures de vidéos sur la nouvelle version du logiciel DIALux EVO 12.1 (2024).",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "1022",
+      "titre": "Apprendre les 5 étapes clés du Design Sprint",
+      "description": "Le cours le plus complet disponible sur le Design Sprint. Plus de 2 heures de vidéos, activités, interviews, etc.",
+      "lien": "https://www.udemy.com/course/introduction-design-sprint/",
+      "contenus": {
+        "texte": "Le cours le plus complet disponible sur le Design Sprint. Plus de 2 heures de vidéos, activités, interviews, etc.",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "Le <strong>cours</strong> le plus complet disponible sur le Design Sprint. Plus de 2 heures de vidéos, activités, interviews, etc.",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "1024",
+      "titre": "SQL Server 2022 et Powershell pour les débutants (2022)",
+      "description": "Apprenez dans ce cours de 9 heures, 2 langages incontournables dans l'informatique : Powershell et SQL !",
+      "lien": "https://www.udemy.com/course/sql-et-powershell-pour-les-grands-debutants-2021/",
+      "contenus": {
+        "texte": "Apprenez dans ce cours de 9 heures, 2 langages incontournables dans l'informatique : Powershell et SQL !",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "Apprenez dans ce <strong>cours</strong> de 9 heures, 2 langages incontournables dans l'informatique : Powershell et SQL !",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "1032",
+      "titre": "Création de revenus passif sur internet : avec Blog Rentable",
+      "description": "Gagner de l’argent chaque mois avec un blog et Vivre de ses revenus passifs à domicile",
+      "lien": "https://www.udemy.com/course/creation-de-revenus-passif-sur-internet-avec-blog-rentable/",
+      "contenus": {
+        "texte": "Gagner de l’argent chaque mois avec un blog et Vivre de ses revenus passifs à domicile",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "Gagner de l’argent chaque mois avec un blog et Vivre de ses revenus passifs à domicile",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "1041",
+      "titre": "CHATGPT  ATTENTION on vous raconte n'importe quoiFact-check des stratégies des influenceurs/ <strong>cour</strong>  ChatGPT : sont-elles vraiment efficaces pour générer 50K€/mois ?Note : 5,0 sur 51 avis31 minutes au total5 sessionsTous les niveaux",
+      "description": "Fact-check des stratégies des influenceurs/ cour  ChatGPT : sont-elles vraiment efficaces pour générer 50K€/mois ?",
+      "lien": "https://www.udemy.com/course/chatgpt-attention-on-vous-raconte-nimporte-quoi/",
+      "contenus": {
+        "texte": "Fact-check des stratégies des influenceurs/ cour  ChatGPT : sont-elles vraiment efficaces pour générer 50K€/mois ?",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Tous les niveaux",
+      "duree": "CHATGPT  ATTENTION on vous raconte n'importe quoiFact-check des stratégies des influenceurs/ <strong>cour</strong>  ChatGPT : sont-elles vraiment efficaces pour générer 50K€/mois ?",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "1380",
+      "titre": "Izypiano-Méthode de piano, Niveau débutant",
+      "description": "6 semaines de cours incluant les 5 volets essentiels pour une formation de qualité et complète",
+      "lien": "https://www.udemy.com/course/izypiano-methode-de-piano-niveau-debutant/",
+      "contenus": {
+        "texte": "6 semaines de cours incluant les 5 volets essentiels pour une formation de qualité et complète",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "6 semaines de <strong>cours</strong> incluant les 5 volets essentiels pour une formation de qualité et complète",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "4991",
+      "titre": "Cloud Computing & Hybrid Cloud vs On-Premise Solutions",
+      "description": "Learn the advantages of on-premise, cloud computing & hybrid cloud infrastructure solutions in this 30 min course!",
+      "lien": "https://www.udemy.com/course/cloud-computing-vs-on-premise-infrastructure-solutions/",
+      "contenus": {
+        "texte": "Learn the advantages of on-premise, cloud computing & hybrid cloud infrastructure solutions in this 30 min course!",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "Learn the advantages of on-premise, <strong>cloud</strong> computing & hybrid <strong>cloud</strong> infrastructure solutions in this 30 min course!",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "6657",
+      "titre": "Big Data in Advertising - Explained in Plain English",
+      "description": "A 30 min overview of what kind of data advertisings use and how that data is collected on your devices.",
+      "lien": "https://www.udemy.com/course/big_data_in_advertising/",
+      "contenus": {
+        "texte": "A 30 min overview of what kind of data advertisings use and how that data is collected on your devices.",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Débutant",
+      "duree": "A 30 min overview of what kind of <strong>data</strong> advertisings use and how that <strong>data</strong> is collected on your devices.",
+      "vecteur_embedding": []
+    }
+  },
+  {
+    "cours": {
+      "id": "8186",
+      "titre": "Responsive UX/UI Design in Figma 1.5h deep dive 2024 UPDATE!",
+      "description": "Figma Auto Layout, Constraints and Breakpoints: Responsive setup, testing and design documentation, min/max width, wrap",
+      "lien": "https://www.udemy.com/course/responsive-ui-design-in-figma-2h-deep-dive/",
+      "contenus": {
+        "texte": "Figma Auto Layout, Constraints and Breakpoints: Responsive setup, testing and design documentation, min/max width, wrap",
+        "lienVideo": ""
+      },
+      "categories": [],
+      "niveau": "Intermédiaire",
+      "duree": "Figma Auto Layout, Constraints and Breakpoints: Responsive setup, testing and design documentation, min/max width, wrap",
+      "vecteur_embedding": []
+    }
+  }
+]

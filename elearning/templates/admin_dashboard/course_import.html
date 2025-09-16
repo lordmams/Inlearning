@@ -1,0 +1,422 @@
+{% extends 'admin_dashboard/base_admin.html' %}
+
+{% block title %}Importation de Cours - Administration{% endblock %}
+
+{% block page_title %}Importation de Cours{% endblock %}
+{% block page_subtitle %}Importer des cours depuis CSV, JSON ou Excel{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Formulaire d'importation -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-upload"></i>
+                    Importer des cours
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- Zone de drop de fichiers -->
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {{ form.file.label }}
+                        </label>
+                        
+                        <!-- Zone de drop visuellement attrayante -->
+                        <div id="drop-zone" class="border border-2 border-dashed rounded p-4 text-center" 
+                             style="min-height: 150px; cursor: pointer; transition: all 0.3s ease;">
+                            <div id="drop-zone-content">
+                                <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">Glissez-déposez votre fichier ici</h5>
+                                <p class="text-muted mb-2">ou</p>
+                                <button type="button" class="btn btn-outline-primary" onclick="document.querySelector('input[name=&quot;file&quot;]').click()">
+                                    <i class="fas fa-folder-open"></i> Parcourir les fichiers
+                                </button>
+                                <p class="small text-muted mt-2">
+                                    Formats supportés: {{ supported_formats|join:", " }} (Max 50MB)
+                                </p>
+                            </div>
+                            
+                            <!-- Input file Django caché mais accessible -->
+                            <div style="position: absolute; left: -9999px;">
+                                {{ form.file }}
+                            </div>
+                        </div>
+                        
+                        <!-- Aperçu du fichier sélectionné -->
+                        <div id="file-preview" class="mt-3 d-none">
+                            <div class="alert alert-info d-flex align-items-center">
+                                <i class="fas fa-file me-2"></i>
+                                <div class="flex-grow-1">
+                                    <strong id="file-name"></strong>
+                                    <small id="file-size" class="text-muted d-block"></small>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearFile()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        {% if form.file.errors %}
+                            <div class="text-danger mt-2">
+                                {% for error in form.file.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.format_type.id_for_label }}" class="form-label">
+                                    {{ form.format_type.label }}
+                                </label>
+                                {{ form.format_type }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    {{ form.update_existing }}
+                                    <label class="form-check-label" for="{{ form.update_existing.id_for_label }}">
+                                        {{ form.update_existing.label }}
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    {{ form.dry_run }}
+                                    <label class="form-check-label" for="{{ form.dry_run.id_for_label }}">
+                                        {{ form.dry_run.label }}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-upload"></i>
+                            Importer
+                        </button>
+                        
+                        <a href="{% url 'admin_dashboard:download_course_template' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-download"></i>
+                            Télécharger Template
+                        </a>
+                        
+                        <a href="{% url 'admin_dashboard:import_logs' %}" class="btn btn-outline-info">
+                            <i class="fas fa-history"></i>
+                            Historique
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Guide d'importation -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle"></i>
+                    Guide d'importation
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6><i class="fas fa-file-csv text-success"></i> Format CSV</h6>
+                        <p class="small text-muted">
+                            Format simple avec en-têtes. Idéal pour Excel et Google Sheets.
+                        </p>
+                        <p class="small">
+                            <strong>Champs requis:</strong> title, description, category, instructor
+                        </p>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <h6><i class="fas fa-file-code text-info"></i> Format JSON</h6>
+                        <p class="small text-muted">
+                            Format structuré permettant les leçons et métadonnées avancées.
+                        </p>
+                        <p class="small">
+                            <strong>Avantages:</strong> Leçons, tags, structure complexe
+                        </p>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <h6><i class="fas fa-file-excel text-success"></i> Format Excel</h6>
+                        <p class="small text-muted">
+                            Fichiers .xlsx avec support des formules et mise en forme.
+                        </p>
+                        <p class="small">
+                            <strong>Limites:</strong> Structure simple comme CSV
+                        </p>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h6>Processus d'importation</h6>
+                <ol class="small">
+                    <li><strong>Validation</strong> - Vérification du format et des données</li>
+                    <li><strong>Normalisation</strong> - Nettoyage et standardisation</li>
+                    <li><strong>Traitement</strong> - Création/mise à jour des cours</li>
+                    <li><strong>Indexation</strong> - Ajout à Elasticsearch pour la recherche</li>
+                    <li><strong>Notification</strong> - Rapport de résultats</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Panneau latéral -->
+    <div class="col-lg-4">
+        <!-- Statistiques -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-bar"></i>
+                    Statistiques
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <h4 class="text-primary">{{ stats.total_courses|default:0 }}</h4>
+                            <small class="text-muted">Cours total</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-success">{{ stats.new_courses_30d|default:0 }}</h4>
+                        <small class="text-muted">Ce mois</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Importations récentes -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-history"></i>
+                    Importations récentes
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_imports %}
+                    <div class="list-group list-group-flush">
+                        {% for import in recent_imports %}
+                        <div class="list-group-item px-0">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">{{ import.filename }}</h6>
+                                    <small class="text-muted">{{ import.started_at|date:"d/m H:i" }}</small>
+                                </div>
+                                <div>
+                                    {% if import.status == 'completed' %}
+                                        <span class="badge bg-success">Réussi</span>
+                                    {% elif import.status == 'error' %}
+                                        <span class="badge bg-danger">Erreur</span>
+                                    {% elif import.status == 'processing' %}
+                                        <span class="badge bg-primary">En cours</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ import.status }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% if import.status == 'completed' %}
+                                <small class="text-success">
+                                    {{ import.imported_count }} importés, {{ import.updated_count }} mis à jour
+                                </small>
+                            {% elif import.status == 'error' %}
+                                <small class="text-danger">{{ import.error_message|truncatechars:50 }}</small>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">
+                        <i class="fas fa-info-circle"></i>
+                        Aucune importation récente
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Actions rapides -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-bolt"></i>
+                    Actions rapides
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'admin_dashboard:pipeline_monitoring' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-eye"></i>
+                        Monitoring Pipeline
+                    </a>
+                    
+                    <a href="{% url 'admin:courses_course_changelist' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-list"></i>
+                        Gérer les cours
+                    </a>
+                    
+                    <button class="btn btn-outline-info btn-sm" onclick="checkConsumerStatus()">
+                        <i class="fas fa-heartbeat"></i>
+                        Statut Consumer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function checkConsumerStatus() {
+    fetch('{% url "admin_dashboard:consumer_status" %}')
+        .then(response => response.json())
+        .then(data => {
+            let status = data.running ? 'En marche' : 'Arrêté';
+            let color = data.running ? 'success' : 'warning';
+            
+            let message = `
+                <strong>Statut Consumer:</strong> <span class="text-${color}">${status}</span><br>
+                <strong>Fichiers en attente:</strong> ${data.pending_files}<br>
+                <strong>Fichiers traités:</strong> ${data.processed_files}<br>
+                <strong>Fichiers en erreur:</strong> ${data.error_files}
+            `;
+            
+            // Afficher dans une modal ou alert
+            alert(`Consumer Status:\n${status}\nPending: ${data.pending_files}\nProcessed: ${data.processed_files}\nErrors: ${data.error_files}`);
+        })
+        .catch(error => {
+            alert('Erreur lors de la vérification du statut: ' + error);
+        });
+}
+
+// Fonction pour effacer le fichier sélectionné
+function clearFile() {
+    const fileInput = document.getElementById('file-input');
+    const djangoFileInput = document.querySelector('input[name="file"]');
+    const filePreview = document.getElementById('file-preview');
+    const dropZone = document.getElementById('drop-zone');
+    
+    fileInput.value = '';
+    if (djangoFileInput) djangoFileInput.value = '';
+    filePreview.classList.add('d-none');
+    dropZone.classList.remove('border-success');
+    dropZone.classList.add('border-dashed');
+}
+
+// Fonction pour afficher l'aperçu du fichier
+function showFilePreview(file) {
+    const filePreview = document.getElementById('file-preview');
+    const fileName = document.getElementById('file-name');
+    const fileSize = document.getElementById('file-size');
+    const dropZone = document.getElementById('drop-zone');
+    
+    fileName.textContent = file.name;
+    fileSize.textContent = `Taille: ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+    
+    filePreview.classList.remove('d-none');
+    dropZone.classList.remove('border-dashed');
+    dropZone.classList.add('border-success');
+}
+
+// Fonction pour valider le fichier
+function validateFile(file) {
+    // Vérifier la taille (50MB max)
+    if (file.size > 50 * 1024 * 1024) {
+        alert('Le fichier est trop volumineux (max 50MB)');
+        return false;
+    }
+    
+    // Vérifier l'extension
+    const allowedExtensions = ['json', 'csv', 'xlsx', 'xls'];
+    const extension = file.name.split('.').pop().toLowerCase();
+    
+    if (!allowedExtensions.includes(extension)) {
+        alert(`Extension de fichier non supportée: .${extension}\nExtensions autorisées: ${allowedExtensions.join(', ')}`);
+        return false;
+    }
+    
+    return true;
+}
+
+// Fonction pour détecter et définir le format automatiquement
+function autoDetectFormat(filename) {
+    const formatSelect = document.querySelector('select[name="format_type"]');
+    const extension = filename.split('.').pop().toLowerCase();
+    
+    if (extension === 'csv') {
+        formatSelect.value = 'csv';
+    } else if (extension === 'json') {
+        formatSelect.value = 'json';
+    } else if (extension === 'xlsx' || extension === 'xls') {
+        formatSelect.value = 'xlsx';
+    }
+}
+
+// Initialisation du drag & drop
+document.addEventListener('DOMContentLoaded', function() {
+    const dropZone = document.getElementById('drop-zone');
+    const djangoFileInput = document.querySelector('input[name="file"]');
+    
+    // Gestionnaires d'événements pour le drag & drop
+    dropZone.addEventListener('click', () => djangoFileInput.click());
+    
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('border-primary', 'bg-light');
+        dropZone.style.borderStyle = 'solid';
+    });
+    
+    dropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('border-primary', 'bg-light');
+        dropZone.style.borderStyle = 'dashed';
+    });
+    
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('border-primary', 'bg-light');
+        dropZone.style.borderStyle = 'dashed';
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            const file = files[0];
+            if (validateFile(file)) {
+                // Assigner le fichier à l'input Django
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                djangoFileInput.files = dt.files;
+                
+                showFilePreview(file);
+                autoDetectFormat(file.name);
+            }
+        }
+    });
+    
+    // Gestionnaire pour l'input Django
+    djangoFileInput.addEventListener('change', function() {
+        const file = this.files[0];
+        if (file) {
+            if (validateFile(file)) {
+                showFilePreview(file);
+                autoDetectFormat(file.name);
+            } else {
+                clearFile();
+            }
+        }
+    });
+});
+</script>
+{% endblock %} 

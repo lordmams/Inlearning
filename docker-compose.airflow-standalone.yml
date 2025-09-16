@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # Airflow Standalone (plus simple pour le développement)
+  airflow-standalone:
+    build: ./orchestration/airflow
+    container_name: airflow-standalone
+    ports:
+      - "8082:8080"
+    environment:
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
+      AIRFLOW__CORE__FERNET_KEY: 'UKMzEm3yIuFYEq1y5siPHPjpO7yI-wV1hjaKRyb3S8c='
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
+      # Configuration du système principal
+      ELASTICSEARCH_HOST: ${ELASTICSEARCH_HOST}
+      ELASTICSEARCH_INDEX: ${ELASTICSEARCH_INDEX:-inlearning-storage}
+      POSTGRES_HOST: db
+      POSTGRES_DB: ${POSTGRES_DB:-elearning_db}
+      POSTGRES_USER: ${POSTGRES_USER:-elearning_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-elearning_password}
+      LEARNING_PLATFORM_URL: http://flask_api:5000
+    volumes:
+      - ./orchestration/airflow/dags:/opt/airflow/dags
+      - ./orchestration/airflow/logs:/opt/airflow/logs
+      - ./orchestration/airflow/plugins:/opt/airflow/plugins
+      - ./ETL_users:/opt/airflow/data/ETL_users
+      - ./ingest:/opt/airflow/data/ingest
+      - airflow-db:/opt/airflow
+    user: "${AIRFLOW_UID:-50000}:0"
+    command: >
+      bash -c "
+        airflow db init &&
+        airflow users create --username admin --firstname Admin --lastname User --role Admin --email admin@airflow.com --password admin &&
+        airflow standalone
+      "
+    networks:
+      - inlearning_default
+
+volumes:
+  airflow-db:
+
+networks:
+  inlearning_default:
+    external: true 

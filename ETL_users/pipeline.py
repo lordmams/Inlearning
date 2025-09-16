@@ -1,11 +1,14 @@
-from etl import extract, transform, load
-#from etl import load
-import yaml
 import os
+
+# from etl import load
+import yaml
+from etl import extract, load, transform
+
 
 def load_config(filepath: str):
     with open(filepath, "r") as file:
         return yaml.safe_load(file)
+
 
 def run_pipeline():
     print("Démarrage du pipeline ETL...")
@@ -35,6 +38,7 @@ def run_pipeline():
             # Étape 4 : Chargement des données
             load.load_data_to_postgres(transformed_data, config)
             print("Pipeline ETL terminé avec succès.")
+
 
 if __name__ == "__main__":
     run_pipeline()

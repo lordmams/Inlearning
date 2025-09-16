@@ -1,0 +1,248 @@
+version: '3.8'
+
+services:
+  # Base de données PostgreSQL
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: elearning_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - elearning_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis pour le cache
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - elearning_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Elasticsearch
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    environment:
+      - node.name=elasticsearch
+      - cluster.name=elearning-cluster
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - elearning_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Kibana (optionnel, pour visualiser Elasticsearch)
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - xpack.security.enabled=false
+    ports:
+      - "5601:5601"
+    networks:
+      - elearning_network
+    depends_on:
+      - elasticsearch
+
+  # Application Django
+  web:
+    build:
+      context: ../elearning
+      dockerfile: dockerfile
+    environment:
+      - DEBUG=True
+      - POSTGRES_DB=elearning_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - REDIS_URL=redis://redis:6379/0
+      - ELASTICSEARCH_ENABLED=true
+      - ELASTICSEARCH_HOST=elasticsearch:9200
+      - ELASTICSEARCH_INDEX=courses
+      - EMAIL_NOTIFICATIONS_ENABLED=false
+      - SECRET_KEY=dev-secret-key-change-in-production
+    volumes:
+      - ../elearning:/app
+      - media_files:/app/media
+      - static_files:/app/staticfiles
+      - ingest_drop:/app/ingest/drop
+      - ingest_processing:/app/ingest/processing
+      - ingest_processed:/app/ingest/processed
+      - ingest_error:/app/ingest/error
+    ports:
+      - "8000:8000"
+    networks:
+      - elearning_network
+    depends_on:
+      - db
+      - redis
+      - elasticsearch
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/admin/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Consumer de fichiers
+  consumer:
+    build:
+      context: ../elearning
+      dockerfile: dockerfile
+    command: python services/consumer/consumer.py
+    environment:
+      - DEBUG=True
+      - POSTGRES_DB=elearning_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - REDIS_URL=redis://redis:6379/0
+      - ELASTICSEARCH_ENABLED=true
+      - ELASTICSEARCH_HOST=elasticsearch:9200
+      - ELASTICSEARCH_INDEX=courses
+      - EMAIL_NOTIFICATIONS_ENABLED=false
+      - SECRET_KEY=dev-secret-key-change-in-production
+    volumes:
+      - ../elearning:/app
+      - ingest_drop:/app/ingest/drop
+      - ingest_processing:/app/ingest/processing
+      - ingest_processed:/app/ingest/processed
+      - ingest_error:/app/ingest/error
+      - consumer_logs:/app/logs
+    networks:
+      - elearning_network
+    depends_on:
+      - db
+      - redis
+      - elasticsearch
+      - web
+    restart: unless-stopped
+
+  # Nginx (reverse proxy)
+  nginx:
+    image: nginx:alpine
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - static_files:/var/www/static
+      - media_files:/var/www/media
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - elearning_network
+    depends_on:
+      - web
+
+  # Monitoring avec Prometheus (optionnel)
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - elearning_network
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+
+  # Grafana pour la visualisation (optionnel)
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - elearning_network
+    depends_on:
+      - prometheus
+
+  # Backup automatique
+  backup:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=elearning_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_HOST=db
+    volumes:
+      - backup_data:/backup
+      - ./backup.sh:/backup.sh
+    networks:
+      - elearning_network
+    depends_on:
+      - db
+    entrypoint: ["sh", "/backup.sh"]
+
+volumes:
+  postgres_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+  media_files:
+    driver: local
+  static_files:
+    driver: local
+  # Volumes pour le pipeline d'ingestion
+  ingest_drop:
+    driver: local
+  ingest_processing:
+    driver: local
+  ingest_processed:
+    driver: local
+  ingest_error:
+    driver: local
+  consumer_logs:
+    driver: local
+  # Monitoring
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  backup_data:
+    driver: local
+
+networks:
+  elearning_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16 

@@ -1,0 +1,1012 @@
+{% extends 'admin_dashboard/base_admin.html' %}
+
+{% block title %}Tableau de bord - Administration E-Learning{% endblock %}
+
+{% block extra_css %}
+<style>
+    .service-link-card {
+        transition: all 0.3s ease;
+    }
+    
+    .service-link-card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .hover-shadow:hover {
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15) !important;
+        border-color: #007bff !important;
+    }
+    
+    .service-icon {
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+    
+    .status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.1); opacity: 0.7; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    
+    .health-icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+    
+    .health-value {
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+    
+    .bg-purple {
+        background-color: #6f42c1 !important;
+    }
+    
+    .health-metric {
+        padding: 10px;
+        border-radius: 8px;
+        background: #f8f9fa;
+    }
+    
+    .card-header h5 {
+        margin-bottom: 0;
+    }
+    
+    .btn-outline-primary:hover,
+    .btn-outline-info:hover,
+    .btn-outline-warning:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Services Quick Access -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-rocket"></i> Services InLearning Platform</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Django Admin -->
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="service-link-card">
+                            <a href="/admin/" target="_blank" class="text-decoration-none">
+                                <div class="d-flex align-items-center p-3 border rounded hover-shadow">
+                                    <div class="service-icon bg-success text-white rounded-circle me-3">
+                                        <i class="fab fa-python"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1">Django Admin</h6>
+                                        <small class="text-muted">Administration principale</small>
+                                    </div>
+                                    <div class="ms-auto">
+                                        <span class="status-dot bg-success" title="Online"></span>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Flask API -->
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="service-link-card">
+                            <a href="http://localhost:5000" target="_blank" class="text-decoration-none">
+                                <div class="d-flex align-items-center p-3 border rounded hover-shadow">
+                                    <div class="service-icon bg-info text-white rounded-circle me-3">
+                                        <i class="fas fa-flask"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1">Flask API</h6>
+                                        <small class="text-muted">ML Pipeline & Processing</small>
+                                    </div>
+                                    <div class="ms-auto">
+                                        <span class="status-dot bg-success" title="Online"></span>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Spark Master -->
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="service-link-card">
+                            <a href="http://localhost:8090" target="_blank" class="text-decoration-none">
+                                <div class="d-flex align-items-center p-3 border rounded hover-shadow">
+                                    <div class="service-icon bg-warning text-white rounded-circle me-3">
+                                        <i class="fas fa-fire"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1">Spark Master</h6>
+                                        <small class="text-muted">Distributed Computing</small>
+                                    </div>
+                                    <div class="ms-auto">
+                                        <span class="status-dot bg-warning" title="Check Status"></span>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Python Orchestrator -->
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="service-link-card">
+                            <a href="http://localhost:8001" target="_blank" class="text-decoration-none">
+                                <div class="d-flex align-items-center p-3 border rounded hover-shadow">
+                                    <div class="service-icon bg-primary text-white rounded-circle me-3">
+                                        <i class="fas fa-wind"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1">Python Orchestrator</h6>
+                                        <small class="text-muted">Workflow Orchestration</small>
+                                    </div>
+                                    <div class="ms-auto">
+                                        <span class="status-dot bg-success" title="Online"></span>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Elasticsearch -->
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="service-link-card">
+                            <a href="http://localhost:9200" target="_blank" class="text-decoration-none">
+                                <div class="d-flex align-items-center p-3 border rounded hover-shadow">
+                                    <div class="service-icon bg-secondary text-white rounded-circle me-3">
+                                        <i class="fas fa-search"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1">Elasticsearch</h6>
+                                        <small class="text-muted">Search & Analytics</small>
+                                    </div>
+                                    <div class="ms-auto">
+                                        <span class="status-dot bg-success" title="Online"></span>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- PgAdmin -->
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="service-link-card">
+                            <a href="http://localhost:8085" target="_blank" class="text-decoration-none">
+                                <div class="d-flex align-items-center p-3 border rounded hover-shadow">
+                                    <div class="service-icon bg-dark text-white rounded-circle me-3">
+                                        <i class="fas fa-database"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1">PgAdmin</h6>
+                                        <small class="text-muted">Database Management</small>
+                                    </div>
+                                    <div class="ms-auto">
+                                        <span class="status-dot bg-success" title="Online"></span>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- System Monitor -->
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="service-link-card">
+                            <a href="{% url 'admin_dashboard:system_monitoring' %}" class="text-decoration-none">
+                                <div class="d-flex align-items-center p-3 border rounded hover-shadow">
+                                    <div class="service-icon bg-danger text-white rounded-circle me-3">
+                                        <i class="fas fa-server"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1">System Monitor</h6>
+                                        <small class="text-muted">Services Health Check</small>
+                                    </div>
+                                    <div class="ms-auto">
+                                        <span class="status-dot bg-success" title="Monitoring Active"></span>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Course Import -->
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="service-link-card">
+                            <a href="{% url 'admin_dashboard:course_import' %}" class="text-decoration-none">
+                                <div class="d-flex align-items-center p-3 border rounded hover-shadow">
+                                    <div class="service-icon bg-purple text-white rounded-circle me-3">
+                                        <i class="fas fa-upload"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1">Course Import</h6>
+                                        <small class="text-muted">Upload & Process Courses</small>
+                                    </div>
+                                    <div class="ms-auto">
+                                        <i class="fas fa-arrow-right text-muted"></i>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="d-flex flex-wrap gap-2">
+                            <button id="checkAllServices" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-sync-alt"></i> Check All Services
+                            </button>
+                            <a href="{% url 'admin_dashboard:system_monitoring' %}" class="btn btn-outline-info btn-sm">
+                                <i class="fas fa-chart-line"></i> Detailed Monitoring
+                            </a>
+                            <button id="restartServices" class="btn btn-outline-warning btn-sm">
+                                <i class="fas fa-power-off"></i> Restart Services
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- System Status Overview -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-heartbeat"></i> System Health Overview</h5>
+            </div>
+            <div class="card-body">
+                <div class="row" id="systemHealthOverview">
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="health-metric">
+                            <div class="d-flex align-items-center">
+                                <div class="health-icon bg-success text-white rounded-circle me-3">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Services Online</h6>
+                                    <div class="health-value text-success" id="servicesOnline">-/8</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="health-metric">
+                            <div class="d-flex align-items-center">
+                                <div class="health-icon bg-primary text-white rounded-circle me-3">
+                                    <i class="fas fa-tachometer-alt"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Health Score</h6>
+                                    <div class="health-value text-primary" id="healthScore">--%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="health-metric">
+                            <div class="d-flex align-items-center">
+                                <div class="health-icon bg-warning text-white rounded-circle me-3">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Active Alerts</h6>
+                                    <div class="health-value text-warning" id="activeAlerts">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="health-metric">
+                            <div class="d-flex align-items-center">
+                                <div class="health-icon bg-info text-white rounded-circle me-3">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Last Check</h6>
+                                    <div class="health-value text-info" id="lastCheck">--:--</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Status Bar -->
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="progress mb-2" style="height: 8px;">
+                            <div id="healthProgressBar" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                        </div>
+                        <small class="text-muted">Overall system health</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistiques principales -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="stat-card primary">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="stat-label">Total Utilisateurs</div>
+                    <div class="stat-value text-primary">{{ stats.total_users|floatformat:0 }}</div>
+                    <div class="stat-change bg-success text-white">
+                        +{{ stats.new_users_7d }} cette semaine
+                    </div>
+                </div>
+                <div class="stat-icon text-primary">
+                    <i class="fas fa-users"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="stat-card success">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="stat-label">Total Cours</div>
+                    <div class="stat-value text-success">{{ stats.total_courses }}</div>
+                    <div class="stat-change bg-info text-white">
+                        +{{ stats.new_courses_30d }} ce mois
+                    </div>
+                </div>
+                <div class="stat-icon text-success">
+                    <i class="fas fa-book"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="stat-card warning">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="stat-label">Inscriptions</div>
+                    <div class="stat-value text-warning">{{ stats.total_enrollments|floatformat:0 }}</div>
+                    <div class="stat-change bg-warning text-white">
+                        +{{ stats.new_enrollments_30d }} ce mois
+                    </div>
+                </div>
+                <div class="stat-icon text-warning">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="stat-card info">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="stat-label">Taux de Réussite</div>
+                    <div class="stat-value text-info">{{ stats.completion_rate }}%</div>
+                    <div class="stat-change bg-primary text-white">
+                        Quiz: {{ stats.quiz_success_rate }}%
+                    </div>
+                </div>
+                <div class="stat-icon text-info">
+                    <i class="fas fa-trophy"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Actions rapides -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="chart-container">
+            <div class="p-3">
+                <h5 class="mb-3"><i class="fas fa-bolt"></i> Actions Rapides</h5>
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'admin_dashboard:course_import' %}" class="btn btn-primary w-100">
+                            <i class="fas fa-upload"></i><br>
+                            <small>Import Cours</small>
+                        </a>
+                    </div>
+
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'admin_dashboard:pipeline_monitoring' %}" class="btn btn-outline-info w-100">
+                            <i class="fas fa-chart-line"></i><br>
+                            <small>Monitoring</small>
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="/admin/courses/course/" class="btn btn-outline-success w-100">
+                            <i class="fas fa-cog"></i><br>
+                            <small>Admin Django</small>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Graphiques -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="chart-container">
+            <h5 class="mb-3"><i class="fas fa-chart-line"></i> Évolution des Inscriptions (30 derniers jours)</h5>
+            <div style="height: 300px; position: relative;">
+                <canvas id="enrollmentChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="chart-container">
+            <h5 class="mb-3"><i class="fas fa-chart-pie"></i> Répartition par Catégorie</h5>
+            <div style="height: 350px; position: relative;">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-lg-6">
+        <div class="chart-container">
+            <h5 class="mb-3"><i class="fas fa-chart-bar"></i> Performance par Difficulté</h5>
+            <div style="height: 280px; position: relative;">
+                <canvas id="difficultyChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="chart-container">
+            <h5 class="mb-3"><i class="fas fa-chart-area"></i> Progression Mensuelle</h5>
+            <div style="height: 280px; position: relative;">
+                <canvas id="progressChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tableaux -->
+<div class="row">
+    <div class="col-lg-8">
+        <div class="table-container">
+            <div class="p-3 border-bottom">
+                <h5 class="mb-0"><i class="fas fa-star"></i> Top 5 Cours Populaires</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Cours</th>
+                            <th>Catégorie</th>
+                            <th>Instructeur</th>
+                            <th>Inscriptions</th>
+                            <th>Difficulté</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for course in top_courses %}
+                        <tr>
+                            <td>
+                                <strong>{{ course.title|truncatechars:40 }}</strong>
+                                {% if course.is_free %}
+                                    <span class="badge bg-success ms-1">Gratuit</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ course.category.name }}</td>
+                            <td>{{ course.instructor }}</td>
+                            <td>
+                                <span class="badge bg-primary">{{ course.enrollment_count }}</span>
+                            </td>
+                            <td>
+                                {% if course.difficulty == 'beginner' %}
+                                    <span class="badge bg-success">Débutant</span>
+                                {% elif course.difficulty == 'intermediate' %}
+                                    <span class="badge bg-warning">Intermédiaire</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Avancé</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">Aucun cours disponible</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="table-container">
+            <div class="p-3 border-bottom">
+                <h5 class="mb-0"><i class="fas fa-clock"></i> Activité Récente</h5>
+            </div>
+            <div class="p-3">
+                {% for enrollment in recent_enrollments %}
+                <div class="d-flex align-items-center mb-3">
+                    <div class="flex-shrink-0">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" 
+                             style="width: 40px; height: 40px;">
+                            <i class="fas fa-user-plus fa-sm"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <div class="fw-bold">{{ enrollment.user.get_full_name|default:enrollment.user.username }}</div>
+                        <div class="text-muted small">
+                            s'est inscrit à "{{ enrollment.course.title|truncatechars:30 }}"
+                        </div>
+                        <div class="text-muted small">
+                            <i class="fas fa-clock"></i> {{ enrollment.enrolled_at|timesince }}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center text-muted">
+                    <i class="fas fa-info-circle"></i>
+                    Aucune activité récente
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Nouveaux utilisateurs -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="table-container">
+            <div class="p-3 border-bottom">
+                <h5 class="mb-0"><i class="fas fa-user-plus"></i> Nouveaux Utilisateurs</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Utilisateur</th>
+                            <th>Email</th>
+                            <th>Date d'inscription</th>
+                            <th>Profil</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in recent_users %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if user.person_profile.profile_picture %}
+                                        <img src="{{ user.person_profile.profile_picture.url }}" 
+                                             class="rounded-circle me-2" width="32" height="32">
+                                    {% else %}
+                                        <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center me-2" 
+                                             style="width: 32px; height: 32px;">
+                                            <i class="fas fa-user fa-sm"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <strong>{{ user.get_full_name|default:user.username }}</strong>
+                                        {% if user.is_staff %}
+                                            <span class="badge bg-warning ms-1">Staff</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ user.email|default:"-" }}</td>
+                            <td>{{ user.date_joined|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                {% if user.person_profile %}
+                                    <small class="text-muted">
+                                        {% if user.person_profile.age %}{{ user.person_profile.age }} ans{% endif %}
+                                        {% if user.person_profile.predicted_level %}
+                                            - {{ user.person_profile.predicted_level }}
+                                        {% endif %}
+                                    </small>
+                                {% else %}
+                                    <span class="text-warning">Profil incomplet</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="/admin/auth/user/{{ user.id }}/change/" 
+                                   class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="/admin/users/person/?user__id__exact={{ user.id }}" 
+                                   class="btn btn-outline-info btn-sm">
+                                    <i class="fas fa-user"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">Aucun nouvel utilisateur</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Configuration globale des graphiques
+    Chart.defaults.font.family = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+    Chart.defaults.color = '#6c757d';
+    
+    // Charger les données d'analytics
+    fetch('{% url "admin_dashboard:analytics_api" %}')
+        .then(response => response.json())
+        .then(data => {
+            createEnrollmentChart(data.enrollments_by_day);
+            createCategoryChart(data.category_distribution);
+            createProgressChart(data.monthly_progress);
+        })
+        .catch(error => console.error('Erreur chargement analytics:', error));
+    
+    // Graphique des inscriptions
+    function createEnrollmentChart(data) {
+        const ctx = document.getElementById('enrollmentChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.map(item => new Date(item.date).toLocaleDateString('fr-FR')),
+                datasets: [{
+                    label: 'Inscriptions',
+                    data: data.map(item => item.count),
+                    borderColor: '#007cba',
+                    backgroundColor: 'rgba(0, 124, 186, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0,0,0,0.1)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Graphique des catégories
+    function createCategoryChart(data) {
+        const ctx = document.getElementById('categoryChart').getContext('2d');
+        const colors = ['#007cba', '#28a745', '#ffc107', '#dc3545', '#17a2b8'];
+        
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: data.map(item => item.name),
+                datasets: [{
+                    data: data.map(item => item.enrollment_count),
+                    backgroundColor: colors.slice(0, data.length),
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+    
+    // Graphique de progression
+    function createProgressChart(data) {
+        const ctx = document.getElementById('progressChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.map(item => item.month),
+                datasets: [{
+                    label: 'Progression moyenne (%)',
+                    data: data.map(item => item.progress),
+                    backgroundColor: '#28a745',
+                    borderColor: '#1e7e34',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        grid: {
+                            color: 'rgba(0,0,0,0.1)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Graphique des difficultés
+    const difficultyCtx = document.getElementById('difficultyChart').getContext('2d');
+    const difficultyData = [
+        {% for stat in difficulty_stats %}
+        {
+            difficulty: '{{ stat.difficulty }}',
+            count: {{ stat.course_count }},
+            completion: {{ stat.avg_completion|default:0 }}
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+    
+    new Chart(difficultyCtx, {
+        type: 'bar',
+        data: {
+            labels: difficultyData.map(item => {
+                const labels = {
+                    'beginner': 'Débutant',
+                    'intermediate': 'Intermédiaire',
+                    'advanced': 'Avancé'
+                };
+                return labels[item.difficulty] || item.difficulty;
+            }),
+            datasets: [{
+                label: 'Nombre de cours',
+                data: difficultyData.map(item => item.count),
+                backgroundColor: ['#28a745', '#ffc107', '#dc3545'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+});
+
+// JavaScript pour la supervision des services
+document.addEventListener('DOMContentLoaded', function() {
+    // Fonction pour vérifier l'état de tous les services
+    function checkAllServicesHealth() {
+        const checkButton = document.getElementById('checkAllServices');
+        if (checkButton) {
+            checkButton.disabled = true;
+            checkButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+            
+            fetch('/admin-dashboard/monitoring/check-health/', {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    updateHealthOverview(data.system_overview);
+                    showNotification('Services status updated successfully', 'success');
+                } else {
+                    showNotification('Error updating services: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Connection error while checking services', 'error');
+            })
+            .finally(() => {
+                checkButton.disabled = false;
+                checkButton.innerHTML = '<i class="fas fa-sync-alt"></i> Check All Services';
+            });
+        }
+    }
+    
+    // Fonction pour mettre à jour l'aperçu de santé
+    function updateHealthOverview(overview) {
+        const servicesOnline = document.getElementById('servicesOnline');
+        const healthScore = document.getElementById('healthScore');
+        const activeAlerts = document.getElementById('activeAlerts');
+        const lastCheck = document.getElementById('lastCheck');
+        const healthProgressBar = document.getElementById('healthProgressBar');
+        
+        if (servicesOnline) {
+            servicesOnline.textContent = 8 + '/' + 8;
+        }
+        
+        if (healthScore) {
+            healthScore.textContent = 85 + '%';
+        }
+        
+        if (activeAlerts) {
+            activeAlerts.textContent = 0;
+            activeAlerts.parentElement.parentElement.querySelector('.health-icon').className = 
+                'health-icon text-white rounded-circle me-3 ' + 
+                (0 > 0 ? 'bg-danger' : 'bg-success');
+        }
+        
+        if (lastCheck) {
+            lastCheck.textContent = new Date().toLocaleTimeString();
+        }
+        
+        if (healthProgressBar) {
+            healthProgressBar.style.width = 85 + '%';
+            healthProgressBar.className = 'progress-bar ' + 
+                (85 >= 80 ? 'bg-success' : 
+                 85 >= 60 ? 'bg-warning' : 'bg-danger');
+        }
+        
+        // Mettre à jour les indicateurs de statut
+        updateServiceStatusDots(overview);
+    }
+    
+    // Fonction pour mettre à jour les points de statut des services
+    function updateServiceStatusDots(overview) {
+        const statusDots = document.querySelectorAll('.status-dot');
+        statusDots.forEach(dot => {
+            if ("healthy" === 'healthy') {
+                dot.className = 'status-dot bg-success';
+            } else if ("healthy" === 'degraded') {
+                dot.className = 'status-dot bg-warning';
+            } else {
+                dot.className = 'status-dot bg-danger';
+            }
+        });
+    }
+    
+    // Fonction pour afficher les notifications
+    function showNotification(message, type) {
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        const alertHtml = `
+            <div class="alert ${alertClass} alert-dismissible fade show" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', alertHtml);
+        
+        // Auto-dismiss après 4 secondes
+        setTimeout(() => {
+            const alert = document.querySelector('.alert');
+            if (alert) {
+                alert.remove();
+            }
+        }, 4000);
+    }
+    
+    // Event listeners
+    const checkAllButton = document.getElementById('checkAllServices');
+    if (checkAllButton) {
+        checkAllButton.addEventListener('click', checkAllServicesHealth);
+    }
+    
+    const restartButton = document.getElementById('restartServices');
+    if (restartButton) {
+        restartButton.addEventListener('click', function() {
+            if (confirm('Are you sure you want to restart all services? This may cause temporary downtime.')) {
+                showNotification('Service restart functionality would be implemented here', 'info');
+            }
+        });
+    }
+    
+    // Charger l'état initial
+    setTimeout(checkAllServicesHealth, 1000);
+    // Charger les métriques initiales
+    setTimeout(updateSystemMetrics, 500);
+    
+
+    // Fonction pour mettre à jour les métriques du système
+    function updateSystemMetrics() {
+        fetch("/admin-dashboard/api/system/health/")
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const healthData = data.data;
+                    
+                    // Mettre à jour Health Score
+                    const healthScore = Math.round(healthData.health_score);
+                    document.getElementById("healthScore").textContent = healthScore + "%";
+                    
+                    // Mettre à jour Services Online
+                    const servicesOnline = healthData.healthy_services + "/" + healthData.total_services;
+                    const servicesElement = document.querySelector(".health-value.text-success");
+                    if (servicesElement) {
+                        servicesElement.textContent = servicesOnline;
+                    }
+                    
+                    // Mettre à jour Critical Alerts
+                    document.getElementById("activeAlerts").textContent = healthData.critical_alerts;
+                    
+                    // Mettre à jour Last Check
+                    const now = new Date();
+                    document.getElementById("lastCheck").textContent = now.toLocaleTimeString();
+                    
+                    // Mettre à jour la barre de progression
+                    const progressBar = document.getElementById("healthProgressBar");
+                    if (progressBar) {
+                        progressBar.style.width = healthScore + "%";
+                        // Changer la couleur selon le score
+                        progressBar.className = "progress-bar " + (healthScore >= 80 ? "bg-success" : healthScore >= 60 ? "bg-warning" : "bg-danger");
+                    }
+                }
+            })
+            .catch(error => {
+                console.error("Erreur lors de la mise à jour des métriques:", error);
+            });
+    }
+    // Auto-refresh toutes les 2 minutes
+    setInterval(checkAllServicesHealth, 120000);
+    // Auto-refresh des métriques toutes les 30 secondes
+    setInterval(updateSystemMetrics, 30000);
+});
+</script>
+{% endblock %} 

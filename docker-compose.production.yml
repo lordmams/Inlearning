@@ -1,0 +1,181 @@
+version: '3.8'
+
+# Version Production simplifiée - Basée sur docker-compose.yaml principal
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-inlearning_prod}
+      POSTGRES_USER: ${POSTGRES_USER:-inlearning_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+      - ./backups:/backups
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  # Redis Cache
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_prod_data:/data
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: always
+
+  # Django Application
+  app:
+    image: ghcr.io/${GITHUB_REPOSITORY:-inlearning}/django-app:${IMAGE_TAG:-latest}
+    environment:
+      - DEBUG=False
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://redis:6379/0
+      - ELASTICSEARCH_HOST=${ELASTICSEARCH_HOST}
+      - ELASTICSEARCH_INDEX=${ELASTICSEARCH_INDEX:-inlearning-production}
+      - ELASTICSEARCH_API_KEY=${ELASTICSEARCH_API_KEY}
+      - LEARNING_PLATFORM_URL=http://flask_api:5000
+      - SECRET_KEY=${SECRET_KEY}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-inlearning.com,www.inlearning.com}
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - SENTRY_DSN=${SENTRY_DSN}
+    volumes:
+      - static_prod_data:/app/staticfiles
+      - media_prod_data:/app/media
+      - ./ingest:/app/ingest
+      - ./logs:/app/logs
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             gunicorn elearning.wsgi:application --bind 0.0.0.0:8000 --workers 3"
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.8'
+
+  # Flask API (Learning Platform)
+  flask_api:
+    image: ghcr.io/${GITHUB_REPOSITORY:-inlearning}/flask-api:${IMAGE_TAG:-latest}
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./ingest:/app/ingest
+    environment:
+      - FLASK_ENV=production
+      - ELASTICSEARCH_HOST=${ELASTICSEARCH_HOST}
+      - ELASTICSEARCH_INDEX=${ELASTICSEARCH_INDEX:-inlearning-production}
+      - ELASTICSEARCH_API_KEY=${ELASTICSEARCH_API_KEY}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - SENTRY_DSN=${SENTRY_DSN}
+    depends_on:
+      - db
+    command: gunicorn --bind 0.0.0.0:5000 --workers 2 app:app
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+
+  # Consumer
+  consumer:
+    image: ghcr.io/${GITHUB_REPOSITORY:-inlearning}/flask-api:${IMAGE_TAG:-latest}
+    volumes:
+      - ./ingest:/app/ingest
+    environment:
+      - LEARNING_PLATFORM_URL=http://flask_api:5000
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - ELASTICSEARCH_HOST=${ELASTICSEARCH_HOST}
+      - ELASTICSEARCH_INDEX=${ELASTICSEARCH_INDEX:-inlearning-production}
+      - ELASTICSEARCH_API_KEY=${ELASTICSEARCH_API_KEY}
+      - SENTRY_DSN=${SENTRY_DSN}
+    depends_on:
+      - flask_api
+    command: python start_consumer.py
+    restart: always
+
+  # Orchestrator Simple
+  orchestrator:
+    image: ghcr.io/${GITHUB_REPOSITORY:-inlearning}/orchestrator:${IMAGE_TAG:-latest}
+    environment:
+      - ENVIRONMENT=production
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - ELASTICSEARCH_HOST=${ELASTICSEARCH_HOST}
+      - ELASTICSEARCH_API_KEY=${ELASTICSEARCH_API_KEY}
+      - SENTRY_DSN=${SENTRY_DSN}
+    ports:
+      - "8090:8090"
+    depends_on:
+      - db
+    volumes:
+      - ./orchestration/simple/logs:/app/logs
+    restart: always
+
+  # Nginx Load Balancer (optionnel, pour SSL et reverse proxy)
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/production.conf:/etc/nginx/conf.d/default.conf
+      - static_prod_data:/var/www/static
+      - media_prod_data:/var/www/media
+      - ./ssl:/etc/nginx/ssl
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - app
+      - flask_api
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.3'
+
+  # Backup automatique simple
+  backup:
+    image: postgres:13
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./backups:/backups
+    command: |
+      sh -c "
+        while true; do
+          pg_dump -h db -U ${POSTGRES_USER} ${POSTGRES_DB} > /backups/backup_$(date +%Y%m%d_%H%M%S).sql
+          find /backups -name '*.sql' -mtime +7 -delete
+          sleep 86400
+        done
+      "
+    depends_on:
+      - db
+    restart: always
+
+volumes:
+  postgres_prod_data:
+  redis_prod_data:
+  static_prod_data:
+  media_prod_data: 

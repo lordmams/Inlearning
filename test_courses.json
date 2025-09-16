@@ -1,0 +1,28 @@
+[
+    {
+        "id": "test-001",
+        "title": "Introduction à Python",
+        "description": "Cours complet pour débuter en programmation Python",
+        "category": "programming",
+        "difficulty": "beginner",
+        "instructor": "Jean Dupont",
+        "duration": "10 heures",
+        "language": "fr",
+        "price": 0,
+        "is_free": true,
+        "tags": ["python", "programmation", "débutant"]
+    },
+    {
+        "id": "test-002", 
+        "title": "JavaScript Avancé",
+        "description": "Concepts avancés de JavaScript pour les développeurs expérimentés",
+        "category": "web_development",
+        "difficulty": "advanced",
+        "instructor": "Marie Martin",
+        "duration": "15 heures",
+        "language": "fr",
+        "price": 49.99,
+        "is_free": false,
+        "tags": ["javascript", "web", "avancé"]
+    }
+] 

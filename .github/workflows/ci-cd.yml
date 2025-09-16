@@ -162,6 +162,7 @@ jobs:
         
         # Deploy
         ssh -o StrictHostKeyChecking=no ${{ secrets.PRODUCTION_USER }}@${{ secrets.PRODUCTION_HOST }} << 'EOF'
+          set -e
           echo "Connected to production server"
           
           # Navigate to project directory (should already exist)
@@ -200,6 +201,10 @@ jobs:
             echo "Using existing .env file (not overwriting)"
           fi
           
+          # Export Anthropic API Key from GitHub Secrets
+          export ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY}"
+          echo "✅ Anthropic API Key configured from secrets"
+          
           # Deploy with docker-compose
           if command -v docker-compose &> /dev/null; then
             echo "Starting services with Docker Compose..."
@@ -218,6 +223,8 @@ jobs:
           
           echo "✅ Production deployment completed successfully"
         EOF
+      env:
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
     
     - name: Notify success
       run: |

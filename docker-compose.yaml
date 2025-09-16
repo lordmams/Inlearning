@@ -132,6 +132,7 @@ services:
       - ./ingest:/app/ingest
     environment:
       - FLASK_ENV=development
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - ELASTICSEARCH_HOST=${ELASTICSEARCH_HOST}
       - ELASTICSEARCH_INDEX=${ELASTICSEARCH_INDEX}
       - ELASTICSEARCH_API_KEY=${ELASTICSEARCH_API_KEY}
